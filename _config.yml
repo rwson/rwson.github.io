@@ -17,16 +17,12 @@ avatar: https://avatars2.githubusercontent.com/u/9476421?v=3&s=460
 
 # Includes an icon in the footer for each username you enter
 footer-links:
-  dribbble: 
-  email: 
-  facebook: 
-  flickr: 
+  email: rw_Song@sina.com
+  QQ: 862121312
+  weChat: images/WeChat.jpg
+  weibo: http://weibo.com/u/5330685789/home?wvr=5
+  tecentWeibo: http://t.qq.com/xiao-songrw?preview
   github: rwson
-  instagram: 
-  linkedin: 
-  pinterest: 
-  rss: # just type anything here for a working RSS icon, make sure you set the "url" above!
-  stackoverflow: # your stackoverflow profile, e.g. "users/50476/bart-kiers"
 
 # Your disqus shortname, entering this will enable commenting on posts
 disqus: 

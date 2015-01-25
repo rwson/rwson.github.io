@@ -283,6 +283,27 @@ footer {
   text-align: center;
 }
 
+.wechat-mask{
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 999;
+  background: rgba(0,0,0,0.4);
+  display: none;
+}
+
+.wtchat-code{
+  width: 512px;
+  height: 512px;
+  background: url(images/WeChat.jpg) no-repeat;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: -256px 0 0 -256px;
+}
+
 // Settled on moving the import of syntax highlighting to the bottom of the CSS
 // ... Otherwise it really bloats up the top of the CSS file and makes it difficult to find the start
 @import "_highlights";
