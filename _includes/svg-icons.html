@@ -6,9 +6,11 @@
 <script>
     window.onload = function(){
         document.querySelector(".QQ").onclick = function(){
-            (document.querySelector(".QQ-mask").style.display = "none") && (document.querySelector(".QQ-mask").style.display = "block");
+            if(document.querySelector(".QQ-mask").style.display = "none")
+                document.querySelector(".QQ-mask").style.display = "block";
             document.onclick = function(){
-                ( document.querySelector(".QQ-mask").style.display == "block") && ( document.querySelector(".QQ-mask").style.display = "none");
+             if(document.querySelector(".QQ-mask").style.display == "block")
+                 document.querySelector(".QQ-mask").style.display = "none";
             };
             return false;
         }
@@ -25,9 +27,11 @@
 <script>
     window.onload = function(){
         document.querySelector(".weChat").onclick = function(){
-            (document.querySelector(".wechat-mask").style.display = "none") && (document.querySelector(".wechat-mask").style.display = "block");
+            if(document.querySelector(".wechat-mask").style.display = "none")
+                document.querySelector(".wechat-mask").style.display = "block";
             document.onclick = function(){
-                ( document.querySelector(".wechat-mask").style.display == "block") && ( document.querySelector(".wechat-mask").style.display = "none");
+             if(document.querySelector(".wechat-mask").style.display == "block")
+                document.querySelector(".wechat-mask").style.display = "none";
             };
             return false;
         }
