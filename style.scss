@@ -25,7 +25,7 @@ body {
 
 .container {
   margin: 0 auto;
-  max-width: 740px;
+  max-width: 840px;
   padding: 0 10px;
   width: 100%;
 }
@@ -47,6 +47,7 @@ h1, h2, h3, h4, h5, h6 {
 h1 {
   font-size: 30px;
   font-family: "Arial","Microsoft YaHei";
+  font-weight: normal;
   a {
     color: inherit;
     font-family: "Arial","Microsoft YaHei";
@@ -231,6 +232,7 @@ nav {
     text-align: right;
     font-weight: 300;
     letter-spacing: 1px;
+    font-family: microsoft yahei, Arial, Helvetica, sans-serif;
 
     @include mobile {
       margin: 0 10px;
