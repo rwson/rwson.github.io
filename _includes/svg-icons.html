@@ -1,18 +1,22 @@
 {% if site.footer-links.QQ %}
-<a href="javascript:;"><i class="contact-icon QQ"></i></a>
-<div class="contact-mask QQ-mask">
-    <a href="javascript:;" class="close-mask close-QQ"></a>
-    <div class="QQ-code"></div>
-</div>
+<a href="javascript:;">
+    <i class="contact-icon QQ">
+        <div class="contact-mask">
+            <img src="../images/QQ.jpg" width="200" height="200">
+        </div>
+    </i>
+</a>
 {% endif %}
-{% if site.footer-links.tecentWeibo %}<a href="{{ site.footer-links.tecentWeibo }}"><i class="contact-icon tecentWeibo"></i></a>{% endif %}
-{% if site.footer-links.weibo %}<a href="{{ site.footer-links.weibo }}"><i class="contact-icon weibo"></i></a>{% endif %}
+{% if site.footer-links.tecentWeibo %}<a href="{{ site.footer-links.tecentWeibo }}" target="_blank"><i class="contact-icon tecentWeibo"></i></a>{% endif %}
+{% if site.footer-links.weibo %}<a href="{{ site.footer-links.weibo }}" target="_blank"><i class="contact-icon weibo"></i></a>{% endif %}
 {% if site.footer-links.weChat %}
-<a href="javascript:;"><i class="contact-icon weChat"></i></a>
-<div class="contact-mask wechat-mask">
-    <a href="javascript:;" class="close-mask close-weChat"></a>
-    <div class="wechat-code"></div>
-</div>
+<a href="javascript:;">
+    <i class="contact-icon weChat">
+        <div class="contact-mask">
+            <img src="../images/WeChat.jpg" width="200" height="200">
+        </div>
+    </i>
+</a>
 {% endif %}
-{% if site.footer-links.github %}<a href="https://github.com/{{ site.footer-links.github }}"><i class="contact-icon github"></i></a>{% endif %}
-{% if site.footer-links.email %}<a href="mailto:{{ site.footer-links.email }}"><i class="contact-icon email"></i></a>{% endif %}
+{% if site.footer-links.github %}<a href="https://github.com/{{ site.footer-links.github }}" target="_blank"><i class="contact-icon github"></i></a>{% endif %}
+{% if site.footer-links.email %}<a href="mailto:{{ site.footer-links.email }}" target="_blank"><i class="contact-icon email"></i></a>{% endif %}

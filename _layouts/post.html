@@ -10,7 +10,7 @@ layout: default
   </div>
 
   <div class="date">
-    发布于 {{ page.date | date: "%b %e, %Y" }}
+    发布于 {{ page.date | date: "%b,%e,%y" }}
   </div>
 
   {% include disqus.html disqus_identifier=page.disqus_identifier %}
