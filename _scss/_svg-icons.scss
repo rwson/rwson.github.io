@@ -44,3 +44,13 @@
   top: 50%;
   margin: -256px 0 0 -256px;
 }
+
+.close-mask{
+  display: block;
+  width: 30px;
+  height: 30px;
+  background: url(../images/close.png) no-repeat;
+  position: absolute;
+  right: 0;
+  top: 0;
+}

@@ -1,44 +1,18 @@
 {% if site.footer-links.QQ %}
 <a href="javascript:;"><i class="contact-icon QQ"></i></a>
 <div class="contact-mask QQ-mask">
+    <a href="javascript:;" class="close-mask close-QQ"></a>
     <div class="QQ-code"></div>
 </div>
-<script>
-    window.onload = function(){
-        console.log(1111);
-        document.querySelector(".QQ").onclick = function(){
-            console.log(1111);
-            if(document.querySelector(".QQ-mask").style.display = "none")
-                document.querySelector(".QQ-mask").style.display = "block";
-            document.onclick = function(){
-             if(document.querySelector(".QQ-mask").style.display == "block")
-                 document.querySelector(".QQ-mask").style.display = "none";
-            };
-            return false;
-        }
-    };
-</script>
 {% endif %}
 {% if site.footer-links.tecentWeibo %}<a href="{{ site.footer-links.tecentWeibo }}"><i class="contact-icon tecentWeibo"></i></a>{% endif %}
 {% if site.footer-links.weibo %}<a href="{{ site.footer-links.weibo }}"><i class="contact-icon weibo"></i></a>{% endif %}
 {% if site.footer-links.weChat %}
 <a href="javascript:;"><i class="contact-icon weChat"></i></a>
 <div class="contact-mask wechat-mask">
+    <a href="javascript:;" class="close-mask close-weChat"></a>
     <div class="wechat-code"></div>
 </div>
-<script>
-    window.onload = function(){
-        document.querySelector(".weChat").onclick = function(){
-            if(document.querySelector(".wechat-mask").style.display = "none")
-                document.querySelector(".wechat-mask").style.display = "block";
-            document.onclick = function(){
-             if(document.querySelector(".wechat-mask").style.display == "block")
-                document.querySelector(".wechat-mask").style.display = "none";
-            };
-            return false;
-        }
-    };
-</script>
 {% endif %}
 {% if site.footer-links.github %}<a href="https://github.com/{{ site.footer-links.github }}"><i class="contact-icon github"></i></a>{% endif %}
 {% if site.footer-links.email %}<a href="mailto:{{ site.footer-links.email }}"><i class="contact-icon email"></i></a>{% endif %}

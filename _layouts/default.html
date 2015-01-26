@@ -10,11 +10,6 @@
     <meta name="author" content="{{ site.name }}" />
     <meta name="description" content="{{ site.description }}">
 
-    <!--[if lt IE 9]>
-      <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-
-
     <link rel="stylesheet" type="text/css" href="{{ site.baseurl }}/style.css" />
     <link rel="alternate" type="application/rss+xml" title="{{ site.name }} - {{ site.description }}" href="{{ site.baseurl }}/feed.xml" />
 
@@ -55,5 +50,10 @@
     </div>
 
     {% include analytics.html %}
+
+    <script src="http://cdn.bootcss.com/jquery/2.1.2/jquery.min.js"></script>
+    <!--[if lt IE 9]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
   </body>
 </html>
