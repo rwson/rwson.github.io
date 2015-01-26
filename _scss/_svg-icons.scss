@@ -26,9 +26,10 @@
 }
 
 .wechat-code{
-  width: 512px;
-  height: 512px;
+  width: 256px;
+  height: 256px;
   background: url(../images/WeChat.jpg) no-repeat;
+  background-size: contain;
   position: absolute;
   left: 50%;
   top: 50%;
@@ -36,9 +37,11 @@
 }
 
 .QQ-code{
-  width: 512px;
-  height: 512px;
-  background: #fff,url(../images/QQ.jpg) no-repeat 72px 53px;
+  width: 256px;
+  height: 256px;
+  background-size: contain;
+  background-color: #fff;
+  background: url(../images/QQ.jpg) no-repeat 72px 53px;
   position: absolute;
   left: 50%;
   top: 50%;
