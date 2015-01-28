@@ -1,22 +1,9 @@
-{% if site.footer-links.QQ %}
-<a href="javascript:;">
-    <i class="contact-icon QQ">
-        <div class="contact-mask">
-            <img src="../images/QQ.jpg" width="200" height="200">
-        </div>
-    </i>
-</a>
-{% endif %}
+{% if site.footer-links.QQ %}<a href="http://wpa.qq.com/msgrd?V=1&Uin={{ site.footer-links.QQ }}"><i class="contact-icon QQ"></i></a>{% endif %}
 {% if site.footer-links.tecentWeibo %}<a href="{{ site.footer-links.tecentWeibo }}" target="_blank"><i class="contact-icon tecentWeibo"></i></a>{% endif %}
 {% if site.footer-links.weibo %}<a href="{{ site.footer-links.weibo }}" target="_blank"><i class="contact-icon weibo"></i></a>{% endif %}
 {% if site.footer-links.weChat %}
-<a href="javascript:;">
-    <i class="contact-icon weChat">
-        <div class="contact-mask">
-            <img src="../images/WeChat.jpg" width="200" height="200">
-        </div>
-    </i>
-</a>
+<a href="jiathis_button_weixin"><i class="contact-icon weChat"></i></a>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=1" charset="utf-8"></script>
 {% endif %}
 {% if site.footer-links.github %}<a href="https://github.com/{{ site.footer-links.github }}" target="_blank"><i class="contact-icon github"></i></a>{% endif %}
 {% if site.footer-links.email %}<a href="mailto:{{ site.footer-links.email }}" target="_blank"><i class="contact-icon email"></i></a>{% endif %}
