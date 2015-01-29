@@ -1,6 +1,6 @@
 ---
 layout: page
-title: laboratory - 我的实验室
+title: 我的实验室
 permalink: /laboratory/
 ---
 
