@@ -4,8 +4,6 @@ title: 我的项目
 permalink: /project/
 ---
 
-我的一些上线项目
-
 [南京农业大学](http://www.njau.edu.cn/ "南京农业大学主站")
 [南京农业大学金融学院](http://finance.njau.edu.cn/ "南京农业大学金融学院")
 [南京农业大学人事人才网](http://rsrcw.njau.edu.cn/ "南京农业大学人事人才网")
