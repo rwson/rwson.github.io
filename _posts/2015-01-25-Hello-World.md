@@ -1,5 +1,5 @@
 ---
-layout: post
+layout: post monthly_archive
 title: Hello World
 date: 2015-01-15
 category: 测试
