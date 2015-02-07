@@ -1,17 +1,8 @@
 ---
 ---
 
-//
-// IMPORTS
-//
-
 @import "_reset";
 @import "_variables";
-// Syntax highlighting @import is at the bottom of this file
-
-/**************/
-/* BASE RULES */
-/**************/
 
 html {
   font-size: 100%;
@@ -28,6 +19,10 @@ body {
   max-width: 840px;
   padding: 0 10px;
   width: 100%;
+}
+
+.container-left{
+  width: 230px;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -242,10 +237,6 @@ nav {
   }
 }
 
-//
-// .main
-//
-
 .posts > .post {
   padding-bottom: 2em;
   border-bottom: 1px solid $lightGray;
@@ -288,7 +279,5 @@ footer {
   text-align: center;
 }
 
-// Settled on moving the import of syntax highlighting to the bottom of the CSS
-// ... Otherwise it really bloats up the top of the CSS file and makes it difficult to find the start
 @import "_highlights";
 @import "_svg-icons";
