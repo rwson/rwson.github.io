@@ -1,7 +1,9 @@
 ---
 layout: monthly_archive
 title: Hello World
-date: 2015-01-15
+year: 2015
+month: 02
+date: 07
 category: 测试
 ---
 
