@@ -30,9 +30,9 @@ var clickHandler = function(k) {
     window['tag'+k].delay(50).fadeIn(350);
   }
 };
-for (var i = 1; i <= 6; i++) {
-  $('#js-label' + i).on('click', clickHandler(i));
-}
+$('#tags__ul>li').each(function(index){
+    $('#' + $(this).attr('id')).on('click', clickHandler($(this).attr('id')));
+});
 
 // If sidebar has class 'mobile', hide it after clicking.
 tag1.on('click', function() {
