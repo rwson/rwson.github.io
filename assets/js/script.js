@@ -23,12 +23,12 @@ var sidebar    = $('#sidebar'),
     button     = $('#icon-arrow');
 
 // Tags switcher
-var clickHandler = function(k) {
-  return function() {
-    $(this).addClass('active').siblings().removeClass('active');
-    tag1.hide();
-    window['tag'+k].delay(50).fadeIn(350);
-  }
+var clickHandler = function(id) {
+    return function() {
+        $(this).addClass('active').siblings().removeClass('active');
+        $('.pl__all').hide();
+        $('.' + id).delay(50).fadeIn(350);
+    }
 };
 $('#tags__ul>li').each(function(index){
     $('#' + $(this).attr('id')).on('click', clickHandler($(this).attr('id')));
