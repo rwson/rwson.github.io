@@ -1,19 +1,8 @@
 ---
-layout: default
+layout: index
+title: place_your_blog_title_here
 ---
 
-<div class="posts">
-  {% for post in site.posts %}
-    <article class="post">    
-      
-      <h1><a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a></h1>
-
-      <div class="entry">
-        {{ post.content | truncatewords:40}}
-      </div>
-      
-      <a href="{{ site.baseurl }}{{ post.url }}" class="read-more">查看更多</a>
-
-    </article>
-  {% endfor %}
-</div>
+<article id="post__content">
+  <h1 id="post__title">Welcome</h1>
+</article> <!-- end #post__content -->
