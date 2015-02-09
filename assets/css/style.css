@@ -174,9 +174,10 @@ a {
   height: 44px;
   border-top: 1px solid #3c4149;
   overflow: hidden;
-  position: absolute;
-  left: 0;
-  bottom: 0; }
+  /*position: absolute;*/
+  /*left: 0;*/
+  /*bottom: 0;*/
+}
   #tags__bottom > .fontello, #tags__bottom > .post__toc-li:before {
     width: 50%;
     font-size: 18px;

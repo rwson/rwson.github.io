@@ -14,32 +14,30 @@
     <aside id="sidebar">
       <nav id="tags">
         <a href="/index.html" id="avatar"></a>
-
+          <div id="tags__bottom">
+              <a href="mailto:place_your_email_address_here" id="icon-email" target="_blank" class="tags-btn fontello"></a>
+              <a href="https://github.com/rwson" id="icon-feed" target="_blank" class="tags-btn fontello"></a>
+          </div>
         <ul id="tags__ul">
-          <li id="所有文章" class="tags__li tags-btn active">所有文章</li>
+          <li id="pl__all" class="tags__li tags-btn active">所有文章</li>
           <li id="HTML" class="tags__li tags-btn">HTML</li>
           <li id="CSS" class="tags__li tags-btn">CSS</li>
           <li id="javaScript" class="tags__li tags-btn">javaScript</li>
           <li id="jQuery" class="tags__li tags-btn">jQuery</li>
           <li id="PHP" class="tags__li tags-btn">PHP</li>
         </ul>
-
-        <div id="tags__bottom">
-          <a href="mailto:place_your_email_address_here" id="icon-email" target="_blank" class="tags-btn fontello"></a>
-          <a href="https://github.com/rwson" id="icon-feed" target="_blank" class="tags-btn fontello"></a>
-        </div>
       </nav> <!-- end #tags -->
 
       <div id="posts-list">
         <form action="" id="search-form">
           <a href="/index.html" id="mobile-avatar"></a>
           <!-- NOTE: input field is disabled by default -->
-          <input id="search-input" type="text" placeholder="Search..." disabled >
+          <input id="search-input" type="text" placeholder="搜索..." disabled title="当前功能无法使用">
         </form>
 
         <nav id="pl__container">
         {% for post in site.posts %}
-          <a class="{{ post.categories }} pl__all" href="{{ post.url }}"><span class="pl__circle"></span><span class="pl__title">{{ post.title }}</span><span class="pl__date">{{ post.date | date: "%b %Y" }}</span></a>
+          <a class="{{ post.categories }} pl__all" href="{{ post.url }}"><span class="pl__circle"></span><span class="pl__title">{{ post.title | truncatewords:25 }}</span><span class="pl__date">{{ post.date | date: "%b %Y" }}</span></a>
         {% endfor %}
         </nav>
       </div> <!-- end #posts-list -->
