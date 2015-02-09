@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
     <!--[if lte IE 9]><meta http-equiv="refresh" content="0;url=/ie.html"><![endif]-->
 
-    <title>小宋 | {{ page.title }}</title>
-    <meta name="description" content="">
+    <title>{{ page.title }} | 小宋</title>
+    <meta name="description" content="宋仁伟 GitHub博客 小宋">
 
     <link rel="stylesheet" type="text/css" href="/assets/css/style.css">
   </head>
@@ -20,11 +20,11 @@
           </div>
         <ul id="tags__ul">
           <li id="pl__all" class="tags__li tags-btn active">所有文章</li>
-          <li id="HTML" class="tags__li tags-btn">HTML</li>
-          <li id="CSS" class="tags__li tags-btn">CSS</li>
-          <li id="javaScript" class="tags__li tags-btn">javaScript</li>
-          <li id="jQuery" class="tags__li tags-btn">jQuery</li>
-          <li id="PHP" class="tags__li tags-btn">PHP</li>
+          <li id="技术" class="tags__li tags-btn">技术</li>
+          <li id="工具" class="tags__li tags-btn">工具</li>
+          <li id="资源" class="tags__li tags-btn">资源</li>
+            <li id="其他" class="tags__li tags-btn">其他</li>
+          <li id="关于我" class="tags__li tags-btn">关于我</li>
         </ul>
       </nav> <!-- end #tags -->
 
@@ -37,7 +37,7 @@
 
         <nav id="pl__container">
         {% for post in site.posts %}
-          <a class="{{ post.categories }} pl__all" href="{{ post.url }}"><span class="pl__circle"></span><span class="pl__title">{{ post.title | truncatewords:25 }}</span><span class="pl__date">{{ post.date | date: "%b %Y" }}</span></a>
+          <a class="{{ post.categories }} pl__all" href="{{ post.url }}"><span class="pl__circle"></span><span class="pl__title">{{ post.title | truncatewords:20 }}</span><span class="pl__date">{{ post.date | date: "%b %Y" }}</span></a>
         {% endfor %}
         </nav>
       </div> <!-- end #posts-list -->

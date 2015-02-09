@@ -5,6 +5,8 @@ layout: index
 <article id="post__content">
   <h1 id="post__title" data-identifier="{{ page.date | date: ' %Y%m%d ' }}">{{ page.title }}</h1>
   {{ content }}
+    <br>
+    <p>written by 小宋 @ {{ page.date | date: ' %Y-%m-%d ' }}</p>
 </article> <!-- end #post__content -->
 
 <!--<div id="post__share">-->
