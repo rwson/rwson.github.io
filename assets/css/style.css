@@ -193,7 +193,7 @@ a {
 #icon-feed {
   border-left: 1px solid #525965; }
   #icon-feed:before {
-    content: "\e802"; }
+    content: url(../img/github-icon.png); }
 
 .tags-btn {
   color: #a6a6a7;
