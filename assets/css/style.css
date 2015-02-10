@@ -261,6 +261,10 @@ a {
     transition: color .3s, background .3s;
 }
 
+#icon-email{
+    font-family: "fontello";
+}
+
 .tags-btn:hover {
     color: #f7f7f7;
     background: #40464f;
@@ -1649,7 +1653,8 @@ img[alt="宋仁伟"]{
     font-size: 180px;
 }
 
-.page-404 h2, p {
+.page-404 h2,
+.page-404 p {
     color: #D21414;
     font-family: "Arial", "Microsoft YaHei";
 }
