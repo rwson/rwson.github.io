@@ -488,7 +488,8 @@ a {
 #post ::-moz-selection {
     background: #474d57;
     color: #fff;
-    text-shadow: none;
+    text-shadow: 0 0 3px rgba(41,162,132,0.7);
+    /*text-shadow: none;*/
 }
 
 @media screen and (max-width: 585px) {
@@ -1664,6 +1665,20 @@ img[alt="宋仁伟"]{
     text-decoration: none;
     font-family: "Arial", "Microsoft YaHei";
 }
+
+.page-404 h1 ::selection,
+.page-404 h1 ::-moz-selection,
+.page-404 h2 ::selection,
+.page-404 h2 ::-moz-selection,
+.page-404 p ::selection,
+.page-404 p ::-moz-selection,
+.page-404 a ::selection,
+.page-404 a ::-moz-selection{
+    background: #474d57;
+    color: #fff;
+    text-shadow: 0 0 3px rgba(41,162,132,0.7);
+}
+
 .page-404 .gif-404{
     display: block;
     width: 160px;

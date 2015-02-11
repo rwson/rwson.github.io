@@ -30,6 +30,25 @@
             text-decoration: none;
             font-family: "Arial", "Microsoft YaHei";
         }
+
+        h1 ::selection ,
+        p ::selection ,
+        a ::selection {
+            background: #474d57;
+            color: #fff;
+            text-shadow: 0 0 3px rgba(41,162,132,0.7);
+            /*text-shadow: none;*/
+        }
+
+        h1 ::-moz-selection ,
+        p ::-moz-selection ,
+        a ::-moz-selection {
+            background: #474d57;
+            color: #fff;
+            text-shadow: 0 0 3px rgba(41,162,132,0.7);
+            /*text-shadow: none;*/
+        }
+
         @media screen and (max-device-width: 600px){
             body{
                 width: 100%;
