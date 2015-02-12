@@ -1666,7 +1666,11 @@ img[alt="宋仁伟"]{
     font-family: "Arial", "Microsoft YaHei";
 }
 
-.page-404 ::selection,
+.page-404 ::selection{
+    background: #474d57;
+    color: #fff;
+    text-shadow: 0 0 3px rgba(41,162,132,0.7);
+}
 .page-404 ::-moz-selection{
     background: #474d57;
     color: #fff;
