@@ -2,7 +2,6 @@
 layout: post
 title: canvas刮刮卡
 date: 2015-02-22
-comment:true
 categories: [技术]
 ---
 

@@ -2,7 +2,6 @@
 layout: post
 title: 我理解的apply和call
 date: 2015-02-24
-comment:true
 categories: [技术]
 ---
 
