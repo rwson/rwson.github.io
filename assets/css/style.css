@@ -783,9 +783,9 @@ iframe {
     content: "\e803";
 }
 
-#icon-weibo {
-    margin-left: 50px;
-}
+/*#icon-weibo {*/
+    /*margin-left: 50px;*/
+/*}*/
 
 #icon-weibo:hover {
     color: #d40220;

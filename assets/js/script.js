@@ -138,6 +138,8 @@ function afterPjax() {
   window.disqus_identifier = identifier;
 
   function check() {
+      $("#post__title").data("show") ? $('#disqus_thread').show() : $('#disqus_thread').hide();
+      //    指定了允许评论才显示评论模块
     if ( !ds_loaded && container.scrollTop() + container.height() > top ) {
       $.ajax({
         type: 'GET',
