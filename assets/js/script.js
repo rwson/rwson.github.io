@@ -137,8 +137,6 @@ function afterPjax() {
   window.disqus_shortname = $('#disqus_thread').attr('name');
   //window.disqus_identifier = identifier;
 
-    console.log($('#disqus_thread'))
-
   function check() {
     if ( !ds_loaded && container.scrollTop() + container.height() > top ) {
       $.ajax({
