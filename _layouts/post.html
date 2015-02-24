@@ -6,8 +6,8 @@ layout: index
   <h1 id="post__title" data-identifier="{{ page.date | date: ' %Y%m%d ' }}" data-show="{{ page.comments }}">{{ page.title }}</h1>
   {{ content }}
     <p>written by 小宋 @ {{ page.date | date: ' %Y-%m-%d ' }}</p>
+    <input type="hidden" name="is-comment" id="is-comment" value="{{ page.comment }}"/>
 </article> <!-- end #post__content -->
-
 <div id="post__share">
   <!--<a id="icon-twitter" class="fontello" href="https://twitter.com/intent/tweet?url=place_your_url_here{{ page.url }}&text={{ page.title }}" target="_blank"></a>-->
   <!--<a id="icon-cc" class="fontello" href="http://creativecommons.org/licenses/by-nc-sa/3.0" target="_blank"></a>-->
