@@ -134,8 +134,8 @@ function afterPjax() {
   var ds_loaded = false,
       top = $('#disqus_thread').offset().top;
       identifier = $('#post__title').data('identifier');
-  window.disqus_shortname = '小宋';
-  window.disqus_identifier = identifier;
+  window.disqus_shortname = $('#disqus_thread').attr('name');
+  //window.disqus_identifier = identifier;
 
   function check() {
     if ( !ds_loaded && container.scrollTop() + container.height() > top ) {
