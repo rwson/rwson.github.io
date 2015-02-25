@@ -1237,7 +1237,7 @@ pre {
     font: .9em/1.5 Consolas, Monaco, 'Andale Mono', monospace;
     border: 1px solid #e5e8ec;
     border-radius: 3px;
-    background-color: #fdfdfd;
+    background-color: #474d57;
     background-image: -webkit-linear-gradient(transparent 50%, rgba(69, 142, 209, 0.04) 50%);
     background-image: -moz-linear-gradient(transparent 50%, rgba(69, 142, 209, 0.04) 50%);
     background-image: -ms-linear-gradient(transparent 50%, rgba(69, 142, 209, 0.04) 50%);
@@ -1247,6 +1247,11 @@ pre {
     background-origin: content-box;
     overflow: auto;
     -webkit-overflow-scrolling: touch;
+    -webkit-box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    -moz-box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    -ms-box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    -o-box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
 }
 
 pre::-webkit-scrollbar {
@@ -1274,6 +1279,7 @@ pre > code {
     -moz-hyphens: none;
     -ms-hyphens: none;
     hyphens: none;
+    color: #fff;
 }
 
 /* Inline code */
