@@ -1,0 +1,18 @@
+---
+layout: index
+---
+
+<article id="post__content">
+  <h1 id="post__title" data-identifier="{{ page.date | date: ' %Y%m%d ' }}">{{ page.title }}</h1>
+  {{ content }}
+    <p>written by 小宋 @ {{ page.date | date: ' %Y-%m-%d ' }}</p>
+</article> <!-- end #post__content -->
+<div id="post__share">
+  <!--<a id="icon-twitter" class="fontello" href="https://twitter.com/intent/tweet?url=place_your_url_here{{ page.url }}&text={{ page.title }}" target="_blank"></a>-->
+  <!--<a id="icon-cc" class="fontello" href="http://creativecommons.org/licenses/by-nc-sa/3.0" target="_blank"></a>-->
+  <a id="icon-weibo" class="fontello" href="http://v.t.sina.com.cn/share/share.php?url=http://rwson.github.io/{{ page.url }}&title={{ page.title }} by 小宋" target="_blank"></a>
+</div>
+ <!--end #post__share-->
+
+<!--<p id="copyright">Powered by <a href="http://jekyllrb.com" target="_blank">Jekyll</a>&nbsp;&nbsp;|&nbsp;&nbsp;Theme <a href="https://github.com/P233/3-Jekyll" target="_blank">3-Jekyll</a></p>-->
+<p id="copyright">Copyright © 2015 <a href="http://rwson.github.io/">rwson</a> All rights reserved.</p>
