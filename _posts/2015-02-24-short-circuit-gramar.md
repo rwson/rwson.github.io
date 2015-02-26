@@ -51,6 +51,8 @@ categories: [技术]
     console.timeEnd("短路语法");
 
 	//	我把两种方法各循环执行了100000次
+
+	
 下面是运行时间对比
 
 ![canvas刮刮卡](http://rwson.github.io/assets/img/posts/run-times-compare.jpg)
