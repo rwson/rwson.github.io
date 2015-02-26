@@ -138,6 +138,9 @@ function afterPjax() {
   window.disqus_identifier = identifier;
 
   function check() {
+    $("#disqus_thread").length === 0 && function(){
+        return false;
+    }();
     if ( !ds_loaded && container.scrollTop() + container.height() > top ) {
       $.ajax({
         type: 'GET',
