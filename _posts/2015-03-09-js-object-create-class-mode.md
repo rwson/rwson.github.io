@@ -1,11 +1,11 @@
 ---
 layout: post
-title: javaScript面向对象 — 创建类常用模式
+title: javaScript创建类的常用模式
 date: 2015-03-07
 categories: [技术]
 ---
 
-javaScript创建类常用模式常用模式:   
+javaScript创建类的常用模式:
 严格意义上,在ECMAScript6出来之前,js中是没有类的概念的,但是聪明的人类想到了用方法和原型类模拟类的一些特性,比如一个对象经过new关键字实例化以后就具有了某些属性,方法。
 
 下面我们就看下常用的创建类的一些常用模式:
