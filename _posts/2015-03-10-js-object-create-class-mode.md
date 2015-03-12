@@ -1,7 +1,7 @@
 ---
 layout: post
 title: javaScript创建类的常用模式
-date: 2015-03-07
+date: 2015-03-10
 categories: [技术]
 ---
 
