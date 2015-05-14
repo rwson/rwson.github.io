@@ -17,10 +17,19 @@ categories: [技术]
 
 第一种：
 
-    直接在控制台运行open .bash_profile命令(如果文件不存在,先运行touch .bash_profile创建profile文件,然后再运行open -e bash_profile编辑profile文件),打开profile文件,Mac会用自带的编辑器打开profile文件,然后我们输入export JAVA_HOME=/System/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home,command + s保存,再控制台再运行.source bash_profile命令,就可完成对jdk的配置。
+    在控制台输入cd ~,进入用户目录
+    然后运行open .bash_profile命令
+    如果文件不存在,先运行touch .bash_profile创建profile文件
+    然后再运行open -e bash_profile编辑profile文件
+    打开profile文件,Mac会用自带的编辑器打开profile文件
+    然后我们输入export JAVA_HOME=/System/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home
+    command + s保存,再控制台再运行.source bash_profile命令,就可完成对jdk的配置。
 
 第二种：
 
-    在控制台运行vi .bash_profile,即可进行profile的编辑,同样输入jdk的路径,然后按下esc,再输入:wq,保存并退出vim编辑器,再在控制台运行.source bash_profile,应用刚才的设置,即可。
+    在控制台输入cd ~,进入用户目录
+    在控制台运行vi .bash_profile,即可进行profile的编辑
+    同样输入jdk的路径,然后按下esc,再输入:wq保存并退出vim编辑器
+    再在控制台运行.source bash_profile,应用刚才的设置,即可。
 
 5.走完上面的几步之后,jdk版本应该配置成功了,可以在控制台输入java -version查看java版本来确认是否为我们需要的版本。
