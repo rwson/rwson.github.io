@@ -32,4 +32,6 @@ categories: [技术]
     同样输入jdk的路径,然后按下esc,再输入:wq保存并退出vim编辑器
     再在控制台运行.source bash_profile,应用刚才的设置,即可。
 
+同理,也可用上面的几种方法来指定CLASSPATH和PATH。
+
 5.走完上面的几步之后,jdk版本应该配置成功了,可以在控制台输入java -version查看java版本来确认是否为我们需要的版本。
