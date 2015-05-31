@@ -172,7 +172,7 @@ categories: [技术]
             }
         });
 
- 	//  奥迪4S店类
+ 		//  奥迪4S店类
         function AudiCarShop(){}
         commonUtil.extend(AudiCarShop,CarShop);
         commonUtil.wrap(BmwCarShop.prototype,{
