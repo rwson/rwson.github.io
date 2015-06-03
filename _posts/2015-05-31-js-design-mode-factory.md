@@ -1,7 +1,7 @@
 ---
 layout: post
 title: javaScript工厂模式
-date: 2015-05-27
+date: 2015-05-31
 categories: [技术]
 ---
 
