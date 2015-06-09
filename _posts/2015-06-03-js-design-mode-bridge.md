@@ -2,7 +2,7 @@
 layout: post
 title: javaScript桥梁模式
 date: 2015-06-03
-categories: [其他]
+categories: [技术]
 ---
 
 桥模式:
