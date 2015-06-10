@@ -2,7 +2,7 @@
 layout: post
 title: Mac环境下配置jdk
 date: 2015-05-14
-categories: [技术]
+categories: [工具]
 ---
 
 由于本人的系统是 OS Yosemite 10.10.3,自带jdk 1.8,但是平时用不到这么高的版本,jdk 1.6足矣,但是安装完了，怎么设置它的默认jdk路径呢？
