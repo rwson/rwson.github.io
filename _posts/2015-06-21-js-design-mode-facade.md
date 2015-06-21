@@ -1,7 +1,7 @@
 ---
 layout: post
 title: javaScript门面模式
-date: 2015-06-14
+date: 2015-06-21
 categories: [技术]
 ---
 
