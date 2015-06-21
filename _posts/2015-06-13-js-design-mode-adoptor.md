@@ -15,7 +15,7 @@ categories: [技术]
 
 我们来模拟一个最简单的选择器
 
-```
+
     //  模拟prototype $ function(不需要传递任何的形参,直接通过arguments对象取得传入的实参)
     function $(){
         var ele = [];
@@ -72,6 +72,6 @@ categories: [技术]
             console.log(YAHOO.get(["div1","div2"]));
         };
     
-```
+
 
 这边的YUIToPrototypeAdapter就是一个适配器方法,根据传入参数类型的不同采取不同的方案处理,相对完美的解决了框架间的适配问题。
