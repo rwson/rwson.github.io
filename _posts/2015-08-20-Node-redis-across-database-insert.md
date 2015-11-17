@@ -1,6 +1,6 @@
 ---
 layout: post
-title: NodeJs中redis窜库插入问题
+title: NodeJs中redis窜库插入
 date: 2015-08-20
 categories: [技术]
 ---
