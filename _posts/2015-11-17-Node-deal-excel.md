@@ -122,3 +122,6 @@ categories: [技术]
     app.listen(3000, function () {
         console.log("success!");
     });
+
+最终返回的结果如下图所示:    
+![](http://rwson.github.io/assets/img/posts/excel-to-json2.png)
