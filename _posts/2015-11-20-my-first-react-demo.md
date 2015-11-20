@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 我的第一个React Native构建的App
+title: 第一个React Native App
 date: 2015-11-20
 categories: [技术]
 ---
