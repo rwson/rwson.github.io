@@ -5,7 +5,7 @@ date: 2015-11-20
 categories: [技术]
 ---
 
-这几天在学习[React Native](http://www.reactnative.com/),觉得很屌,做了个示例App,拿出来和大家分享下
+这几天在学习[React Native](http://www.reactnative.com/),觉得很屌,做了个"Hello World",拿出来和大家分享下
 
 先说环境搭建把,大致可分为下面几步:
 
