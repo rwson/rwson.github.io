@@ -1,6 +1,6 @@
 ---
 layout: post
-title: React组件声明周期
+title: React组件生命周期
 date: 2015-12-01
 categories: [技术]
 ---
