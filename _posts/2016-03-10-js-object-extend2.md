@@ -1,7 +1,7 @@
 ---
 layout: post
 title: javaScript实现继承之2
-date: 2015-03-10
+date: 2016-03-10
 categories: [技术]
 ---
 
