@@ -1,6 +1,6 @@
 ---
 layout: post
-title: javascript中关于Date的一些事
+title: javascript中Date细节
 date: 2016-08-30
 categories: [技术]
 ---
