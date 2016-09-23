@@ -28,6 +28,70 @@ React绑定事件的写法和在HTML上绑定事件的写法很像，比如我�
     
 这样，我们就完成了一个click事件的绑定，当用户点击这个按钮，handleClick将被调用，完成一些逻辑。
 
+就拿刚才上面的代码举例,我们在handleClick中用this,此时发现this指向了window对象,所以如果要在里面读取state/prop就比较麻烦,这时可以通过ES5中的bind方法来修改this的指向,就像下面这样:
+
+    ...
+    handleClick: function(){
+        //  ...
+    },
+    render: function(){
+        return (
+            <button onClick={this.handleClick.bind(this, [....argus])}>click</button>
+        );
+    },
+    ...
+    
+后面还可以传入参数,还可以在getInitialState(或者ES6语法的constructor里)手动指定一个新属性,来达到修改this指向的目的:
+
+- ES5
+
+    
+    //  ...
+
+    var Comp = React.createClass({
+
+        getInitialState: function() {
+            this.handleClick = this._handleClick.bind(this);
+        },
+        
+        _handleClick: function() {
+            //  事件的处理逻辑
+        },
+        
+        render: function() {
+            return (
+                <button onClick={this.handleClick}>click</button>
+            );
+        }
+
+    });
+
+
+- ES6
+
+    
+    //  ...
+    
+    class Comp extends Component {
+    
+        constructor(props) {
+            super(props);
+            
+            this.handleClick = this._handleClick.bind(this);
+        }
+    
+        _handleClick() {
+            //  事件的处理逻辑
+        }
+        
+        render() {
+            const {handleClick} = this;
+            return  (
+                <button onClick={handleClick}>click</button>
+            );
+        }
+    }
+
 刚才是在JSX语法上绑定的事件，如果不用JSX，我们就需要换成下面的绑定方法:
 
     React.DOM.button({
