@@ -1,8 +1,8 @@
 ---
 layout: post
-title: javaScript创建类的常用模式
+title: javascript创建类的常用模式
 date: 2015-03-10
-categories: [技术]
+categories: [javascript]
 ---
 
 javaScript创建类的常用模式:

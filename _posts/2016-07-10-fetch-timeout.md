@@ -2,7 +2,7 @@
 layout: post
 title: fetch中的Timeout
 date: 2016-07-10
-categories: [技术]
+categories: [ES6]
 ---
 
 随着ES6的普及,fetch已经渐渐取代了普通ajax在异步请求中的位置,以前在用jQuery中的ajax时,可以指定一个timeout属性,设置该请求的超时时间,但是原生的fetch并不支持该属性,如果遇到遇到一个请求一直pedding状态,就只能干等着,什么也干不了。由于fetch本身在被初始化后返回一个Promise对象,我们就可以对其再包一层Promise来实现在fetch请求中加入timeout的功能。

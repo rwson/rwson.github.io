@@ -2,7 +2,7 @@
 layout: post
 title: React组件生命周期
 date: 2015-12-01
-categories: [技术]
+categories: [React]
 ---
 
 在React的组件生命周期中，随着该组件的props活着state发生改变，对应的DOM也随着变换，一个组件对于特定的输入，它将返回一致的输出。

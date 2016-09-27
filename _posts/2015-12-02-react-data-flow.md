@@ -2,7 +2,7 @@
 layout: post
 title: React中的数据流
 date: 2015-12-02
-categories: [技术]
+categories: [React]
 ---
 
 昨天学习完组件的生命周期，今天学习学习React中的数据流。

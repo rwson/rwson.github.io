@@ -1,8 +1,8 @@
 ---
 layout: post
-title: javaScript工厂模式
+title: javascript工厂模式
 date: 2015-05-31
-categories: [技术]
+categories: [javascript]
 ---
 
 工厂模式:

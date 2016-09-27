@@ -1,8 +1,8 @@
 ---
 layout: post
-title: javaScript实现继承
+title: javascript实现继承
 date: 2015-05-26
-categories: [技术]
+categories: [javascript]
 ---
 
 继承:

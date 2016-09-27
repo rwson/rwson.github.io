@@ -2,7 +2,7 @@
 layout: post
 title: React Native自定义原生模块
 date: 2016-01-12
-categories: [技术]
+categories: [React]
 ---
 
 现如今，越来越多的移动开发者选择用React Native来开发他们的app。虽然React Native提供了强大的API供我们调用，但是对于一些功能(比如第三方支付、文件上传之类的)，原生模块中并没有提供给我们相关的API，这时候就需要我们来自己封装一些东西来给js端调用。这边以ios端的为例来介绍。

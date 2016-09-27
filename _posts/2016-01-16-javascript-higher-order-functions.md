@@ -1,8 +1,8 @@
 ---
 layout: post
-title: javaScript的高阶函数
+title: javascript的高阶函数
 date: 2016-01-16
-categories: [技术]
+categories: [javascript]
 ---
 
 高阶函数:听到高阶感觉很高大上的一个词,但是实现起来并不是那么难。

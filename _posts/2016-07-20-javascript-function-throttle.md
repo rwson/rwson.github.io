@@ -2,7 +2,7 @@
 layout: post
 title: javascript函数节流
 date: 2016-07-20
-categories: [技术]
+categories: [javascript]
 ---
 
 如果我们需要做一个过滤的功能,类似于下面这个效果

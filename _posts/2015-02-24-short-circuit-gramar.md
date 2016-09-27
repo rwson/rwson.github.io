@@ -1,8 +1,8 @@
 ---
 layout: post
-title: javaScript中的短路语法
+title: javascript中的短路语法
 date: 2015-02-26
-categories: [技术]
+categories: [javascript]
 ---
 
 在js代码中，以前写判断都是通过最简单的"if...else..."来判断,最近无意中改了个写法,发现也可以用,而且相对于的判断方法,省去了"if...else...",取而代之的是"&&"或者"\|\|",下面我们一起看下关于短路语法。

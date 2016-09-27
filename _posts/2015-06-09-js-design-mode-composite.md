@@ -1,8 +1,8 @@
 ---
 layout: post
-title: javaScript组合模式
+title: javascript组合模式
 date: 2015-06-09
-categories: [技术]
+categories: [javascript]
 ---
 
 组合模式:

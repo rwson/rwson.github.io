@@ -1,8 +1,8 @@
 ---
 layout: post
-title: javaScript原型
+title: javascript原型
 date: 2015-05-23
-categories: [技术]
+categories: [javascript]
 ---
 
 javaScript原型:

@@ -1,8 +1,8 @@
 ---
 layout: post
-title: javaScript适配器模式
+title: javascript适配器模式
 date: 2015-06-13
-categories: [技术]
+categories: [javascript]
 ---
 
 适配器模式:

@@ -2,7 +2,7 @@
 layout: post
 title: 检测数据变化
 date: 2016-06-23
-categories: [技术]
+categories: [javascript]
 ---
 
 MVVM一直是最近几年的很火的一个词之一,以angularjs和Vue为代表的都是这种模式,但是实现完全不同。Vue是通过ES5中的新增方法Object.defineProperty并且给该属性指定getter/setter(setter上调用observe方法)方法来实现的;而angularjs中则是通过脏检查来实现该模式,也就是对所有数据当都调用一个轮询($digest),然后比对每个属性值,如果发生变化,就调用相应的处理回调函数,这种方式的缺点显而易见,当数据达到一定数量时候,处理起来就显得笨重吃力,个人觉得可以给整个数据提供一个setData方法,传入需要设置的新数据,然后内部做一个深拷贝,这样就只需要把新设置的数据和原来的数据进行对比,在性能上应该优于给所有数据轮询的方式。下面是具体实现:

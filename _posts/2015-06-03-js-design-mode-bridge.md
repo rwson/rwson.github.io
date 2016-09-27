@@ -1,8 +1,8 @@
 ---
 layout: post
-title: javaScript桥梁模式
+title: javascript桥梁模式
 date: 2015-06-03
-categories: [技术]
+categories: [javascript]
 ---
 
 桥模式:

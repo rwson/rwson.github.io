@@ -2,7 +2,7 @@
 layout: post
 title: NodeJs中redis窜库插入
 date: 2015-08-20
-categories: [技术]
+categories: [NodeJs]
 ---
 
 最近在用NodeJs+redis搭建一个类似漂流瓶的服务器,有个需求如下:根据漂流瓶的类型来将数据用hash的方式插入到数据库中,这边类型主要根据性别(male/female)来区分,当类型为male时插入到0号数据库,female时插入到1号数据库。

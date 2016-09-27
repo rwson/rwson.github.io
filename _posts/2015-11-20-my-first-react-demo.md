@@ -2,7 +2,7 @@
 layout: post
 title: 第一个React Native App
 date: 2015-11-20
-categories: [技术]
+categories: [React]
 ---
 
 这几天在学习[React Native](http://www.reactnative.com/),觉得很屌,做了个"Hello World",拿出来和大家分享下

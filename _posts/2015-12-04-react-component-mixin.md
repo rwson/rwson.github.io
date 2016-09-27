@@ -2,7 +2,7 @@
 layout: post
 title: React组件的复合和mixin
 date: 2015-12-04
-categories: [技术]
+categories: [React]
 ---
 
 在传统的HTML中，元素是构成页面的基础单元。但在React中，组件是构建页面的基础单元。我们可以把React中的组件理解成混入了javaScript表达能力的HTML元素。在React中，一个组件就相当于一个javaScript函数，它接收props和state作为参数，并且输入渲染好的DOM，组件的意义在于用来呈现和表达应用中的某一部分数据。

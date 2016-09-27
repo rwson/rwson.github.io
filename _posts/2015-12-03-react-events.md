@@ -2,7 +2,7 @@
 layout: post
 title: React中的事件
 date: 2015-12-03
-categories: [技术]
+categories: [React]
 ---
 
 对于用户界面来说，展示最多只占整体因素的一半，另一半则是用户输入，即通过javaScript来完成人机交互。

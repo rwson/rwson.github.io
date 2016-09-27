@@ -2,7 +2,7 @@
 layout: post
 title: 我理解的apply和call
 date: 2015-02-24
-categories: [技术]
+categories: [javascript]
 ---
 
 方法定义:

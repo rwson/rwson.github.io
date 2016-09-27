@@ -1,8 +1,8 @@
 ---
 layout: post
-title: javaScript接口
+title: javascript接口
 date: 2015-05-27
-categories: [技术]
+categories: [javascript]
 ---
 
 接口:

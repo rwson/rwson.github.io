@@ -1,8 +1,8 @@
 ---
 layout: post
-title: javaScript中arguments对象
+title: javascript中arguments对象
 date: 2015-03-07
-categories: [技术]
+categories: [javascript]
 ---
 
 arguments对象    

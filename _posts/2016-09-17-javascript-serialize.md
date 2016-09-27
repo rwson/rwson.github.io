@@ -2,7 +2,7 @@
 layout: post
 title: javascript中的序列化
 date: 2016-09-17
-categories: [技术]
+categories: [javascript]
 ---
 在用jQuery发送ajax(POST)请求的时候,最常见的提交方式就是"application/x-www-form-urlencoded",通常都会传入一个data属性作为传输给后端的数据,在ajax发送之前,那么我们直接如果直接传入把这个对象传递给后端,后端就不能对该对象进行解析,因为对象会被转成字符串"[object Object]",所以就需要我们对该对象进行url编码,并且转换成字符串,再传给后端。
 
