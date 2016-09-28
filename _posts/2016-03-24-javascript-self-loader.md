@@ -10,6 +10,7 @@ categories: [javascript]
 - 传统
 
 
+
     //  绩效奖金
     function performanceCoefficient(salary) {
         return salary * 0.2;
