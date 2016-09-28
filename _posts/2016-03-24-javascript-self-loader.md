@@ -9,7 +9,8 @@ categories: [javascript]
 
 - 传统
 
-    ```
+
+```
     //  绩效奖金
     function performanceCoefficient(salary) {
         return salary * 0.2;
@@ -34,12 +35,12 @@ categories: [javascript]
     finalSalary = finalSalary - incomeTax(finalSalary - companyReserve(finalSalary));
     
     console.log(finalSalary);
-    ```
+```
 
 
 - 类模块化
 
-    ```
+```
     //  全局变量,存储已经声明的模块
     var modules = {};
     
@@ -114,7 +115,7 @@ categories: [javascript]
     });
     
     loader("salary");
-    ```
+```
 
 
 上面两段代码都完成了相同的功能,但是在写法上差别很大,称第二种方式是类模块化的原因是现在的代码还没有完全实现模块化,所有的模块都在同一文件,没有实现完全解耦,这时就需要加载器(require)来帮我们完成各功能模块分文件的目的,模块化的优势不言而喻,后面介绍一步步实现一个符合AMD规范的加载器。
