@@ -1,7 +1,7 @@
 ---
 layout: post
 title: javascript闭包
-date: 2015-07-10
+date: 2015-07-18
 categories: [javascript]
 ---
 
@@ -168,4 +168,34 @@ javascript在作用域和其他大多数语言不同, 没有局部变量的的�
     
 上面我们就完成了一个简单的继承和私有成员属性的模拟。
 
-关于闭包的应用例子还有很多,后面介绍。
+关于闭包的应用例子还有很多,比如我们用js绑定事件的时候:
+
+
+    var listNodes = document.querySelectorAll("li");
+    //  假设网页中有5个li元素
+    
+
+    for(var i = 0, len = listNodes.length; i < len; i ++) {
+        listNodes[i].onclick = function() {
+            //  do something
+            console.log(i);
+        }
+    }
+
+此时无论我们点击哪个元素,最后都会打印出5来,因为我们点击的时候循环已经结束,i的值变成了5,我们可以用闭包来解决这个问题:
+    
+    
+
+    var listNodes = document.querySelectorAll("li");
+    //  假设网页中有5个li元素
+
+    for(var i = 0, len = listNodes.length; i < len; i ++) {
+        listNodes[i].onclick = (function(index){
+            return function() {
+                //  do something
+                console.log(index);
+            };
+        })(i);
+    }
+
+用上面的方法,我们就可以正确的打印出i的值。
