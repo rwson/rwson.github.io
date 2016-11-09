@@ -2,7 +2,7 @@
 layout: post
 title: javascript工厂模式
 date: 2015-05-31
-categories: [javascript]
+categories: [javascript, 设计模式]
 ---
 
 工厂模式:

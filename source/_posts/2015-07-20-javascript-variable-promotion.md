@@ -2,7 +2,7 @@
 layout: post
 title: javascript变量提升
 date: 2015-07-20
-categories: [javascript]
+categories: [javascript, 变量提升]
 ---
 
 在日常开发中有时候可能会遇到下面的情况:

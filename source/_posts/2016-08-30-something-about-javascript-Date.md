@@ -2,7 +2,7 @@
 layout: post
 title: javascript中Date细节
 date: 2016-08-30
-categories: [javascript]
+categories: [javascript, Date]
 ---
 
 ##### Safri浏览器new Date("yyyy-mm-dd")返回invalid Date

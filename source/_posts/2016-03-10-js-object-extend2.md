@@ -2,7 +2,7 @@
 layout: post
 title: javascript实现继承之2
 date: 2016-03-10
-categories: [javascript]
+categories: [javascript, 继承]
 ---
 
 在前面的一篇文章[JavaScript实现继承](http://rwson.github.io/%E6%8A%80%E6%9C%AF/2015/05/26/js-object-extend.html)介绍过js中通过原型来继承的两种方法

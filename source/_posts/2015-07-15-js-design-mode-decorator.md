@@ -2,7 +2,7 @@
 layout: post
 title: javascript装饰者模式
 date: 2015-07-15
-categories: [javascript]
+categories: [javascript, 设计模式]
 ---
 
 js装饰者模式可以把一个对象(类/函数)透明地包装在另外一个对象上,完成对被装饰者添加一些新功能的作用。

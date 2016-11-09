@@ -2,7 +2,7 @@
 layout: post
 title: javascript接口
 date: 2015-05-27
-categories: [javascript]
+categories: [javascript, 接口]
 ---
 
 接口:

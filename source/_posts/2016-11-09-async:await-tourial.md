@@ -2,10 +2,10 @@
 layout: post
 title: async/await学习
 date: 2016-11-09
-categories: [javascript, ES6, async/await]
+categories: [javascript, ES7, async/await]
 ---
 
-在处理javascript中异步的时候,回调往往是最让人恶心的,之前介绍过用[Promise](http://123.207.98.169:81/2016/05/04/2016-05-04-es6-promise/)来处理异步的问题,但是即使用上了Promise,在处理回调上还是会有各种嵌套,今天介绍学习了async/await,由于在Nodejs中还未得到支持,所以需要借助一些npm包来实践,在这里用的是[asyncawait](https://github.com/yortus/asyncawait)。
+在处理javascript中异步的时候,回调往往是最让人恶心的,之前介绍过用[Promise](http://123.207.98.169:81/2016/05/04/2016-05-04-es6-promise/)来处理异步的问题,但是即使用上了Promise,在处理回调上还是会有各种嵌套,今天来介绍下ES7中的async/await,由于在Nodejs中还未得到支持,所以需要借助一些npm包来实践,在这里用的是[asyncawait](https://github.com/yortus/asyncawait)。
 
 先来个原生文件读取的例子:
 

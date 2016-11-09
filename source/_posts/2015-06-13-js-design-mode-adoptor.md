@@ -2,7 +2,7 @@
 layout: post
 title: javascript适配器模式
 date: 2015-06-13
-categories: [javascript]
+categories: [javascript, 设计模式]
 ---
 
 适配器模式:

@@ -2,7 +2,7 @@
 layout: post
 title: javascript门面模式
 date: 2015-06-21
-categories: [javascript]
+categories: [javascript, 设计模式]
 ---
 
 在javascript中，门面模式常常是开发人员最亲密的朋友。它是几乎所有javascript库的核心原则。通过创建一些使得方法让复杂系统变得更加简单易用,门面模式可以使库提供的工具更容易理解。

@@ -2,7 +2,7 @@
 layout: post
 title: javascript闭包
 date: 2015-07-18
-categories: [javascript]
+categories: [javascript, 闭包]
 ---
 
 本文讨论的javascript不包含ES6标准。

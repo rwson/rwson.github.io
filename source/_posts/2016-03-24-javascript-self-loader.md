@@ -2,7 +2,7 @@
 layout: post
 title: 实现模块化编程
 date: 2016-03-24
-categories: [javascript]
+categories: [javascript, 继承]
 ---
 
 先上个小例子(工资计算器):

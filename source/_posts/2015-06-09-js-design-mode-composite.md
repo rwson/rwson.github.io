@@ -2,7 +2,7 @@
 layout: post
 title: javascript组合模式
 date: 2015-06-09
-categories: [javascript]
+categories: [javascript, 设计模式]
 ---
 
 组合模式:

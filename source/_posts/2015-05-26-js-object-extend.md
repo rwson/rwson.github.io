@@ -2,7 +2,7 @@
 layout: post
 title: javascript实现继承
 date: 2015-05-26
-categories: [javascript]
+categories: [javascript, 继承]
 ---
 
 继承:

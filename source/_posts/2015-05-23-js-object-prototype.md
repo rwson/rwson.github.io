@@ -2,7 +2,7 @@
 layout: post
 title: javascript原型
 date: 2015-05-23
-categories: [javascript]
+categories: [javascript, 原型]
 ---
 
 javaScript原型:

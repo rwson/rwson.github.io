@@ -2,7 +2,7 @@
 layout: post
 title: javascript桥梁模式
 date: 2015-06-03
-categories: [javascript]
+categories: [javascript, 设计模式]
 ---
 
 桥模式:
