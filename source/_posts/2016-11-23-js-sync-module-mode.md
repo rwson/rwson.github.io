@@ -1,7 +1,7 @@
 ---
 layout: post
 title: javascript模块化编程-同步模式
-date: 2016-11-11
+date: 2016-11-29
 categories: [javascript, 模块化]
 ---
 
