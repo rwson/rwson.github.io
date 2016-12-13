@@ -121,12 +121,12 @@ categories: [javascript, Shadow DOM, Web Component]
             }
         }
 
-}
+    }
 
     //  调用 customElements.define定义自定义元素,第一个参数自定义元素名,第二个参数是HTMLElement的一个子类
     customElements.define("custom-progress-bar", CustomProgressBar);
 
-    window.onload = function () {
+    window.onload = () => {
     
         let customProgressBar = document.querySelector("custom-progress-bar"),
             progress;
@@ -135,7 +135,7 @@ categories: [javascript, Shadow DOM, Web Component]
          * 给进度条组件绑定onclick事件,每次点击进度加10
          * @param e
          */
-        customProgressBar.onclick = function (e) {
+        customProgressBar.onclick = (e) => {
             progress = Number(this.progress);
             if(progress >= 100) {
                 progress = 0;
@@ -148,6 +148,7 @@ categories: [javascript, Shadow DOM, Web Component]
     };
 
     //  HTML
+    //  现在我们可以通过new CustomProgressBar()或者custom-progress-bar来使用自定义元素了
     
     <custom-progress-bar></custom-progress-bar>
     
@@ -159,8 +160,8 @@ categories: [javascript, Shadow DOM, Web Component]
 
 最后渲染出来是如下的布局结构:
 
-![](imgs/shadow-dom-rendered.png)
+![](/imgs/shadow-dom-rendered.png)
 
 一起看看实际的效果:
 
-![](imgs/shadow-dom-gif.gif)
+![](/imgs/shadow-dom-gif.gif)
