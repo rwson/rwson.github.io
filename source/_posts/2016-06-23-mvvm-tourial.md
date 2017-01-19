@@ -424,4 +424,4 @@ categories: [javascript, MVVM]
     
 好了,到这里我们的MVVM入口和指令都全部实现好了,下面一起看下效果吧:
 
-![运行效果](/imgs/shadow-dom-rendered.png)
+![运行效果](/imgs/mvvm-run.gif)
