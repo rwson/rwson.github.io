@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html>
+  <!-- Html Head Tag-->
+  <head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="rwson">
+  <!-- Open Graph Data -->
+  <meta property="og:title" content="React组件的复合和mixin"/>
+  <meta property="og:description" content="" />
+  <meta property="og:site_name" content="小宋"/>
+  <meta property="og:type" content="article" />
+  <meta property="og:image" content="http://www.rwson.xyzundefined"/>
+  
+    <link rel="alternate" href="/atom.xml" title="小宋" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+
+  <!-- Site Title -->
+  <title>小宋</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <!-- Custom CSS -->
+  
+  <link rel="stylesheet" href="/css/style.light.css">
+
+  <!-- Google Analytics -->
+  
+
+</head>
+
+  <body>
+    <!-- Page Header -->
+
+
+<header class="site-header header-background" style="background-image: url(/img/banner.jpeg)">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="page-title with-background-image">
+          <p class="title">React组件的复合和mixin</p>
+          <p class="subtitle"></p>
+        </div>
+        <div class="site-menu with-background-image">
+          <ul>
+            
+              <li>
+                <a href="/">
+                  
+                  Home
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="/archives">
+                  
+                  Archives
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="https://github.com/rwson">
+                  
+                  Github
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="mailto:862121312@qq.com">
+                  
+                  Email
+                  
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<article>
+  <div class="container typo">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-info text-muted">
+          
+            <!-- Author -->
+            <span class="author info">By rwson</span>
+          
+          <!-- Date -->
+          <span class="date-time info">On
+            <span class="date">2015-12-04</span>
+          </span>
+          
+          <!--  Categories  -->
+            <span class="categories info">Under 
+
+<a href="/categories/React/">React</a>
+</span>
+          
+        </div>
+        <!-- Tags -->
+        
+        <!-- Post Main Content -->
+        <div class="post-content">
+          <p>在传统的HTML中，元素是构成页面的基础单元。但在React中，组件是构建页面的基础单元。我们可以把React中的组件理解成混入了javaScript表达能力的HTML元素。在React中，一个组件就相当于一个javaScript函数，它接收props和state作为参数，并且输入渲染好的DOM，组件的意义在于用来呈现和表达应用中的某一部分数据。</p>
+<h4 id="组件的复合"><a href="#组件的复合" class="headerlink" title="组件的复合"></a>组件的复合</h4><p>我们都知道，在React中声明一个组件用React.createClass的方法，但是React并没有给我们提供一个叫React.extendClass的方法让我们来拓展或继承已经声明好的组件。我们可以通过组件复合的方法来构造一个新的组件。</p>
+<p>下面是一个组件复用的例子：</p>
+<p>我们现在要渲染一个选择题组件MultipeChoice，包含多个选项RadioInput。</p>
+<blockquote>
+<h5 id="选项组件"><a href="#选项组件" class="headerlink" title="选项组件"></a>选项组件</h5></blockquote>
+<p>先来组装HTML：</p>
+<pre><code>var RadioInput = React.createClass({
+    render:function(){
+        return (
+            &lt;div className=&quot;redio&quot;&gt;
+                &lt;label&gt;
+                    &lt;input type=&quot;radio&quot; value=&quot;1&quot; /&gt;
+                    选项说明
+                &lt;/label&gt;
+            &lt;/div&gt;
+        );
+    }
+});
+</code></pre><p>现在一个选项的HTML就组件完成了，但是现在内容和选项的值都是写死的，所以我们需要给这个组件添加一些属性，下面继续完善这个组件：</p>
+<pre><code>var RadioInput = React.createClass({
+
+    //  propTypes给组件增加一个说明,标明每个prop属性的类型和是否必填
+    propTypes:{
+        id:React.PropTypes.string,
+        name:React.PropTypes.string.isRequired,
+        label:React.PropTypes.string.isRequired,
+        value:React.PropTypes.string.isRequired,
+        checkd:React.PropTypes.bool
+    },
+
+    //  getDefauleProps可以给一些非必填属性指定默认值
+    getDefauleProps:function(){
+        return {
+            id:null,
+            checked:false
+        };
+    }
+});
+</code></pre><p>现在组件有了相应的props了，我们的组件需要随着时间而变化的数据，id对于每个实例来说相当重要，以及用户能随时更新的checked值，现在需要定义一些初始状态。</p>
+<pre><code>var RadioInput = React.createClass({
+    ...
+    getInitialState:function(){
+        var id = this.props.id || (new Date().getTime()).toString(32);
+        //  如果没传id,就拿当前时间戳生成一个
+        return {
+            id:id,
+            name:id,
+            checked:!!this.state.checked
+            //  强转成布尔值
+        };
+    },
+
+    //  修改render方法,根据state和props重新组装HTML
+    render:function(){
+        return (
+            &lt;div className=&quot;redio&quot;&gt;
+                &lt;label&gt;
+                    &lt;input type=&quot;radio&quot; 
+                        id={this.state.id}
+                        name={this.state.name}
+                        value={this.props.value}
+                        checked={this.state.checked}
+                    /&gt;
+                    {this.props.label}
+                &lt;/label&gt;
+            &lt;/div&gt;
+        );
+    }
+});
+</code></pre><p>到此，就算完成一个选项组件的构建。</p>
+<blockquote>
+<h5 id="父组件的构建及整合到父组件"><a href="#父组件的构建及整合到父组件" class="headerlink" title="父组件的构建及整合到父组件"></a>父组件的构建及整合到父组件</h5></blockquote>
+<p>现在来构建父组件MultipeChoice</p>
+<pre><code>var MultipeChoice = React.createClass({
+
+    //  指定一些数据类型和必须性
+    propTypes:{
+        value:React.PropTypes.string,
+        choices:React.PropTypes.array.isRequired,
+        onCompleted:React.PropTypes.func.isRequired
+    },
+
+    getInitialState:function(){
+        return {
+            id:uniqueId(&quot;mutil-choice-&quot;),
+            value:this.props.value
+        };
+    },
+
+    render:function(){
+        return (
+            &lt;div className=&quot;form-group&quot;&gt;
+                &lt;label className=&quot;item-label&quot; htmlFor={this.state.id}&gt;
+                    {this.props.label}
+                &lt;/label&gt;
+                &lt;div className=&quot;item-content&quot;&gt;
+                    &lt;RadioInput ... /&gt;
+                    ...
+                    &lt;RadioInput ... /&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        );
+    }
+});
+</code></pre><p>我们假设一个RadioInput就是一个选项组件，为了生成他们，我们需要对选项列表进行映射，把每一项都转换成一个组件。</p>
+<pre><code>var MultipeChoice = React.createClass({
+    ...
+
+    //  遍历属性中的choices数组,返回选项列表
+    renderChoices:function(){
+        return this.props.choices.map(function(item,index){
+            return RadioInput({
+                id:&quot;choice-&quot; + index,
+                name:this.state.id,
+                label:choice,
+                value:choice,
+                checked:this.state.value === choice
+            });
+        }).bind(this);
+    },
+
+    render:function(){
+        return (
+            &lt;div className=&quot;form-group&quot;&gt;
+                &lt;label className=&quot;item-label&quot; htmlFor={this.state.id}&gt;
+                    {this.props.label}
+                &lt;/label&gt;
+                &lt;div className=&quot;item-content&quot;&gt;
+                    {this.renderChoices()}
+                &lt;/div&gt;
+            &lt;/div&gt;
+        );
+    }
+});
+</code></pre><p>现在使用这个组件就可以像下面这样：</p>
+<pre><code>&lt;MultipeChoice choice={arrOfChoices} ... /&gt;
+</code></pre><p>现在又有另外一个问题，就是父子组件之间怎么通信的一个问题，放在我们现在的例子来说，子组件状态变化以后父组件不知道。</p>
+<blockquote>
+<h5 id="父子组件之间的关系"><a href="#父子组件之间的关系" class="headerlink" title="父子组件之间的关系"></a>父子组件之间的关系</h5></blockquote>
+<p>父子组件通信最简单的方式就是使用props，父组件通过props传递一个回调方法，子组件在需要时进行调用。</p>
+<p>现在我们继续改造…</p>
+<p>先来对父组件进行改造：</p>
+<pre><code>var MultipeChoice = React.createClass({
+    ...
+
+    //  定义的handleChanged回调方法，供子组件状态变化后调用
+    handleChanged:function(value){
+        this.setState({
+            value:value
+        });
+        this.props.onCompleted(value);
+    },
+
+    renderChoices:function(){
+        return this.props.choices.map(function(item,index){
+            return RadioInput({
+                ...
+                onChanged:this.handleChanged
+            });
+        }).bind(this);
+    },
+
+    ...
+});
+</code></pre><p>再来对子组件进行改造：</p>
+<pre><code>var RadioInput = React.createClass({
+    ...
+
+    propTypes:{
+        ...
+        onChanged:React.PropTypes.bool
+    },
+
+    getInitialState:function(){
+        var id = this.props.id || (new Date().getTime()).toString(32);
+        //  如果没传id,就拿当前时间戳生成一个
+        return {
+            id:id,
+            name:id,
+            checked:!!this.state.checked
+            //  强转成布尔值
+        };
+    },
+
+    handleChanged:function(ev){
+        var checked = ev.target.checked;
+        this.setState({
+            checked:checked
+        });
+        if(checked){
+            this.props.onChanged(this.props.value);
+        }
+    },
+
+    //  修改render方法,根据state和props重新组装HTML
+    render:function(){
+        return (
+            &lt;div className=&quot;redio&quot;&gt;
+                &lt;label htmlFor={this.state.id}&gt;
+                    &lt;input type=&quot;radio&quot; 
+                    onChange={this.handleChanged}
+                    /&gt;
+                    {this.props.label}
+                &lt;/label&gt;
+            &lt;/div&gt;
+        );
+    }
+});
+</code></pre><p>以上就是我们一个组件复合的例子。</p>
+<h4 id="mixin"><a href="#mixin" class="headerlink" title="mixin"></a>mixin</h4><p>mixin允许我们定义可以在多个组件中公用的方法。</p>
+<blockquote>
+<h5 id="什么是mixin"><a href="#什么是mixin" class="headerlink" title="什么是mixin"></a>什么是mixin</h5></blockquote>
+<p>我们先来看一个来自React主页上的定时器组件的例子：</p>
+<pre><code>var Timer = React.createClass({
+    getInitialState:function(){
+        return {
+            secondElapsed:0
+        };
+    },
+    tick:function(){
+        this.setState({
+            secondElapsed:this.state.secondElapsed + 1
+        });
+    },
+    componentWillUnmount:function(){
+        clearInterval(this.interval);
+    },
+    componentDidMount:function(){
+        this.interval = setInterval(this.tick,1000);
+    },
+    render:function(){
+        return (
+            &lt;div&gt;
+                second Elapsed:{this.state.secondElapsed}
+            &lt;/div&gt;
+        );
+    }
+});
+</code></pre><p>上面的代码看起来还不错，但是如果我们有多个组件要用定时器时，这时候就体现出一个代码复用性的问题，这时候就到mixin大显神威的时候了。现在来改造一个像下面一样的定时器组件：</p>
+<pre><code>var IntervalMixin = function(interval){
+    return {
+        componentDidMount:function(){
+            this._interval = setInterval(this.onTick,interval);
+        },
+        componentWillUnmount:function(){
+            clearInterval(this._interval);
+        }
+    };
+};
+
+var Timer = React.createClass({
+    mixins:[
+        IntervalMixin(1000)
+    ],
+    getInitialState:function(){
+        return {
+            secondElapsed:0
+        };
+    },
+    onTick:function(){
+        this.setState({
+            secondElapsed:this.state.secondElapsed + 1
+        });
+    },
+    render:function(){
+        return (
+            &lt;div&gt;
+                second Elapsed:{this.state.secondElapsed}
+            &lt;/div&gt;
+        );
+    }
+});
+</code></pre><p>把刚才的改进了，并且可以传入相关的时间间隔</p>
+<p>mixin，可以理解成就是把一个 mixin 对象上的方法都混合到了另一个组件上，和 jQuery中$.extend 方法的作用相同。</p>
+<p>mixin和组件中有关生命周期的方法是不冲突的，反而会被合并，也就是说他们都会被执行。</p>
+<pre><code>var Component = React.createClass({
+    mixins:[
+        {
+            getInitialState:function(){
+                return {a:1};
+            }
+        }
+    ],
+    getInitialState:function(){
+        return {b:2};
+    }
+});
+</code></pre><p>就上上面的例子，我们在mixin中实现了一个getInitialState，同样在组件类中也实现了一个getInitialState，得到的初始state为{a:1,b:2}，如果组件类中的方法和mixin中的方法返回对象中有相同的键，React会给出一个警告。</p>
+<blockquote>
+<h5 id="mixin的相关执行顺序和作用"><a href="#mixin的相关执行顺序和作用" class="headerlink" title="mixin的相关执行顺序和作用"></a>mixin的相关执行顺序和作用</h5></blockquote>
+<p>以组件中的生命周期方法为例，比如componentDidMount，会按照mixin数组中的顺序进行调用，并且最终调用组件类中的componentDisMount。</p>
+<p>mixin是解决代码复用性最强大的工具之一，它能让我们只专注组件自身的逻辑。</p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+
+
+
+    <!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <p class="copyright text-muted">
+          Build By <a target="_blank" href="https://github.com/rwson">rwson</a>
+        <p class="copyright text-muted">
+          Powered By <a target="_blank" href="https://hexo.io/">Hexo.</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    <!-- After Footer Scripts -->
+<script src="/js/highlight.pack.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function(event) {
+    var codeBlocks = Array.prototype.slice.call(document.getElementsByTagName('pre'))
+    codeBlocks.forEach(function(block, index) {
+      hljs.highlightBlock(block);
+    });
+  });
+</script>
+
+  </body>
+</html>
+

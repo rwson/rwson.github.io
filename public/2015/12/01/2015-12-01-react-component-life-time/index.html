@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+  <!-- Html Head Tag-->
+  <head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="rwson">
+  <!-- Open Graph Data -->
+  <meta property="og:title" content="React组件生命周期"/>
+  <meta property="og:description" content="" />
+  <meta property="og:site_name" content="小宋"/>
+  <meta property="og:type" content="article" />
+  <meta property="og:image" content="http://www.rwson.xyzundefined"/>
+  
+    <link rel="alternate" href="/atom.xml" title="小宋" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+
+  <!-- Site Title -->
+  <title>小宋</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <!-- Custom CSS -->
+  
+  <link rel="stylesheet" href="/css/style.light.css">
+
+  <!-- Google Analytics -->
+  
+
+</head>
+
+  <body>
+    <!-- Page Header -->
+
+
+<header class="site-header header-background" style="background-image: url(/img/banner.jpeg)">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="page-title with-background-image">
+          <p class="title">React组件生命周期</p>
+          <p class="subtitle"></p>
+        </div>
+        <div class="site-menu with-background-image">
+          <ul>
+            
+              <li>
+                <a href="/">
+                  
+                  Home
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="/archives">
+                  
+                  Archives
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="https://github.com/rwson">
+                  
+                  Github
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="mailto:862121312@qq.com">
+                  
+                  Email
+                  
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<article>
+  <div class="container typo">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-info text-muted">
+          
+            <!-- Author -->
+            <span class="author info">By rwson</span>
+          
+          <!-- Date -->
+          <span class="date-time info">On
+            <span class="date">2015-12-01</span>
+          </span>
+          
+          <!--  Categories  -->
+            <span class="categories info">Under 
+
+<a href="/categories/React/">React</a>
+</span>
+          
+        </div>
+        <!-- Tags -->
+        
+        <!-- Post Main Content -->
+        <div class="post-content">
+          <p>在React的组件生命周期中，随着该组件的props活着state发生改变，对应的DOM也随着变换，一个组件对于特定的输入，它将返回一致的输出。</p>
+<p>在React中，对于每个组件都提供了相应的钩子去响应：</p>
+<ul>
+<li>创建时(实例化)</li>
+<li>存在期(活动期)</li>
+<li>销毁期</li>
+</ul>
+<hr>
+<h4 id="实例化"><a href="#实例化" class="headerlink" title="实例化"></a>实例化</h4><p>在React的一个组件被实例化时，将依次调用以下一些方法</p>
+<pre><code>getDefaultProps:
+</code></pre><p>对于某个组件类，该方法只会被调用一次。对于那些没有被父组件指定props属性的组件来说，该方法返回默认的props</p>
+<pre><code>getInitialState
+</code></pre><p>对于该组件的每个实例来说，该方法有且只能被调用一次，在这里，我们可以对每个组件的状态进行初始化，和getDefaultProps不同的是，getInitialState在每次被实例化时都会被调用(个人感觉这一点感觉和js面向对象中的构造方法和原型类似，getDefaultProps相当于一个原型，getInitialState相当于构造方法，然后所有实例都享有同一个原型)，由于getDefaultProps在该方法之前被调用，所以此时我们已经可以访问到this.props了</p>
+<pre><code>componentWillMount
+</code></pre><p>该方法在首次完成渲染之前被渲染，在这个方法里面，我们可以修改组件的一些state，需要注意的是，这是该组件完成实例化之前的最后一次修改</p>
+<pre><code>render
+</code></pre><p>渲染虚拟DOM，对应一个组件来说，render方法是唯一一个必须实现的，并且遵循以下特殊的几个规则：</p>
+<ol>
+<li>只能通过this.props和this.state来访问数据</li>
+<li>可以返回null，boolean值或者任何形式的组件</li>
+<li>只能出现一个顶级组件(不能返回多个一级标签并列)</li>
+</ol>
+<pre><code>componentDidMount
+</code></pre><p>组件被实例化完成(render执行成功)后调用，可以在该方法中用this.getDOMNode()来访问到该组件，在这个方法中，比如我们要运行我们自定义的一个jQuery插件时，就可以直接写在里面，但是如果React运行在服务端，该方法将不会被调用</p>
+<h4 id="活动期"><a href="#活动期" class="headerlink" title="活动期"></a>活动期</h4><p>随着组件的一些状态(比如鼠标点击、键盘输入等)发生改变，将依次调用以下一些方法</p>
+<pre><code>componentWillReciveProps
+</code></pre><p>在任意时刻，组件的props都可以通过父辈组件来修改，此时将调用该方法，我们可以在该方法对组件的state进行更新</p>
+<pre><code>showComponentUpdate
+</code></pre><p>当props或者state发生改变，我们可以在该方法中进行比较修改前和修改后的数据，返回一个boolean值，React会根据这个来判断是否需要重新进行渲染</p>
+<pre><code>componentWillUpdate
+</code></pre><p>和上一阶段的componentWillMount类似，只不过该方法是在重新进行渲染之前被调用</p>
+<pre><code>render
+</code></pre><p>重新渲染虚拟DOM</p>
+<pre><code>componentDidUpdate
+</code></pre><p>也和componentDidMount类似，只不过是在完成重新渲染之后被调用</p>
+<h4 id="销毁期"><a href="#销毁期" class="headerlink" title="销毁期"></a>销毁期</h4><p>最后该组件被使用完成，下面的方法将会给这个组件提供自身清理的机会</p>
+<pre><code>componentWillUnmount
+</code></pre><p>比如我们在该组件中设置了一个定时器，添加了某些事件绑定等等，该方法就负责把定时器清除，移除事件监听的</p>
+<p>以上就是React中一个组件的生命周期</p>
+<hr>
+<h4 id="反模式-把计算后的值赋值给state"><a href="#反模式-把计算后的值赋值给state" class="headerlink" title="反模式:把计算后的值赋值给state"></a>反模式:把计算后的值赋值给state</h4><p>在getInitialState方法中，我们可以访问到this.props，通过this.props来创建state就是一种反模式。<br>比如:在组件中,把当前事件转换成字符串格式，就只能在渲染时进行<br>反模式的写法是不恰当的</p>
+<p>反模式中的写法:</p>
+<pre><code>...
+getDefault:function(){
+    return {
+        &quot;date&quot;:new Date()
+    };
+},
+getInitialState:function(){
+    return {
+        &quot;day&quot;:this.props.getDay()
+    };
+},
+render:function(){
+    return &lt;div&gt;Day:{this.state.day}&lt;/div&gt;
+}
+...
+</code></pre><p>正常模式的写法</p>
+<pre><code>...
+getDefault:function(){
+    return {
+        &quot;date&quot;:new Date()
+    };
+},
+render:function(){
+    var day = this.props.date.getDay()；
+    return &lt;div&gt;Day:{day}&lt;/div&gt;
+}
+...
+</code></pre><p>好了，博客写完了，收工，睡觉！<img src="emoji/smile" width="18"></p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+
+
+
+    <!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <p class="copyright text-muted">
+          Build By <a target="_blank" href="https://github.com/rwson">rwson</a>
+        <p class="copyright text-muted">
+          Powered By <a target="_blank" href="https://hexo.io/">Hexo.</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    <!-- After Footer Scripts -->
+<script src="/js/highlight.pack.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function(event) {
+    var codeBlocks = Array.prototype.slice.call(document.getElementsByTagName('pre'))
+    codeBlocks.forEach(function(block, index) {
+      hljs.highlightBlock(block);
+    });
+  });
+</script>
+
+  </body>
+</html>
+

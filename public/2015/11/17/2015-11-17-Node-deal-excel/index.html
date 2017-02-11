@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+  <!-- Html Head Tag-->
+  <head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="rwson">
+  <!-- Open Graph Data -->
+  <meta property="og:title" content="NodeJs处理excel返回json"/>
+  <meta property="og:description" content="" />
+  <meta property="og:site_name" content="小宋"/>
+  <meta property="og:type" content="article" />
+  <meta property="og:image" content="http://www.rwson.xyzundefined"/>
+  
+    <link rel="alternate" href="/atom.xml" title="小宋" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+
+  <!-- Site Title -->
+  <title>小宋</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <!-- Custom CSS -->
+  
+  <link rel="stylesheet" href="/css/style.light.css">
+
+  <!-- Google Analytics -->
+  
+
+</head>
+
+  <body>
+    <!-- Page Header -->
+
+
+<header class="site-header header-background" style="background-image: url(/img/banner.jpeg)">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="page-title with-background-image">
+          <p class="title">NodeJs处理excel返回json</p>
+          <p class="subtitle"></p>
+        </div>
+        <div class="site-menu with-background-image">
+          <ul>
+            
+              <li>
+                <a href="/">
+                  
+                  Home
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="/archives">
+                  
+                  Archives
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="https://github.com/rwson">
+                  
+                  Github
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="mailto:862121312@qq.com">
+                  
+                  Email
+                  
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<article>
+  <div class="container typo">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-info text-muted">
+          
+            <!-- Author -->
+            <span class="author info">By rwson</span>
+          
+          <!-- Date -->
+          <span class="date-time info">On
+            <span class="date">2015-11-17</span>
+          </span>
+          
+          <!--  Categories  -->
+            <span class="categories info">Under 
+
+<a href="/categories/NodeJs/">NodeJs</a>
+</span>
+          
+        </div>
+        <!-- Tags -->
+        
+        <!-- Post Main Content -->
+        <div class="post-content">
+          <p>快3个月没写博客了，感觉好生疏。</p>
+<p>由于最近在做一个乐队投票活动，每个乐队都有几个预览图片，但是运营上传图片的时候没有考虑顺序问题，后端也没做类似于拖拽排序的功能，为了快速改出来，乐队预览图的url格式是”<a href="http://api.juhuaba.com/api/file/z2/图片id" target="_blank" rel="external">http://api.juhuaba.com/api/file/z2/图片id</a>“,<br>然后一想，前端可以根据指定的id的顺序来显示，然后运营那边就给了我一个excel表格，每个乐队的id和图片，然后，看了一眼excel表格，好几百条数据，感觉手动处理太烦，而且容易出错，所以就想搞个办法让程序来处理。</p>
+<p>先上一张excel的图</p>
+<p><img src="/imgs/excel-to-json.png" alt=""></p>
+<p>然后开始从网上找办法，很多都是说用一个”node-xlsx”的插件，但是我试了下，可能是excel表格的问题吧，报了个很奇怪的错，就放弃了。后来去npm上找到一个”xlsx-json”的插件，试了下，确实可以取得表格里的数据做为一个数组，每一项都有，只不过如果是空单元格或者被合并的单元格都会显示null,所以还是得自己处理下。</p>
+<p>首先肯定是执行”npm install xlsx-json”啦<br>然后这个插件需要有个配置文件，暂且叫task.json吧，下面是task.json中的内容。</p>
+<pre><code>[
+  {
+    &quot;input&quot;: &quot;data.xlsx&quot;,
+    &quot;sheet&quot;: &quot;Sheet1&quot;,
+    &quot;range&quot;: &quot;A1:C240&quot;,
+    &quot;raw&quot;: true,
+    &quot;output&quot;: &quot;data.json&quot;
+  }
+]
+//    该数组接受多个对象，每个对象的基本格式是上面那种
+//    input代表是哪个文件
+//    sheet代表一个工作簿
+//    range代表要转换的一个区域
+//    row代表逐行读取
+//    output代表输出到哪个文件
+</code></pre><p>下面是调用代码</p>
+<pre><code>var xlsx2json = require(&apos;xlsx-json&apos;);
+xlsx2json(task, function(err, jsonArr) {
+    if (err) {
+        console.error(err);
+        return;
+    }
+});
+</code></pre><p>虽然配置了这些参数，但是读取出来的不如人意，就像下面这样：</p>
+<p><img src="/imgs/excel-to-json2.png" alt=""></p>
+<p>然后就对转换出来数组的进行了处理，下面是完整代码，前台浏览器访问<a href="http://localhost:3000,直接返回json给前台" target="_blank" rel="external">http://localhost:3000,直接返回json给前台</a></p>
+<pre><code>var xlsx2json = require(&apos;xlsx-json&apos;),   //  加载xlsx-json模块
+    task = require(&apos;./task.json&apos;),      //  配置文件
+    express = require(&quot;express&quot;),
+    app = express(),
+    jsonData,                           //  临时变量,存储转转出来的数据
+    tmpObj = {},                        //  对象,循环时用
+    lastTmp = {},                       //  对象,循环用,存储每个乐队的完整对象
+    result = [];                        //  由完整乐队对象构成的数组
+xlsx2json(task, function (err, jsonArr) {
+    if (err) {
+        console.error(err);
+        return;
+    }
+    jsonData = jsonArr[0];
+    //  返回值为[[],[],[],[]]格式,所以拿第一个
+});
+
+for (var i = 1, len = jsonData.length; i &lt; len; i++) {
+    var str = jsonData[i].join(&quot;-&quot;);
+    jsonData[i] = str;
+}
+//  对转出来的数组进行遍历(从第二项,第一项是[&quot;name&quot;,&quot;id&quot;,&quot;pics&quot;],所以不需要转换),有的前面两项是null的数组就被转换成&quot;--第三项&quot;了
+
+for (var j = 1, lenj = jsonData.length; j &lt; lenj + 1; j++) {
+    //  同样从第二项开始遍历,这边多循环一次由于最后一项的原因(当然也可以不多循环,直接在for外面再做个push就好)
+
+    if (j == lenj) {
+        result.push(lastTmp);
+    }
+    //  到最后一项时,放到数组里面(此时最后一项已经没有了)
+
+    if (jsonData[j] &amp;&amp; !jsonData[j].match(/\-\-/g)) {
+        //  该项存在且不是前面两项为null的情况
+
+        if (lastTmp.hasOwnProperty(&quot;id&quot;)) {
+            result.push(lastTmp);
+        }
+        //  在&quot;第二轮&quot;循环时,把一个完整的乐队对象放到数组
+
+        tmpObj = {};
+        var spl = jsonData[j].split(&quot;-&quot;);
+        tmpObj = {
+            &quot;id&quot;: spl[1],
+            &quot;image&quot;: [
+                spl[2]
+            ]
+        };
+        //  给tmpObj指定id和image,其中image为数组
+
+    } else if (jsonData[j] &amp;&amp; jsonData[j].match(/\-\-/g).length) {
+        //  该项存在且前面两项为null的情况,就取最后一项
+
+        var tmpStr = jsonData[j].replace(&quot;--&quot;, &quot;&quot;);
+        if (tmpStr) {
+            tmpObj.image.push(jsonData[j].replace(&quot;--&quot;, &quot;&quot;));
+        }
+    }
+
+    lastTmp = tmpObj;
+    //  把每次循环得到的乐队对象做存储
+}
+
+app.get(&quot;/&quot;, function (req, res) {
+    //  配置路由,请求http://localhost:3000时,输出转换好的数据
+    res.send(200, {
+        &quot;data&quot;: result
+    });
+});
+
+app.listen(3000, function () {
+    console.log(&quot;success!&quot;);
+});
+</code></pre><p>最终返回的结果如下图所示:<br><img src="/imgs/excel-to-json3.png" alt=""></p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+
+
+
+    <!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <p class="copyright text-muted">
+          Build By <a target="_blank" href="https://github.com/rwson">rwson</a>
+        <p class="copyright text-muted">
+          Powered By <a target="_blank" href="https://hexo.io/">Hexo.</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    <!-- After Footer Scripts -->
+<script src="/js/highlight.pack.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function(event) {
+    var codeBlocks = Array.prototype.slice.call(document.getElementsByTagName('pre'))
+    codeBlocks.forEach(function(block, index) {
+      hljs.highlightBlock(block);
+    });
+  });
+</script>
+
+  </body>
+</html>
+

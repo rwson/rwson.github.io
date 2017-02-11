@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+  <!-- Html Head Tag-->
+  <head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="rwson">
+  <!-- Open Graph Data -->
+  <meta property="og:title" content="React中的数据流"/>
+  <meta property="og:description" content="" />
+  <meta property="og:site_name" content="小宋"/>
+  <meta property="og:type" content="article" />
+  <meta property="og:image" content="http://www.rwson.xyzundefined"/>
+  
+    <link rel="alternate" href="/atom.xml" title="小宋" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+
+  <!-- Site Title -->
+  <title>小宋</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <!-- Custom CSS -->
+  
+  <link rel="stylesheet" href="/css/style.light.css">
+
+  <!-- Google Analytics -->
+  
+
+</head>
+
+  <body>
+    <!-- Page Header -->
+
+
+<header class="site-header header-background" style="background-image: url(/img/banner.jpeg)">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="page-title with-background-image">
+          <p class="title">React中的数据流</p>
+          <p class="subtitle"></p>
+        </div>
+        <div class="site-menu with-background-image">
+          <ul>
+            
+              <li>
+                <a href="/">
+                  
+                  Home
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="/archives">
+                  
+                  Archives
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="https://github.com/rwson">
+                  
+                  Github
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="mailto:862121312@qq.com">
+                  
+                  Email
+                  
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<article>
+  <div class="container typo">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-info text-muted">
+          
+            <!-- Author -->
+            <span class="author info">By rwson</span>
+          
+          <!-- Date -->
+          <span class="date-time info">On
+            <span class="date">2015-12-02</span>
+          </span>
+          
+          <!--  Categories  -->
+            <span class="categories info">Under 
+
+<a href="/categories/React/">React</a>
+</span>
+          
+        </div>
+        <!-- Tags -->
+        
+        <!-- Post Main Content -->
+        <div class="post-content">
+          <p>昨天学习完组件的生命周期，今天学习学习React中的数据流。</p>
+<p>在React中，数据流是单向的(由父节点传递到子节点)，因此组件变得简单且易于把握，它们只需要从父节点中获取props来渲染即可，某个组件顶层的props发生改变，React会递归遍历整个组件树，并且重新渲染使用这个属性的组件。</p>
+<p>在React组件内部，还具有自己的状态，但是只能在组件内部进行修改。</p>
+<h4 id="React中的props"><a href="#React中的props" class="headerlink" title="React中的props:"></a>React中的props:</h4><p>props就是properties的缩写，接收任意类型的数据。</p>
+<p>设置组件的props有两种方法:</p>
+<ol>
+<li><p>可以在挂载组件的时候设置</p>
+<pre><code>var surveys = [
+    {
+        &quot;title&quot;:&quot;some value&quot;
+    }
+];
+&lt;ListSurveys surveys={surveys} /&gt;
+</code></pre></li>
+<li><p>或者调用组件实例的setProps方法</p>
+<pre><code>var surveys = [
+    {
+        &quot;title&quot;:&quot;some value&quot;
+    }
+];
+var listSurveys = React.render(&lt;ListSurveys/&gt;,document.body);
+listSurveys.setProps({&quot;surveys&quot;:surveys});
+</code></pre></li>
+</ol>
+<p>需要注意的是，只能在子组件或者组件树外面调用setProps方法，但是不能用this.setProps，如果非要这样，可以用state来代替。</p>
+<p>可以通过this.props来访问props，但是不能修改，组件不能对自己的props进行修改。</p>
+<p>JSX中props的几种使用</p>
+<ol>
+<li><p>把props设置成字符串</p>
+<pre><code>&lt;a href=&quot;/a/b&quot;&gt;&lt;/a&gt;
+</code></pre></li>
+<li><p>用JSX中的展开语法({…obj})把props设置成一个对象</p>
+<pre><code>var aComponent = React.createClass({
+    render:function(){
+        var props = {
+                &quot;a&quot;:&quot;foo&quot;,
+                &quot;b&quot;:&quot;bar&quot;
+        };
+        return (
+            &lt;aComponent {...props} /&gt;
+        );
+    }
+});
+</code></pre></li>
+<li><p>绑定事件</p>
+<pre><code>var aComponent = React.createClass({
+    handleClick:function(){
+        ...
+    },
+    render:function(){
+        return (
+            &lt;button onClick={this.handleClick}&gt;啦啦啦&lt;/button&gt;
+        );
+    }
+});
+</code></pre></li>
+</ol>
+<p>我们给button添加了一个onClick属性,值为handleClick，当该按钮被点击，将执行handleClick方法。</p>
+<p>PropTypes:</p>
+<p>React中提供一个验证props的方式(通过在组件中定义一组对象)</p>
+<pre><code>var aCOmponent = React.createClass({
+    PropTypes:{
+        survey:React.PropTypes.shape({
+            id:React.PropTypes.number.isRequired
+        }).isRequired,
+        onClick:React.ProTypes.func
+    },
+    ...
+});
+</code></pre><p>在组件初始化时，如果指定的props和指定的类型不匹配，控制台会打出一个警告，如果不是必传的prop，可以不用isRequired，尽管这个不是必须的，但是有了它，我们将更能清楚的知道该组件对props的数据格式/必填性等要求。</p>
+<p>getDefaultProps方法:</p>
+<p>我们可以调用这个方法给某个组件添加props的默认值，但是这只能对非必填属性，需要注意的是，该方法在React.createClass(声明组件)的时候就被调用了，返回值将被缓存起来。</p>
+<pre><code>var aCOmponent = React.createClass({
+    getDefaultProps:function(){
+        return {
+            survey:[]
+        };
+    },
+    ...
+});
+</code></pre><h4 id="React中的state"><a href="#React中的state" class="headerlink" title="React中的state"></a>React中的state</h4><p>每个组件都有自己的state，state和props的区别在与state只能存在于组件内部(前面说props可以在组件外部通过实例方法进行修改，但是不能在在组件内部用this.setProps来修改，对应state来说，只能通过this.setState来进行修改)</p>
+<p>state可以用来确定一个元素视图的状态，比如我们在下面自定义一个dropDown组件:</p>
+<pre><code>var dropDown = React.createClass({
+    getInitialState:function(){
+        return {
+            showOptions:false
+        };
+    },
+    render:function(){
+        var options = &quot;&quot;;
+        if(this.state.showOptions){
+            options = &lt;ul className=&quot;option-item&quot;&gt;
+                &lt;li&gt;option-1&lt;/li&gt;
+                &lt;li&gt;option-2&lt;/li&gt;
+                &lt;li&gt;option-3&lt;/li&gt;
+                &lt;li&gt;option-4&lt;/li&gt;
+            &lt;/ul&gt;;
+        }
+        return (
+            &lt;div className=&quot;dropDown&quot;&gt;
+                &lt;label onClick={this.handleClick}&gt;select an option&lt;/label&gt;
+                {options}
+            &lt;/div&gt;
+        );
+    },
+    handleClick:function(){
+        this.setState({
+            showOptions:true
+        });
+    }
+});
+</code></pre><p>在本例中，state被用来判断是否显示下拉框中的可选项。</p>
+<p>在React中，state可以用this.setState来进行修改，也可以通过getInitialState方法提供一些默认值，只要setState被调用，render方法也会被调用，如果render的返回值有变化，DOM也会被更新，我们看到的当然也有变化。</p>
+<p>和props类似，我们只能通过this.state来访问state，但是决不能通过这种方式对state进行修改。</p>
+<hr>
+<p>好了，上面就是关于props和state的一个学习，下面我们介绍下props和state中应该放些什么东西</p>
+<p>props:数据源、计算后的结果、等等</p>
+<p>state:组件渲染时的必要数据(boolean值[控制显示隐藏等]、输入框值、等等)</p>
+<p>同时，不要想着把props的值赋值给state</p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+
+
+
+    <!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <p class="copyright text-muted">
+          Build By <a target="_blank" href="https://github.com/rwson">rwson</a>
+        <p class="copyright text-muted">
+          Powered By <a target="_blank" href="https://hexo.io/">Hexo.</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    <!-- After Footer Scripts -->
+<script src="/js/highlight.pack.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function(event) {
+    var codeBlocks = Array.prototype.slice.call(document.getElementsByTagName('pre'))
+    codeBlocks.forEach(function(block, index) {
+      hljs.highlightBlock(block);
+    });
+  });
+</script>
+
+  </body>
+</html>
+

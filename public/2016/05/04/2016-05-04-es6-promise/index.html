@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+  <!-- Html Head Tag-->
+  <head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="rwson">
+  <!-- Open Graph Data -->
+  <meta property="og:title" content="ES6中的Promise"/>
+  <meta property="og:description" content="" />
+  <meta property="og:site_name" content="小宋"/>
+  <meta property="og:type" content="article" />
+  <meta property="og:image" content="http://www.rwson.xyzundefined"/>
+  
+    <link rel="alternate" href="/atom.xml" title="小宋" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+
+  <!-- Site Title -->
+  <title>小宋</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <!-- Custom CSS -->
+  
+  <link rel="stylesheet" href="/css/style.light.css">
+
+  <!-- Google Analytics -->
+  
+
+</head>
+
+  <body>
+    <!-- Page Header -->
+
+
+<header class="site-header header-background" style="background-image: url(/img/banner.jpeg)">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="page-title with-background-image">
+          <p class="title">ES6中的Promise</p>
+          <p class="subtitle"></p>
+        </div>
+        <div class="site-menu with-background-image">
+          <ul>
+            
+              <li>
+                <a href="/">
+                  
+                  Home
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="/archives">
+                  
+                  Archives
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="https://github.com/rwson">
+                  
+                  Github
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="mailto:862121312@qq.com">
+                  
+                  Email
+                  
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<article>
+  <div class="container typo">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-info text-muted">
+          
+            <!-- Author -->
+            <span class="author info">By rwson</span>
+          
+          <!-- Date -->
+          <span class="date-time info">On
+            <span class="date">2016-05-04</span>
+          </span>
+          
+          <!--  Categories  -->
+            <span class="categories info">Under 
+
+<a href="/categories/ES6/">ES6</a> / <a href="/categories/ES6/Promise/">Promise</a>
+</span>
+          
+        </div>
+        <!-- Tags -->
+        
+        <!-- Post Main Content -->
+        <div class="post-content">
+          <p>在执行一些异步操作(典型的有JavaScript中的ajax/NodeJs中读取文件等等)的时候,我们不知道该操作什么时候完成,所以就需要在不同的时候写上回调,等到有返回的时候,再执行下一步操作,下面就用jQuery中的一个ajax来做示例:</p>
+<pre><code>$.ajax({
+    &quot;url&quot;: &quot;xxx&quot;,
+    &quot;type&quot;: &quot;GET&quot;,
+    &quot;dataType&quot;: &quot;&quot;JSON,
+    &quot;success&quot;: function(res){},
+    &quot;error&quot;: function(ex){
+        //  do some thing
+    }
+});
+</code></pre><p>最基础的一个ajax示例,当我们有多个ajax嵌套请求的时候,就中了所谓的”回调地狱”,类似于下面的写法:</p>
+<pre><code>$.ajax({
+    //  some configs
+    &quot;success&quot;: function(res){
+        $.ajax({
+            //  ...
+            &quot;success&quot;: function(res){
+                $.ajax({
+                    //  ...
+                    &quot;success&quot;:function(res){
+                        .
+                        .
+                        .
+                    }
+                });
+            }
+        });
+    }
+});
+</code></pre><p>一层套着一层,代码可读性很差,且不容易后期的维护</p>
+<p>这时候就需要一个比前者好的解决方案来解决该问题,ES6中的Promise一定程度上解决了该问题:</p>
+<p>我们可以利用Promise对ajax进行一层封装</p>
+<pre><code>function _ajax(url, method, args) {
+    let promise = new Promise((resolve, reject) =&gt; {
+
+        let client = new XMLHttpRequest();
+        let uri = url;
+
+        if (args &amp;&amp; (method == &quot;POST&quot; || method == &quot;PUT&quot;)) {
+            let argcount = 0;
+            uri += &quot;?&quot;;
+            for (var key in args) {
+                if (args.hasOwnProperty(key)) {
+                    if (argcount++) {
+                        uri += &apos;&amp;&apos;;
+                    }
+                    uri += encodeURIComponent(key) + &apos;=&apos; + encodeURIComponent(args[key]);
+                }
+            }
+        }
+
+        client.open(method, uri);
+        client.send();
+
+        client.onload = function() {
+            if (this.status &gt;= 200 &amp;&amp; this.status &lt; 300) {
+                resolve(this.response);
+            } else {
+                reject(this.statusText);
+            }
+        };
+        client.onerror = function() {
+            reject(this.statusText);
+        };
+
+    });
+
+    return promise;
+}
+
+let core = {
+
+    &quot;GET&quot;: function(args) {
+        return _ajax(url, &quot;GET&quot;, args);
+    },
+
+    &quot;POST&quot;: function(args) {
+        return _ajax(url, &quot;POST&quot;, args);
+    },
+
+    &quot;PUT&quot;: function(args) {
+        return _ajax(url, &quot;PUT&quot;, args);
+    },
+
+    &quot;DELETE&quot;: function(args) {
+        return _ajax(url, &quot;DELETE&quot;, args);
+    }
+
+};
+</code></pre><p>上面这段代码是JavaScript MDN上的代码(可能稍微有点改动),它对ajax进行了一层封装,经过这层封装,我们可以像下面这样写一些异步代码:</p>
+<pre><code>$http(&quot;xxx&quot;)
+.GET()
+.then((data) =&gt; {
+
+    //  do something
+
+    $http(&quot;xxx2&quot;)
+    .GET()
+    .then((data) =&gt; {
+
+        //  do something
+
+        $http(&quot;xxx3&quot;)
+        .GET({&quot;key&quot;,&quot;value&quot;})
+        .then((data) =&gt; {
+            //  do something...
+        })
+
+
+    },(ex) =&gt; {});
+
+})
+.catch((ex) =&gt; {});
+</code></pre><p>虽然还有嵌套,但是代码看起来已经舒服了很多。</p>
+<p>Promise是一个异步编程的抽象,它是一个返回值或抛出exception的代理对象,一般promise对象都有一个then方法,这个then方法是我们如何获得返回值(成功实现承诺的结果值,称为fulfillment)或抛出exception(拒绝承诺的理由,称为rejection)，then是用两个可选的回调作为参数,我们可以称为onFulfilled和OnRejected,也可以把OnRejected写在catch里面</p>
+<p>所以一个Promise一共有下面几个状态</p>
+<ol>
+<li>pending待承诺 - promise初始状态</li>
+<li>fulfilled实现承诺 - 一个承诺成功实现状态</li>
+<li>rejected拒绝承诺 - 一个承诺失败的状态</li>
+</ol>
+<p>再来个NodeJs中读取文件的例子:</p>
+<pre><code>function readFile(path) {
+    var fs = require(&quot;fs&quot;);
+    var prromise = new Promise((resolve, reject) =&gt; {
+        fs.readdir(path, (ex, files) =&gt; {
+            if (ex) {
+                return reject(ex);
+            }
+            return resolve(files);
+        });
+    });
+
+    return prromise;
+}
+
+readFile(config.avatarPath + &quot;1&quot;).then((files) =&gt; {
+    //  do some thing
+    console.log(files);
+}).catch((ex) =&gt; {
+    //  do something...
+    console.log(ex);
+});
+</code></pre><p>如果不用Promise和一些ES6的特性,上面的代码应该看起来是下面的这样子:</p>
+<pre><code>var fs = require(&quot;fs&quot;);
+fs.readdir(path, function (ex, files) {
+    if (ex) {
+        //  do something
+        return console.log();
+    }
+
+    //  do some thing
+    console.log(files);
+});
+</code></pre><p>代码量可能更少,但是陷入”回调地狱”的可能就更大了,在ES7中,又新增了async/await特性来针对异步操作的,后面介绍😄</p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+
+
+
+    <!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <p class="copyright text-muted">
+          Build By <a target="_blank" href="https://github.com/rwson">rwson</a>
+        <p class="copyright text-muted">
+          Powered By <a target="_blank" href="https://hexo.io/">Hexo.</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    <!-- After Footer Scripts -->
+<script src="/js/highlight.pack.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function(event) {
+    var codeBlocks = Array.prototype.slice.call(document.getElementsByTagName('pre'))
+    codeBlocks.forEach(function(block, index) {
+      hljs.highlightBlock(block);
+    });
+  });
+</script>
+
+  </body>
+</html>
+

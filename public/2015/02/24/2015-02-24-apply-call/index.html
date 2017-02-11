@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+  <!-- Html Head Tag-->
+  <head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="rwson">
+  <!-- Open Graph Data -->
+  <meta property="og:title" content="我理解的apply和call"/>
+  <meta property="og:description" content="" />
+  <meta property="og:site_name" content="小宋"/>
+  <meta property="og:type" content="article" />
+  <meta property="og:image" content="http://www.rwson.xyzundefined"/>
+  
+    <link rel="alternate" href="/atom.xml" title="小宋" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+
+  <!-- Site Title -->
+  <title>小宋</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <!-- Custom CSS -->
+  
+  <link rel="stylesheet" href="/css/style.light.css">
+
+  <!-- Google Analytics -->
+  
+
+</head>
+
+  <body>
+    <!-- Page Header -->
+
+
+<header class="site-header header-background" style="background-image: url(/img/banner.jpeg)">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="page-title with-background-image">
+          <p class="title">我理解的apply和call</p>
+          <p class="subtitle"></p>
+        </div>
+        <div class="site-menu with-background-image">
+          <ul>
+            
+              <li>
+                <a href="/">
+                  
+                  Home
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="/archives">
+                  
+                  Archives
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="https://github.com/rwson">
+                  
+                  Github
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="mailto:862121312@qq.com">
+                  
+                  Email
+                  
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<article>
+  <div class="container typo">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-info text-muted">
+          
+            <!-- Author -->
+            <span class="author info">By rwson</span>
+          
+          <!-- Date -->
+          <span class="date-time info">On
+            <span class="date">2015-02-24</span>
+          </span>
+          
+          <!--  Categories  -->
+            <span class="categories info">Under 
+
+<a href="/categories/javascript/">javascript</a> / <a href="/categories/javascript/call-apply/">call/apply</a>
+</span>
+          
+        </div>
+        <!-- Tags -->
+        
+        <!-- Post Main Content -->
+        <div class="post-content">
+          <p>方法定义:</p>
+<p>语法：call([this[,arg1[, arg2[,   [,.argN]]]]])</p>
+<p>定义：调用一个对象的一个方法，以另一个对象替换当前对象。</p>
+<p>说明：call 方法可以用来代替另一个对象调用一个方法。call 方法可将一个函数的对象上下文从初始的上下文改变为由 this 指定的新对象。如果没有提供 this 参数，那么 Global 对象被用作 this。</p>
+<p>语法：apply([this[,argArray]])</p>
+<p>定义：应用某一对象的一个方法，用另一个对象替换当前对象。</p>
+<p>说明：如果 argArray 不是一个有效的数组或者不是 arguments 对象，那么将导致一个 TypeError。如果没有提供 argArray 和 this 任何一个参数，那么 Global 对象将被用作 this， 并且无法被传递任何参数。</p>
+<p>两者区别微乎其微(除了调用对象传的参数一致，apply传入的参数是逐个传入，而apply是通过一个数组传的)</p>
+<p>示例:</p>
+<p>//  做绑定参数之用</p>
+<pre><code>function sum(x,y){
+    return x + y;
+}
+
+function call1(num1,num2){
+    return sum.call(this,num1,num2);
+}
+//  call调用sum
+
+function apply1(num1,num2){
+    return sum.apply(this,[num1,num2]);
+}
+//  apply调用sum
+
+console.log(call1(10,20));
+console.log(apply1(16,20));
+</code></pre><p>//  扩充作用域，对象和方法不需要有任何关系</p>
+<pre><code>window.color = &quot;red&quot;;
+
+var obj = {
+    &quot;color&quot;:&quot;blue&quot;
+};
+
+function showColor(){
+    console.log(this.color);
+}
+
+showColor.call(this);
+
+showColor.call(obj);
+//  通过指定调用者来区分作用域
+</code></pre><p>//  实现继承</p>
+<pre><code>function obj(name){
+    this.name = name;
+    this.showName = function(){
+        console.log(this.name);
+    }
+}
+// obj对象
+
+function Cat(name){
+    obj.call(this, name);
+    // 继承obj对象
+}
+
+var cat = new Cat(&quot;A Cat&quot;);
+cat.showName();
+</code></pre><p>//  模拟实现call方法</p>
+<pre><code>function test1(a,b){
+    return a + b;
+}
+//  定义普通的方法
+
+function Obj(x,y){
+    this.x = x;
+    this.y = y;
+    //  指定Obj的属性x和y就是传入的x和y
+    return x * y;
+}
+//  定义一个对象
+
+var o = new Obj(10,20);
+//  实例化一个Obj对象
+
+console.log(test1.call(o,o.x, o.y));
+
+o.method = test1;
+//  实例化对象的临时变量，用于接受调用者
+console.log(o.method(o.x, o.y));
+delete  o.method;
+//  调用完以后删除临时变量
+</code></pre><p>//  此外，也可以用来判断类型</p>
+<pre><code>console.log(Object.prototype.toString.apply(o));
+console.log(Object.prototype.toString.call(o));
+</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+
+
+
+    <!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <p class="copyright text-muted">
+          Build By <a target="_blank" href="https://github.com/rwson">rwson</a>
+        <p class="copyright text-muted">
+          Powered By <a target="_blank" href="https://hexo.io/">Hexo.</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    <!-- After Footer Scripts -->
+<script src="/js/highlight.pack.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function(event) {
+    var codeBlocks = Array.prototype.slice.call(document.getElementsByTagName('pre'))
+    codeBlocks.forEach(function(block, index) {
+      hljs.highlightBlock(block);
+    });
+  });
+</script>
+
+  </body>
+</html>
+

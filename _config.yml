@@ -68,7 +68,7 @@ theme: aero-dual
 
 # Deployment
 ## Docs: https://hexo.io/docs/deployment.html
-deploy:
+deployment:
 type: git
 repo: git@github.com:rwson/rwson.github.io.git
 branch: master

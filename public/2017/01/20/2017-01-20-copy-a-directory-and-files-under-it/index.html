@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+  <!-- Html Head Tag-->
+  <head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="rwson">
+  <!-- Open Graph Data -->
+  <meta property="og:title" content="实现一个拷贝文件夹以及文件夹下所有文件的方法"/>
+  <meta property="og:description" content="" />
+  <meta property="og:site_name" content="小宋"/>
+  <meta property="og:type" content="article" />
+  <meta property="og:image" content="http://www.rwson.xyzundefined"/>
+  
+    <link rel="alternate" href="/atom.xml" title="小宋" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+
+  <!-- Site Title -->
+  <title>小宋</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <!-- Custom CSS -->
+  
+  <link rel="stylesheet" href="/css/style.light.css">
+
+  <!-- Google Analytics -->
+  
+
+</head>
+
+  <body>
+    <!-- Page Header -->
+
+
+<header class="site-header header-background" style="background-image: url(/img/banner.jpeg)">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="page-title with-background-image">
+          <p class="title">实现一个拷贝文件夹以及文件夹下所有文件的方法</p>
+          <p class="subtitle"></p>
+        </div>
+        <div class="site-menu with-background-image">
+          <ul>
+            
+              <li>
+                <a href="/">
+                  
+                  Home
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="/archives">
+                  
+                  Archives
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="https://github.com/rwson">
+                  
+                  Github
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="mailto:862121312@qq.com">
+                  
+                  Email
+                  
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<article>
+  <div class="container typo">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-info text-muted">
+          
+            <!-- Author -->
+            <span class="author info">By rwson</span>
+          
+          <!-- Date -->
+          <span class="date-time info">On
+            <span class="date">2017-01-20</span>
+          </span>
+          
+          <!--  Categories  -->
+            <span class="categories info">Under 
+
+<a href="/categories/nodejs/">nodejs</a> / <a href="/categories/nodejs/文件操作/">文件操作</a>
+</span>
+          
+        </div>
+        <!-- Tags -->
+        
+        <!-- Post Main Content -->
+        <div class="post-content">
+          <p>实现这个方法依赖了<a href="https://www.npmjs.com/package/fs-extra" target="_blank" rel="external">fs-extra</a>模块,实现目的是为了一个方法拷贝所有当前目录下所有文件,具体实现如下:</p>
+<pre><code>let fs = require(&quot;fs-extra&quot;);
+
+/**
+ * 批量拷贝文件
+ * @param src           源目录          String
+ * @param target        目标目录        String
+ * @param filetypes     文件类型        RegExp
+ * @param ignorefiles   忽略文件列表    Array
+ **/
+fs.copyAllFiles = (src, target, filetypes, ignorefiles) =&gt; {
+    let argus = arguments,
+        readSrc = src,
+        targetSrc = target,
+        fileSrc, targeFileSrc;
+
+    fs.readdir(readSrc, (ex, files) =&gt; {
+        if (files.length) {
+            files.forEach((file) =&gt; {
+
+                //  当前文件不在忽略列表中
+                if (!(~ignoreFiles.indexOf(file))) {
+                    fileSrc = path.resolve(readSrc, file);
+                    if (filetypes.test(file)) {
+                        targeFileSrc = path.resolve(targetSrc, file);
+                        fs.copySync(fileSrc, targeFileSrc);
+                    } else {
+                        targeFileSrc = path.resolve(targetSrc, file);
+                        fs.copySync(fileSrc, targeFileSrc);
+                        //  递归拷贝下一级目录
+                        fs.copyAllFiles.call(fileSrc, targeFileSrc, filetypes, ignorefiles);
+                    }
+                }
+            });
+        }
+    });
+};
+</code></pre><p>上面的就是要实现的方法,调用的方法就看起来像下面的样子:</p>
+<pre><code>const ignoreFiles = [&quot;.DS_Store&quot;, &quot;.idea&quot;, &quot;.git&quot;, &quot;.svn&quot;];
+fs.copyAllFiles(&quot;a&quot;, &quot;b&quot;, /\.jpe?g|\.png/, ignoreFiles);
+</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+
+
+
+    <!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <p class="copyright text-muted">
+          Build By <a target="_blank" href="https://github.com/rwson">rwson</a>
+        <p class="copyright text-muted">
+          Powered By <a target="_blank" href="https://hexo.io/">Hexo.</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    <!-- After Footer Scripts -->
+<script src="/js/highlight.pack.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function(event) {
+    var codeBlocks = Array.prototype.slice.call(document.getElementsByTagName('pre'))
+    codeBlocks.forEach(function(block, index) {
+      hljs.highlightBlock(block);
+    });
+  });
+</script>
+
+  </body>
+</html>
+

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+  <!-- Html Head Tag-->
+  <head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="rwson">
+  <!-- Open Graph Data -->
+  <meta property="og:title" content="async/await学习"/>
+  <meta property="og:description" content="" />
+  <meta property="og:site_name" content="小宋"/>
+  <meta property="og:type" content="article" />
+  <meta property="og:image" content="http://www.rwson.xyzundefined"/>
+  
+    <link rel="alternate" href="/atom.xml" title="小宋" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+
+  <!-- Site Title -->
+  <title>小宋</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <!-- Custom CSS -->
+  
+  <link rel="stylesheet" href="/css/style.light.css">
+
+  <!-- Google Analytics -->
+  
+
+</head>
+
+  <body>
+    <!-- Page Header -->
+
+
+<header class="site-header header-background" style="background-image: url(/img/banner.jpeg)">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="page-title with-background-image">
+          <p class="title">async/await学习</p>
+          <p class="subtitle"></p>
+        </div>
+        <div class="site-menu with-background-image">
+          <ul>
+            
+              <li>
+                <a href="/">
+                  
+                  Home
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="/archives">
+                  
+                  Archives
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="https://github.com/rwson">
+                  
+                  Github
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="mailto:862121312@qq.com">
+                  
+                  Email
+                  
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<article>
+  <div class="container typo">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-info text-muted">
+          
+            <!-- Author -->
+            <span class="author info">By rwson</span>
+          
+          <!-- Date -->
+          <span class="date-time info">On
+            <span class="date">2016-11-09</span>
+          </span>
+          
+          <!--  Categories  -->
+            <span class="categories info">Under 
+
+<a href="/categories/javascript/">javascript</a> / <a href="/categories/javascript/ES7/">ES7</a> / <a href="/categories/javascript/ES7/async-await/">async/await</a>
+</span>
+          
+        </div>
+        <!-- Tags -->
+        
+        <!-- Post Main Content -->
+        <div class="post-content">
+          <p>在处理javascript中异步的时候,回调往往是最让人恶心的,之前介绍过用<a href="http://123.207.98.169:81/2016/05/04/2016-05-04-es6-promise/" target="_blank" rel="external">Promise</a>来处理异步的问题,但是即使用上了Promise,在处理回调上还是会有各种嵌套,今天来介绍下ES7中的async/await,由于在Nodejs中还未得到支持,所以需要借助一些npm包来实践,在这里用的是<a href="https://github.com/yortus/asyncawait" target="_blank" rel="external">asyncawait</a>。</p>
+<p>先来个原生文件读取的例子:</p>
+<pre><code>const fs = require(&quot;fs&quot;);
+fs.readFile(&quot;test.txt&quot;, (ex, res) =&gt; {
+   console.log(res.toString()); 
+
+   //   do something...
+
+   fs.readFile(&quot;test2.txt&quot;, (ex, res) =&gt; {
+        console.log(res.toString());
+
+        //  do something
+   });
+});
+
+//  控制台输出
+xxxxx
+yyyyy
+</code></pre><p>下面我们再用async/await实现一遍:</p>
+<pre><code>const async = require(&quot;asyncawait&quot;).async;
+const await = require(&quot;asyncawait&quot;).await;
+let readFile = function(path) {
+    return new Promise((resolve, reject) =&gt; {
+        fs.readFile(path, (ex, res) =&gt; {
+            if (ex) {
+                reject(ex);
+            }
+            resolve(res);
+        });
+    });
+}
+
+let asyncReadFile = async(() =&gt; {
+
+    let fs = await (readFile(&quot;test.txt&quot;));
+    let fs2 = await (readFile(&quot;test2.txt&quot;));
+
+    console.log(fs.toString());
+    console.log(fs2.toString());
+});
+
+asyncReadFile();
+</code></pre><p>虽然代码可能比上面的多了一点,但是已经完全看不到回调嵌套的影子了,也能完成同样的功能,何乐而不为。😉</p>
+<p>下面我们再来模拟一个异步请求的例子:</p>
+<pre><code>const async = require(&quot;asyncawait&quot;).async;
+const await = require(&quot;asyncawait&quot;).await;
+const http = require(&quot;http&quot;);
+
+http.createServer((req, res) =&gt; {
+
+    switch (req.url) {
+
+        case &quot;/async-await&quot;:
+            setTimeout(() =&gt; {
+                res.writeHead(200, { &quot;Content-Type&quot;: &quot;text/plain&quot; });
+                res.end(&quot;request end&quot;);
+            }, 5000);
+            break;
+
+        case &quot;/async-await2&quot;:
+            setTimeout(() =&gt; {
+                res.writeHead(200, { &quot;Content-Type&quot;: &quot;text/plain&quot; });
+                res.end(&quot;request end2&quot;);
+            }, 8000);
+            break;
+
+        default:
+            break;
+
+    }
+}).listen(3000, &quot;127.0.0.1&quot;);
+
+let requestUrl = function(path) {
+    return new Promise((resolve, reject) =&gt; {
+        http.get({
+            hostname: &apos;localhost&apos;,
+            port: 3000,
+            path: path,
+            agent: false
+        }, (res) =&gt; {
+            res.on(&quot;data&quot;, (data) =&gt; {
+                resolve(data);
+            });
+            res.on(&quot;error&quot;, (ex) =&gt; {
+                reject(ex);
+            })
+        });
+    });
+}
+
+let asyncRequest = async(() =&gt; {
+    let resp, resp2;
+    await (requestUrl(&quot;/async-await&quot;).then((res) =&gt; {
+        console.log(res.toString());
+        resp = res.toString();
+    }).catch((ex) =&gt; {
+        resp = &quot;发生错误!&quot;;
+    }));
+
+    await (requestUrl(&quot;/async-await2&quot;).then((res) =&gt; {
+        resp2 = res.toString();
+    }).catch((ex) =&gt; {
+        resp = &quot;发生错误!&quot;;
+    }));
+    console.log(resp);
+    console.log(resp2);
+});
+
+asyncRequest();
+
+//  控制台输出
+request end
+request end2
+</code></pre><p>由此我们可以将async/await用在很多地方,比如例子中的文件读取、异步请求、nodejs中的查询数据库等等。</p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+
+
+
+    <!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <p class="copyright text-muted">
+          Build By <a target="_blank" href="https://github.com/rwson">rwson</a>
+        <p class="copyright text-muted">
+          Powered By <a target="_blank" href="https://hexo.io/">Hexo.</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    <!-- After Footer Scripts -->
+<script src="/js/highlight.pack.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function(event) {
+    var codeBlocks = Array.prototype.slice.call(document.getElementsByTagName('pre'))
+    codeBlocks.forEach(function(block, index) {
+      hljs.highlightBlock(block);
+    });
+  });
+</script>
+
+  </body>
+</html>
+

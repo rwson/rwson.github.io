@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html>
+  <!-- Html Head Tag-->
+  <head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="rwson">
+  <!-- Open Graph Data -->
+  <meta property="og:title" content="javascript组合模式"/>
+  <meta property="og:description" content="" />
+  <meta property="og:site_name" content="小宋"/>
+  <meta property="og:type" content="article" />
+  <meta property="og:image" content="http://www.rwson.xyzundefined"/>
+  
+    <link rel="alternate" href="/atom.xml" title="小宋" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+
+  <!-- Site Title -->
+  <title>小宋</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <!-- Custom CSS -->
+  
+  <link rel="stylesheet" href="/css/style.light.css">
+
+  <!-- Google Analytics -->
+  
+
+</head>
+
+  <body>
+    <!-- Page Header -->
+
+
+<header class="site-header header-background" style="background-image: url(/img/banner.jpeg)">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="page-title with-background-image">
+          <p class="title">javascript组合模式</p>
+          <p class="subtitle"></p>
+        </div>
+        <div class="site-menu with-background-image">
+          <ul>
+            
+              <li>
+                <a href="/">
+                  
+                  Home
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="/archives">
+                  
+                  Archives
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="https://github.com/rwson">
+                  
+                  Github
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="mailto:862121312@qq.com">
+                  
+                  Email
+                  
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<article>
+  <div class="container typo">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-info text-muted">
+          
+            <!-- Author -->
+            <span class="author info">By rwson</span>
+          
+          <!-- Date -->
+          <span class="date-time info">On
+            <span class="date">2015-06-09</span>
+          </span>
+          
+          <!--  Categories  -->
+            <span class="categories info">Under 
+
+<a href="/categories/javascript/">javascript</a> / <a href="/categories/javascript/设计模式/">设计模式</a>
+</span>
+          
+        </div>
+        <!-- Tags -->
+        
+        <!-- Post Main Content -->
+        <div class="post-content">
+          <p>组合模式:</p>
+<p>在组合模式中，对象有两种形式，一种是叶子对象，一种是组合对象，其中组合对象是叶子对象的组成，有时候我们需要通过简单的控制来完成工作，组合模式就派上了用场。</p>
+<p>下面我们模拟一个场景，模拟公司内部的一个，上级(组合对象)只要交代给部门领导(组合对象)，再由部门领导交付具体的指令给具体的员工(叶子对象)来完成具体的工作。</p>
+<p>先来看看传统的做法：</p>
+<pre><code>/**
+  *
+  * 公司类
+  **/
+function Org(name){
+    this.name = name;
+    this.depts = [];
+}
+Org.prototype = {
+    &quot;constructor&quot;:Org,
+    &quot;addDepts&quot;:function(child){
+        this.depts.push(child);
+        return this;
+        //  添加部门,return this 提供链式调用
+    },
+    &quot;getDepts&quot;:function(){
+        return this.depts;
+        //  获取部门
+    }
+};
+
+/**
+  *
+  * 部门类
+  **/
+function Dept(name){
+    this.name = name;
+    this.persons = [];
+}
+Dept.prototype = {
+    &quot;constructor&quot;:Dept,
+    &quot;addPersons&quot;:function(child){
+        this.persons.push(child);
+        return this;
+        //  添加部门员工
+    },
+    &quot;getPersons&quot;:function(){
+        return this.persons;
+        //  获取部门员工
+    }
+};
+
+/**
+  *
+  * 员工类
+  **/
+function Person(name){
+    this.name = name;
+}
+commonUtil.wrap(Person.prototype,{
+    &quot;constructor&quot;:Person,
+    &quot;hardWorking&quot;:function(){
+        console.log(this.name + &quot; ... 努力工作！&quot;);
+        //  xxx ... 努力工作
+    },
+    &quot;sleeping&quot;:function(){
+        console.log(this.name + &quot;睡觉！&quot;);
+        //  xxx 睡觉！
+    }
+});
+
+var p1 = new Person(&quot;张1&quot;),
+    p2 = new Person(&quot;张2&quot;),
+    p3 = new Person(&quot;张3&quot;),
+    p4 = new Person(&quot;张4&quot;),
+    p5 = new Person(&quot;张5&quot;),
+    p6 = new Person(&quot;张6&quot;),
+    dept1 = new Dept(&quot;开发&quot;),
+    dept2 = new Dept(&quot;销售&quot;),
+    org = new Org(&quot;某某公司&quot;);
+//  实例化对象    
+
+dept1.addPersons(p1).addPersons(p2).addPersons(p3);
+dept2.addPersons(p4).addPersons(p5).addPersons(p6);
+org.addDepts(dept1).addDepts(dept2);
+//  添加部门和部门员工
+
+for(var i = 0,depts = org.getDepts();i &lt; depts.length;i ++){
+    for(j = 0,persons = depts[i].getPersons();j &lt; persons.length;j ++){
+        if(persons[j][&quot;name&quot;] === &quot;张3&quot;){
+            persons[j].hardWorking();
+        }
+    }
+}
+//  具体的让张3努力工作
+</code></pre><p>在上面的例子我们可以看到,如果想要”张三”这个人执行hardWorking方法，需要写两层循环，现在只是两层结构，要是在多层的情况下，可能就需要递归神马了，甚是麻烦。</p>
+<p>再来看看组合模式吧！这边的commomUtil下的方法和工厂模式里面的用的一样的。</p>
+<pre><code>var CompositeInterface = new commonUtil.Interface(&quot;CompositeInterface&quot;,[&quot;addChild&quot;,&quot;getChild&quot;]),
+LeafInterface = new commonUtil.Interface(&quot;LeafInterface&quot;,[&quot;hardWorking&quot;,&quot;sleeping&quot;]);
+        //  定义组合对象和叶子对象需要实现的接口
+
+/**
+ * 组合对象
+ * @param name
+ * @constructor
+ */
+function Composite(name){
+    this.name = name;
+    this.type = &quot;Composite&quot;;
+    //  说明当前对象类型
+    this.children = [];
+    //  承装孩子（叶子节点）的数组
+}
+commonUtil.wrap(Composite.prototype,{
+    &quot;constructor&quot;:Composite,
+    &quot;addChild&quot;:function(child){
+        this.children.push(child);
+        return this;
+    },
+    &quot;getChild&quot;:function(name){
+        var list = [],
+            pushLeaf = function(item){
+                if(this.name === name || item[&quot;type&quot;] === &quot;Composite&quot;){
+                      item[&quot;children&quot;].each(arguments.callee);
+                     // pushLeaf(item[&quot;children&quot;]);
+                }else if(item[&quot;type&quot;] === &quot;Leaf&quot;) {
+                    list.push(item);
+                }
+            };
+        if(name &amp;&amp; this.name !== name){
+            //  返回指定类型的叶子对象
+            this.children.each(function(item){
+                if(item[&quot;name&quot;] === name &amp;&amp; item[&quot;type&quot;] === &quot;Composite&quot;){
+                    item[&quot;children&quot;].each(pushLeaf);
+                }
+                //  二级节点
+                if(item[&quot;name&quot;] !== name &amp;&amp; item[&quot;type&quot;] === &quot;Composite&quot;){
+                    item[&quot;children&quot;].each(arguments.callee);
+                }
+                //  三级、四级...
+                if(item[&quot;name&quot;] === name &amp;&amp; item[&quot;type&quot;] === &quot;Leaf&quot;){
+                    list.push(item);
+                }
+            });
+        }else{
+            //  返回所有叶子对象
+            this.children.each(pushLeaf);
+        }
+        return list;
+    },
+    &quot;hardWorking&quot;:function(name){
+        var leafObjects = this.getChild(name);
+        //  得到所有的叶子类型对象
+        for(var i = 0,l = leafObjects.length;i &lt; l;i ++){
+            leafObjects[i] &amp;&amp; leafObjects[i].hardWorking(leafObjects[i][&quot;name&quot;]);
+        }
+    },
+    &quot;sleeping&quot;:function(name){
+        var leafObjects = this.getChild(name);
+        //  得到所有的叶子类型对象
+        for(var i = 0,l = leafObjects.length;i &lt; l;i ++){
+            leafObjects[i].sleeping(leafObjects[i][&quot;name&quot;]);
+        }
+    }
+});
+
+/**
+ * 叶子对象
+ * @param name
+ * @constructor
+ */
+function Leaf(name){
+    this.name = name;
+    this.type = &quot;Leaf&quot;;
+    //  说明当前对象类型
+}
+commonUtil.wrap(Leaf.prototype,{
+    &quot;constructor&quot;:Leaf,
+    &quot;addChild&quot;:function(child){
+        throw new Error(&quot;this method is disabled&quot;);
+        //  叶子节点下没有添加子节点的方法,所以调用的时候抛异常
+    },
+    &quot;getChild&quot;:function(name){
+        if(this.name === name){
+            return this;
+        }
+        return null;
+    },
+    &quot;hardWorking&quot;:function(){
+        console.log(this.name + &quot; ... 努力工作！&quot;);
+    },
+    &quot;sleeping&quot;:function(name){
+        console.log(this.name + &quot; ... 睡觉！&quot;);
+    }
+});
+
+var p1 = new Leaf(&quot;张1&quot;),
+    p2 = new Leaf(&quot;张2&quot;),
+    p3 = new Leaf(&quot;张3&quot;),
+    p4 = new Leaf(&quot;张4&quot;),
+    p5 = new Leaf(&quot;张5&quot;),
+    p6 = new Leaf(&quot;张6&quot;),
+    p7 = new Leaf(&quot;张7&quot;),
+    p8 = new Leaf(&quot;张8&quot;),
+    p9 = new Leaf(&quot;张9&quot;),
+    p10 = new Leaf(&quot;张10&quot;),
+    p11 = new Leaf(&quot;张11&quot;),
+    p12 = new Leaf(&quot;张12&quot;),
+    dept1 = new Composite(&quot;南京开发部&quot;),
+    dept2 = new Composite(&quot;南京销售部&quot;),
+    dept3 = new Composite(&quot;杭州开发部&quot;),
+    dept4 = new Composite(&quot;杭州销售部&quot;),
+    org = new Composite(&quot;xx公司&quot;),
+    org2 = new Composite(&quot;南京分公司&quot;),
+    org3 = new Composite(&quot;杭州分公司&quot;);
+    //  实例化一些对象
+
+    dept1.addChild(p1).addChild(p2).addChild(p3);
+    dept2.addChild(p4).addChild(p5).addChild(p6);
+    dept3.addChild(p7).addChild(p8).addChild(p9);
+    dept4.addChild(p10).addChild(p11).addChild(p12);
+    //  组装二级、三级、叶子节点
+
+    org2.addChild(dept1).addChild(dept2);
+    org3.addChild(dept3).addChild(dept4);
+    org.addChild(org2).addChild(org3);
+    //  组装分公司和总公司
+
+    org.hardWorking();  
+    //  总公司下面的人都执行hardWork方法
+    org.hardWorking(&quot;南京分公司&quot;);  
+    //  南京分公司下面的人都执行hardWork方法
+    org.hardWorking(&quot;杭州开发部&quot;);  
+    //  某级子节点(组合对象)下面的人都执行hardWork方法
+    org.hardWorking(&quot;张12&quot;);  
+    //  具体某人执行hardWork方法
+</code></pre><p>怎么样,看完这个例子是不是感觉比传统的调用方法简单多了,现在就2种类型的对象,虽然组合对象下封装的方法,只要传入具体的某个部门或者员工就能走它下面的方法;这么好的模式,何乐而不为？</p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+
+
+
+    <!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <p class="copyright text-muted">
+          Build By <a target="_blank" href="https://github.com/rwson">rwson</a>
+        <p class="copyright text-muted">
+          Powered By <a target="_blank" href="https://hexo.io/">Hexo.</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    <!-- After Footer Scripts -->
+<script src="/js/highlight.pack.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function(event) {
+    var codeBlocks = Array.prototype.slice.call(document.getElementsByTagName('pre'))
+    codeBlocks.forEach(function(block, index) {
+      hljs.highlightBlock(block);
+    });
+  });
+</script>
+
+  </body>
+</html>
+

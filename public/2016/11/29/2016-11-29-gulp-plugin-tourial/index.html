@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+  <!-- Html Head Tag-->
+  <head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="rwson">
+  <!-- Open Graph Data -->
+  <meta property="og:title" content="Gulp插件的研究"/>
+  <meta property="og:description" content="" />
+  <meta property="og:site_name" content="小宋"/>
+  <meta property="og:type" content="article" />
+  <meta property="og:image" content="http://www.rwson.xyzundefined"/>
+  
+    <link rel="alternate" href="/atom.xml" title="小宋" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+
+  <!-- Site Title -->
+  <title>小宋</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <!-- Custom CSS -->
+  
+  <link rel="stylesheet" href="/css/style.light.css">
+
+  <!-- Google Analytics -->
+  
+
+</head>
+
+  <body>
+    <!-- Page Header -->
+
+
+<header class="site-header header-background" style="background-image: url(/img/banner.jpeg)">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="page-title with-background-image">
+          <p class="title">Gulp插件的研究</p>
+          <p class="subtitle"></p>
+        </div>
+        <div class="site-menu with-background-image">
+          <ul>
+            
+              <li>
+                <a href="/">
+                  
+                  Home
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="/archives">
+                  
+                  Archives
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="https://github.com/rwson">
+                  
+                  Github
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="mailto:862121312@qq.com">
+                  
+                  Email
+                  
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<article>
+  <div class="container typo">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-info text-muted">
+          
+            <!-- Author -->
+            <span class="author info">By rwson</span>
+          
+          <!-- Date -->
+          <span class="date-time info">On
+            <span class="date">2016-11-29</span>
+          </span>
+          
+          <!--  Categories  -->
+            <span class="categories info">Under 
+
+<a href="/categories/javascript/">javascript</a> / <a href="/categories/javascript/Gulp/">Gulp</a> / <a href="/categories/javascript/Gulp/构建工具/">构建工具</a>
+</span>
+          
+        </div>
+        <!-- Tags -->
+        
+        <!-- Post Main Content -->
+        <div class="post-content">
+          <p>在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。</p>
+<p>今天研究了下gulp插件,写点心得体会吧。看了两个gulp插件源码,发现里面都引入了<a href="https://github.com/rvagg/through2" target="_blank" rel="external">through2</a>这个包,官方的说法就是”Node Stream的简单封装，目的是让链式流操作更加简单;”,就也照葫芦画瓢,引用了这个包,简单实现一个gulp插件,功能就是压缩css,并且把css中的”background: url(xxxx.png)”中的”xxxx.png”转换成base64编码的形式,减少http请求数。</p>
+<pre><code>&quot;use strict&quot;;
+
+const through = require(&quot;through2&quot;),
+    path = require(&quot;path&quot;),
+    fs = require(&quot;fs&quot;),
+
+    //  引用async/await,方便处理文件读写的异步操作
+    async = require(&quot;asyncawait&quot;).async,
+    await = require(&quot;asyncawait&quot;).await,
+
+    //  匹配url(../xxx.yyy)这种表达式
+    imgReg = /url\s*\((\s*[A-Za-z0-9\-\_\.\/\:]+\s*)\);?/gi,
+
+    //  将fs.readFile封装成Promise
+    readFile = (path) =&gt; {
+        return new Promise((resolve, reject) =&gt; {
+            fs.readFile(path, (ex, file) =&gt; {
+                if (ex) {
+                    reject(ex);
+                }
+                resolve(file);
+            });
+        });
+    };
+
+let base, contents, match, tmp, url;
+
+//  暴露出去的函数
+module.exports = (opt) =&gt; {
+
+    return through.obj(function(file, enc, cb) {
+
+        //  文件为空直接执行回调函数
+        if (file.isNull()) {
+            cb(null, file);
+        }
+
+        //  取得当前css的绝对路径
+        base = file.base;
+
+        //  匹配css中的无效字符,并且转换成buffer
+        file.contents = new Buffer(file._contents.toString()
+            //  去换行符
+            .replace(/\n/gm, &quot;&quot;)
+
+            //  去&quot;{&quot;之后到第一条样式间的空白字符
+            .replace(/\{\s+/g, &quot;{&quot;)
+
+            //  去&quot;;&quot;之后的空白字符
+            .replace(/\;\s+/g, &quot;;&quot;));
+
+        //  将文件内容转换成普通字符串并缓存
+        contents = file.contents.toString();
+
+        //  取得url(../../xxx.yyy),并且缓存
+        match = contents.match(imgReg);
+
+        //  async-await读取图片文件成base64编码
+        async(() =&gt; {
+
+            //  遍历之前的缓存项
+            match.forEach((item) =&gt; {
+
+                //  拼凑文件绝对路径
+                url = item.replace(&quot;url(&quot;, &quot;&quot;).replace(&quot;)&quot;, &quot;&quot;).trim();
+
+                //  用await读取文件,避免嵌套
+                tmp = await (readFile(path.resolve(base, url)));
+
+                //  替换之前匹配的字符串
+                contents = contents.replace(item, `url(data:image/png;base64,${tmp.toString(&quot;base64&quot;)})`);
+            });
+
+            //  把文件内容转成buffer
+            file.contents = new Buffer(contents);
+
+            //  回调函数
+            cb(null, file);
+
+        })();
+    });
+
+};
+</code></pre><p>至此,一个简单的插件就实现了,当然,还有很多不足,比如对图片进行压缩,减少base64字符串的长度,用request模块处理对网络图片的引用等等。</p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+
+
+
+    <!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <p class="copyright text-muted">
+          Build By <a target="_blank" href="https://github.com/rwson">rwson</a>
+        <p class="copyright text-muted">
+          Powered By <a target="_blank" href="https://hexo.io/">Hexo.</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    <!-- After Footer Scripts -->
+<script src="/js/highlight.pack.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function(event) {
+    var codeBlocks = Array.prototype.slice.call(document.getElementsByTagName('pre'))
+    codeBlocks.forEach(function(block, index) {
+      hljs.highlightBlock(block);
+    });
+  });
+</script>
+
+  </body>
+</html>
+

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+  <!-- Html Head Tag-->
+  <head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="rwson">
+  <!-- Open Graph Data -->
+  <meta property="og:title" content="javascript适配器模式"/>
+  <meta property="og:description" content="" />
+  <meta property="og:site_name" content="小宋"/>
+  <meta property="og:type" content="article" />
+  <meta property="og:image" content="http://www.rwson.xyzundefined"/>
+  
+    <link rel="alternate" href="/atom.xml" title="小宋" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+
+  <!-- Site Title -->
+  <title>小宋</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <!-- Custom CSS -->
+  
+  <link rel="stylesheet" href="/css/style.light.css">
+
+  <!-- Google Analytics -->
+  
+
+</head>
+
+  <body>
+    <!-- Page Header -->
+
+
+<header class="site-header header-background" style="background-image: url(/img/banner.jpeg)">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="page-title with-background-image">
+          <p class="title">javascript适配器模式</p>
+          <p class="subtitle"></p>
+        </div>
+        <div class="site-menu with-background-image">
+          <ul>
+            
+              <li>
+                <a href="/">
+                  
+                  Home
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="/archives">
+                  
+                  Archives
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="https://github.com/rwson">
+                  
+                  Github
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="mailto:862121312@qq.com">
+                  
+                  Email
+                  
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<article>
+  <div class="container typo">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-info text-muted">
+          
+            <!-- Author -->
+            <span class="author info">By rwson</span>
+          
+          <!-- Date -->
+          <span class="date-time info">On
+            <span class="date">2015-06-13</span>
+          </span>
+          
+          <!--  Categories  -->
+            <span class="categories info">Under 
+
+<a href="/categories/javascript/">javascript</a> / <a href="/categories/javascript/设计模式/">设计模式</a>
+</span>
+          
+        </div>
+        <!-- Tags -->
+        
+        <!-- Post Main Content -->
+        <div class="post-content">
+          <p>适配器模式:</p>
+<p>适配器,顾名思义,我们生活中能见到很多这样的例子,举个最简单的例子吧:<br>我现在有一台老台式机电脑和刚买的新式电脑,我们都知道,老台式机上的插口都是圆口(F32型插口),而新式电脑上的都是USB插口,假如我现在想在新式电脑上用老式电脑上的那个鼠标,但是插口又不一样,那怎么办呢？我们现在就需要一个转换器来中转,这个转换器就完成了完成由老到新的转换功能。</p>
+<p>再举个实际开发中可能会遇到情况:比如公司新进一批前端,然后公司急于做一个项目,需要这几个前端一起参与才能按时交工,但是这几个前端里面有的会prototype.js不会YUI,然后有的会YUI不会prototype.js,而产品经理最后说采取YUI,由于项目时间比较紧,所以没那么大的成本来给他们把这两个库都培训一遍,这时候问题来了,怎么样让这些人都参与到开发中来呢？且看下面的模拟:</p>
+<p>我们来模拟一个最简单的选择器</p>
+<pre><code>//  模拟prototype $ function(不需要传递任何的形参,直接通过arguments对象取得传入的实参)
+function $(){
+    var ele = [];
+    for(var i = 0;i &lt; arguments.length;i ++){
+        var el = arguments[i];
+        if(typeof el === &quot;string&quot;){
+            el = document.getElementById(el);
+        }
+        if(el.length == 1){
+            return el;
+        }
+        ele.push(el);
+    }
+    return ele;
+}
+
+//  模拟YUI中的get (必须传递一个参数,不是字符串就是数组)
+var YAHOO = {};
+YAHOO.get = function(el){
+    if(typeof el === &quot;string&quot;){
+        return document.getElementById(el);
+    }else if(el instanceof Array){
+        var ele = [];
+        for(var i = 0;i &lt; el.length;i ++){
+              ele[ele.length] = YAHOO.get(el[i]);
+        }
+        return ele;
+    }else if(el){
+        return el;
+    }else{
+        return null;
+    }
+};
+
+//  适配器方法
+    function YUIToPrototypeAdapter(){
+        //  YUI开发永远传递一个参数
+        if(arguments.length == 1){
+            //  YUI方案
+            var e = arguments[0];
+            return $.apply(window,e instanceof  Array ? e : new Array(e));
+        }else{
+            //  prototype处理方案
+            return $.apply(window,arguments);
+        }
+    }
+
+    YAHOO.get = YUIToPrototypeAdapter;
+
+    window.onload = function(){
+        //  $(&quot;div1&quot;,&quot;div2&quot;)            prototype风格
+        //  YAHOO.get([&quot;div1&quot;,&quot;div2&quot;])  YUI风格
+        console.log($(&quot;div1&quot;,&quot;div2&quot;));
+        console.log(YAHOO.get([&quot;div1&quot;,&quot;div2&quot;]));
+    };
+</code></pre><p>这边的YUIToPrototypeAdapter就是一个适配器方法,根据传入参数类型的不同采取不同的方案处理,相对完美的解决了框架间的适配问题。</p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+
+
+
+    <!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <p class="copyright text-muted">
+          Build By <a target="_blank" href="https://github.com/rwson">rwson</a>
+        <p class="copyright text-muted">
+          Powered By <a target="_blank" href="https://hexo.io/">Hexo.</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    <!-- After Footer Scripts -->
+<script src="/js/highlight.pack.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function(event) {
+    var codeBlocks = Array.prototype.slice.call(document.getElementsByTagName('pre'))
+    codeBlocks.forEach(function(block, index) {
+      hljs.highlightBlock(block);
+    });
+  });
+</script>
+
+  </body>
+</html>
+

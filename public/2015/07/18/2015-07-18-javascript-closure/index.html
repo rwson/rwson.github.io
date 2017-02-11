@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+  <!-- Html Head Tag-->
+  <head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="rwson">
+  <!-- Open Graph Data -->
+  <meta property="og:title" content="javascript闭包"/>
+  <meta property="og:description" content="" />
+  <meta property="og:site_name" content="小宋"/>
+  <meta property="og:type" content="article" />
+  <meta property="og:image" content="http://www.rwson.xyzundefined"/>
+  
+    <link rel="alternate" href="/atom.xml" title="小宋" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+
+  <!-- Site Title -->
+  <title>小宋</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <!-- Custom CSS -->
+  
+  <link rel="stylesheet" href="/css/style.light.css">
+
+  <!-- Google Analytics -->
+  
+
+</head>
+
+  <body>
+    <!-- Page Header -->
+
+
+<header class="site-header header-background" style="background-image: url(/img/banner.jpeg)">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="page-title with-background-image">
+          <p class="title">javascript闭包</p>
+          <p class="subtitle"></p>
+        </div>
+        <div class="site-menu with-background-image">
+          <ul>
+            
+              <li>
+                <a href="/">
+                  
+                  Home
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="/archives">
+                  
+                  Archives
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="https://github.com/rwson">
+                  
+                  Github
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="mailto:862121312@qq.com">
+                  
+                  Email
+                  
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<article>
+  <div class="container typo">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-info text-muted">
+          
+            <!-- Author -->
+            <span class="author info">By rwson</span>
+          
+          <!-- Date -->
+          <span class="date-time info">On
+            <span class="date">2015-07-18</span>
+          </span>
+          
+          <!--  Categories  -->
+            <span class="categories info">Under 
+
+<a href="/categories/javascript/">javascript</a> / <a href="/categories/javascript/闭包/">闭包</a>
+</span>
+          
+        </div>
+        <!-- Tags -->
+        
+        <!-- Post Main Content -->
+        <div class="post-content">
+          <p>本文讨论的javascript不包含ES6标准。</p>
+<p>javascript在作用域和其他大多数语言不同, 没有局部变量的的概念,一个变量的作用范围就是它所在的函数,且没有块级作用域的概念。</p>
+<p>我们可以通过下面的代码理解下上面的话:</p>
+<pre><code>var variable1 = 1;
+
+function A() {
+    console.log(variable1);
+
+    if(true) {
+        var variable2 = &quot;variable2&quot;;
+    }
+
+    console.log(variable2);
+}
+
+A();
+//  最终打印出1和variable2这个字符串
+</code></pre><p>可能类似的代码放到其他语言中,我们在if外面访问variable2时,就会报错,但在javascript中不会。</p>
+<p>刚才说”一个变量的作用范围就是它所在的函数”,可以通过下面的代码验证下:</p>
+<pre><code>function A() {
+    var variable1 = &quot;variable1&quot;;
+}
+
+A();
+
+console.log(variable1);
+//  Uncaught ReferenceError: variable1 is not defined
+</code></pre><p>此时在函数外部就无法访问函数内定义的变量。</p>
+<p>但是如果不用var关键字的话,情况就不一样了</p>
+<pre><code>function A() {
+    variable1 = &quot;variable1&quot;;
+}
+
+A();
+
+console.log(variable1);
+//  最终打印出variable1这个字符串
+</code></pre><p>因为不用var的话,就相当于声明了一个全局变量。</p>
+<p>但是有时候,我们就是想读取函数内部变量,该怎么做呢?可以像下面这样:</p>
+<pre><code>function A() {
+
+    var variable1 = &quot;variable1&quot;;
+
+    return function() {
+        console.log(variable1);
+    };
+
+}
+
+A()();
+</code></pre><p>这边调用了两对圆括号,第一对是取得A返回的匿名函数,第二对是执行该匿名函数。</p>
+<p>上面就是一个典型的闭包例子,用阮一峰大神的话说”闭包就是能够读取其他函数内部变量的函数”。</p>
+<p>在实际开发中,我们会在很多地方用到闭包,就是用到两个比较重要的作用:</p>
+<ul>
+<li>使某些变量常驻内存,且不与函数外部变量冲突</li>
+<li>子函数访问父函数的内容</li>
+</ul>
+<p>在很多著名类库/框架源码中,可能经常会看到类似的代码:</p>
+<pre><code>(function(root, undefined) {
+
+    var var1 = xxx;
+    var var2 = yyy;
+    //  ...
+
+    function zzz() {
+        //  ...
+    }
+
+    root.zzz = zzz;
+
+})(window);
+</code></pre><p>就充分利用了第一条特性。</p>
+<p>第二条就是我们在前面的代码中有例子,就不做过多阐述。</p>
+<p>我们都知道javascript中没有类的概念,我们只能通过函数类模拟类,通过原型来实现继承,但是有时候有些成员属性是不能继承的或者不希望被外部直接访问到, 所以需要一些私有成员属性。</p>
+<p>下面我们模拟一个类,里面有私有成员属性:</p>
+<pre><code>//  实现一个&quot;人&quot;类
+function Person(name, age) {
+
+    //  模拟私有成员属性
+    var _salary;
+    var _wife;
+
+    //  getter/setter
+    this.salaryGetter = function() {
+        return _salary;
+    };
+
+    this.salarySetter = function(salary) {
+        _salary = salary;
+    };
+
+    this.wifeGetter = function() {
+        return _wife;
+    };
+
+    this.wifeSetter = function(wife) {
+        _wife = wife;
+    };
+
+    this.name = name;
+    this.age = age;
+
+}
+
+Person.prototype = {
+
+    constructor: Person,
+
+    eat: function() {
+        console.log(&quot;吃饭&quot;);
+    },
+
+    sleep: function() {
+        console.log(&quot;睡觉&quot;);
+    }
+
+    //  ...
+
+};
+
+function SubPerson(name, age) {
+
+    //  构造器继承
+    Person.call(this,name,age);
+
+}
+
+SubPerson.prototype = new Person();
+
+
+SubPerson.prototype.constructor = SubPerson;
+
+//  overwrite methods
+
+var person = new SubPerson(&quot;小宋&quot;, 23);
+
+console.log(person);
+</code></pre><p>上面我们就完成了一个简单的继承和私有成员属性的模拟。</p>
+<p>关于闭包的应用例子还有很多,比如我们用js绑定事件的时候:</p>
+<pre><code>var listNodes = document.querySelectorAll(&quot;li&quot;);
+//  假设网页中有5个li元素
+
+
+for(var i = 0, len = listNodes.length; i &lt; len; i ++) {
+    listNodes[i].onclick = function() {
+        //  do something
+        console.log(i);
+    }
+}
+</code></pre><p>此时无论我们点击哪个元素,最后都会打印出5来,因为我们点击的时候循环已经结束,i的值变成了5,我们可以用闭包来解决这个问题:</p>
+<pre><code>var listNodes = document.querySelectorAll(&quot;li&quot;);
+//  假设网页中有5个li元素
+
+for(var i = 0, len = listNodes.length; i &lt; len; i ++) {
+    listNodes[i].onclick = (function(index){
+        return function() {
+            //  do something
+            console.log(index);
+        };
+    })(i);
+}
+</code></pre><p>用上面的方法,我们就可以正确的打印出i的值。</p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+
+
+
+    <!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <p class="copyright text-muted">
+          Build By <a target="_blank" href="https://github.com/rwson">rwson</a>
+        <p class="copyright text-muted">
+          Powered By <a target="_blank" href="https://hexo.io/">Hexo.</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    <!-- After Footer Scripts -->
+<script src="/js/highlight.pack.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function(event) {
+    var codeBlocks = Array.prototype.slice.call(document.getElementsByTagName('pre'))
+    codeBlocks.forEach(function(block, index) {
+      hljs.highlightBlock(block);
+    });
+  });
+</script>
+
+  </body>
+</html>
+

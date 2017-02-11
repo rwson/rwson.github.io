@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html>
+  <!-- Html Head Tag-->
+  <head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="rwson">
+  <!-- Open Graph Data -->
+  <meta property="og:title" content="javascript工厂模式"/>
+  <meta property="og:description" content="" />
+  <meta property="og:site_name" content="小宋"/>
+  <meta property="og:type" content="article" />
+  <meta property="og:image" content="http://www.rwson.xyzundefined"/>
+  
+    <link rel="alternate" href="/atom.xml" title="小宋" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+
+  <!-- Site Title -->
+  <title>小宋</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <!-- Custom CSS -->
+  
+  <link rel="stylesheet" href="/css/style.light.css">
+
+  <!-- Google Analytics -->
+  
+
+</head>
+
+  <body>
+    <!-- Page Header -->
+
+
+<header class="site-header header-background" style="background-image: url(/img/banner.jpeg)">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="page-title with-background-image">
+          <p class="title">javascript工厂模式</p>
+          <p class="subtitle"></p>
+        </div>
+        <div class="site-menu with-background-image">
+          <ul>
+            
+              <li>
+                <a href="/">
+                  
+                  Home
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="/archives">
+                  
+                  Archives
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="https://github.com/rwson">
+                  
+                  Github
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="mailto:862121312@qq.com">
+                  
+                  Email
+                  
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<article>
+  <div class="container typo">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-info text-muted">
+          
+            <!-- Author -->
+            <span class="author info">By rwson</span>
+          
+          <!-- Date -->
+          <span class="date-time info">On
+            <span class="date">2015-05-31</span>
+          </span>
+          
+          <!--  Categories  -->
+            <span class="categories info">Under 
+
+<a href="/categories/javascript/">javascript</a> / <a href="/categories/javascript/设计模式/">设计模式</a>
+</span>
+          
+        </div>
+        <!-- Tags -->
+        
+        <!-- Post Main Content -->
+        <div class="post-content">
+          <p>工厂模式:</p>
+<p>创建一个对象常常需要复杂的过程，所以不适合在一个复杂的对象中。创建对象可能会导致大量的重复代码，也可能提供不了足够级别的抽象。工厂方法模式通过定义一个单独的创建对象的方法来解决这些问题，由子类实现这个方法来创建具体类型的对象。</p>
+<p>简单工厂：<br>类本身实现了所有功能代码，通过实例化调用其方法来完成某些功能。</p>
+<p>抽象工厂：<br>类本身定一些抽象方法，通过给子类继承的方式，来重写父类的抽象方法，该类不能被实例化，只能通过实例化它的子类来完成某些功能。</p>
+<pre><code>/**
+ * 注：
+ * commonUtil.wrap(xxx.prototype,{})和xxx.prototype = {}功能相同
+ * commonUtil.extend()是实现继承那边类式继承的代码功能
+ * commonUtil.Interface和commonUtil.Interface.ensureImplement是实现接口那边鸭式辨型的代码功能
+ *
+ * */
+</code></pre><hr>
+<p>这是简单工厂的一个示例：</p>
+<pre><code>/*
+    功能描述：
+    有三种类型的车(奔驰,宝马,奥迪),现在要买车,定义一个汽车4店类卖车
+    逻辑流程：
+
+*/
+
+/**
+  * 汽车商店构造器
+  * @constructor
+  */
+function CarShop() {}
+
+    commonUtil.wrap(CarShop.prototype, {
+        &quot;constructor&quot;: CarShop,
+        &quot;sellCar&quot;: function (type) {
+            var car;
+            switch (type) {
+                case &quot;Benz&quot;:
+                    car = new Benz();
+                    break;
+                case &quot;Bmw&quot;:
+                    car = new Bmw();
+                    break;
+                case &quot;Audi&quot;:
+                    car = new Audi();
+                    break;
+                default:
+                    &quot;not to buy!&quot;
+            }
+    //    通过传入的参数判断到底要实例哪个牌子的车对象(造车)
+            return car;
+        }
+    });
+    //  拓展原型对象
+
+    /**
+     * SuperClass
+     * @constructor
+     */
+    function BaseCar(){}
+
+    commonUtil.wrap(BaseCar.prototype,{
+        &quot;start&quot;: function () {
+            console.log(&quot;我的&quot;+ this.constructor.name +&quot;启动了！&quot;);
+        },
+        &quot;run&quot;: function () {
+            console.log(&quot;我的&quot;+ this.constructor.name +&quot;开走了！&quot;);
+        }
+    });
+
+    //  Class benz bmw audi
+    //  子类应该先继承BaseCar类,再拓展或重写自己的方法
+     //    奔驰    
+    function Benz() {
+    }
+    commonUtil.extend(Benz,BaseCar);
+
+    //    宝马
+    function Bmw() {
+    }
+    commonUtil.extend(Bmw,BaseCar);
+
+    //    奥迪
+    function Audi() {
+    }
+    commonUtil.extend(Audi,BaseCar);
+    //  三个子类分别继承父类
+
+    var shop = new CarShop();
+     //    实例化汽车商店
+    var car = shop.sellCar(&quot;Bmw&quot;);
+    //    从商店里买走辆宝马
+    car.start();
+    car.run();
+
+    var car2 = shop.sellCar(&quot;Audi&quot;);
+    //    从商店买走一辆奥迪
+    car2.start();
+    car2.run();
+</code></pre><p>从上面的例子中可以看到，在CarShop这个类中，把所有工作都做了，但是在实际生活中，汽车4S店负责的就只有卖车等工作，不会和现在这个例子一样把生产车的例子也做了，而且在这个例子中，该汽车4S店提供了3种品牌的车(本初、宝马、奥迪)，根据需求决定具体出哪一种车。所以，我们有必要把代码优化下，让汽车店只负责卖车。其他的工作和它没太大关系，于是，就有了抽象工厂的概念。</p>
+<pre><code>var CarInterface = new commonUtil.Interface(&quot;CarInterface&quot;, [&quot;start&quot;, &quot;run&quot;]);
+//  接口对象的实例
+
+/**
+ * 卖车的商店(抽象类)
+ * 抽象类 -&gt; 用来被之类继承
+ * @constructor
+ * */
+function CarShop() {
+}
+
+commonUtil.wrap(CarShop.prototype, {
+    &quot;constructor&quot;: CarShop,
+    &quot;sellCar&quot;: function (type) {
+        throw new Error(&quot;method sellCar is an abstruct method!&quot;);
+    }//    卖车，给子类继承重写
+});
+//  拓展原型对象
+
+//  奔驰4S店类
+function BenzCarShop(){}
+commonUtil.extend(BenzCarShop,CarShop);
+commonUtil.wrap(BenzCarShop.prototype,{
+    &quot;constructor&quot;:BenzCarShop,
+    &quot;sellCar&quot;:function(type){
+        var car;
+        var types = [&quot;Benz&quot;];
+        for(var t in types){
+            if(types[t] === type){
+                //  如果商店里有想要的型号,就走这边
+                car = CarFactory.createCar(type);
+            }else{
+                //  没有此类型的车
+                console.log(&quot;没有此型号！&quot;);
+            }
+        }
+        return car;
+        //  数组中存放所有奔驰类型的汽车
+    }
+});
+
+//  宝马4S店类
+function BmwCarShop(){}
+commonUtil.extend(BmwCarShop,CarShop);
+commonUtil.wrap(BmwCarShop.prototype,{
+    &quot;constructor&quot;:BmwCarShop,
+    &quot;sellCar&quot;:function(type){
+        var car;
+        var types = [&quot;Bmw&quot;];
+        for(var t in types){
+            if(types[t] === type){
+                //  如果商店里有想要的型号,就走这边
+                car = CarFactory.createCar(type);
+            }else{
+                //  没有此类型的车
+                console.log(&quot;没有此型号！&quot;);
+            }
+        }
+        return car;
+    }
+});
+
+ //  奥迪4S店类
+function AudiCarShop(){}
+commonUtil.extend(AudiCarShop,CarShop);
+commonUtil.wrap(BmwCarShop.prototype,{
+    &quot;constructor&quot;:AudiCarShop,
+    &quot;sellCar&quot;:function(type){
+        var car;
+        var types = [&quot;Audi&quot;];
+        for(var t in types){
+            if(types[t] === type){
+                //  如果商店里有想要的型号,就走这边
+                car = CarFactory.createCar(type);
+            }else{
+                //  没有此类型的车
+                console.log(&quot;没有此型号！&quot;);
+            }
+        }
+        return car;
+    }
+});
+ //    创建3个汽车4S店类，分别完成对汽车店类的继承
+
+var CarFactory = {
+    &quot;createCar&quot;:function(type){
+        var car;
+        //  动态创建车
+        car = eval(&quot;new &quot;+ type +&quot;();&quot;);
+        //  利用eval动态创建传入的车实例
+        commonUtil.Interface.ensureImplement(car,CarInterface);
+        //  检验接口是否实现
+        return car;
+    }
+};
+//  创建生产一台车的工厂(单体模式)
+
+/**
+ * SuperClass
+ * @constructor
+ */
+function BaseCar(){}
+
+commonUtil.wrap(BaseCar.prototype,{
+    &quot;start&quot;: function () {
+        console.log(&quot;老子的&quot;+ this.constructor.name +&quot;启动了！&quot;);
+    },
+    &quot;run&quot;: function () {
+        console.log(&quot;老子的&quot;+ this.constructor.name +&quot;开走了！&quot;);
+    }
+});
+
+//  Class benz bmw audi
+//  子类应该先继承父类,再拓展或重写自己的方法
+
+function Benz() {
+}
+commonUtil.extend(Benz,BaseCar);
+
+function Bmw() {
+}
+commonUtil.extend(Bmw,BaseCar);
+commonUtil.wrap(Bmw.prototype,{
+    &quot;driveBmw&quot;:function(){
+        console.log(&quot;开宝马！&quot;);
+    },
+    &quot;run&quot;:function(){
+        console.log(&quot;宝马开走了！&quot;);
+    }
+});
+
+function Audi() {
+}
+commonUtil.extend(Audi,BaseCar);
+//  三个子类分别继承父类,并且拓展自己的方法
+
+var benz = new BenzCarShop(),
+    bmw = new BmwCarShop(),
+    benzCar = benz.sellCar(&quot;Benz&quot;),
+    bmwCar = bmw.sellCar(&quot;Bmw&quot;);
+//去具体的某个4S店卖车
+
+benzCar.run();
+bmwCar.run();    
+</code></pre><p>在上面的抽象工厂中，汽车类之提供了一个抽象方法，给各子类继承和重写，而生产的工作交给了具体某种汽车厂商的造车厂，卖车的工作细分到具体某种品牌的4S店，这样，才是我们日常生活中的正常逻辑(买什么车,去什么4S店 -&gt; 卖车 -&gt; 生产车 -&gt; 买车)。</p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+
+
+
+    <!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <p class="copyright text-muted">
+          Build By <a target="_blank" href="https://github.com/rwson">rwson</a>
+        <p class="copyright text-muted">
+          Powered By <a target="_blank" href="https://hexo.io/">Hexo.</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    <!-- After Footer Scripts -->
+<script src="/js/highlight.pack.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function(event) {
+    var codeBlocks = Array.prototype.slice.call(document.getElementsByTagName('pre'))
+    codeBlocks.forEach(function(block, index) {
+      hljs.highlightBlock(block);
+    });
+  });
+</script>
+
+  </body>
+</html>
+

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+  <!-- Html Head Tag-->
+  <head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="rwson">
+  <!-- Open Graph Data -->
+  <meta property="og:title" content="NodeJs中redis窜库插入"/>
+  <meta property="og:description" content="" />
+  <meta property="og:site_name" content="小宋"/>
+  <meta property="og:type" content="article" />
+  <meta property="og:image" content="http://www.rwson.xyzundefined"/>
+  
+    <link rel="alternate" href="/atom.xml" title="小宋" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+
+  <!-- Site Title -->
+  <title>小宋</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <!-- Custom CSS -->
+  
+  <link rel="stylesheet" href="/css/style.light.css">
+
+  <!-- Google Analytics -->
+  
+
+</head>
+
+  <body>
+    <!-- Page Header -->
+
+
+<header class="site-header header-background" style="background-image: url(/img/banner.jpeg)">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="page-title with-background-image">
+          <p class="title">NodeJs中redis窜库插入</p>
+          <p class="subtitle"></p>
+        </div>
+        <div class="site-menu with-background-image">
+          <ul>
+            
+              <li>
+                <a href="/">
+                  
+                  Home
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="/archives">
+                  
+                  Archives
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="https://github.com/rwson">
+                  
+                  Github
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="mailto:862121312@qq.com">
+                  
+                  Email
+                  
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<article>
+  <div class="container typo">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-info text-muted">
+          
+            <!-- Author -->
+            <span class="author info">By rwson</span>
+          
+          <!-- Date -->
+          <span class="date-time info">On
+            <span class="date">2015-08-20</span>
+          </span>
+          
+          <!--  Categories  -->
+            <span class="categories info">Under 
+
+<a href="/categories/NodeJs/">NodeJs</a>
+</span>
+          
+        </div>
+        <!-- Tags -->
+        
+        <!-- Post Main Content -->
+        <div class="post-content">
+          <p>最近在用NodeJs+redis搭建一个类似漂流瓶的服务器,有个需求如下:根据漂流瓶的类型来将数据用hash的方式插入到数据库中,这边类型主要根据性别(male/female)来区分,当类型为male时插入到0号数据库,female时插入到1号数据库。</p>
+<p>先贴代码:</p>
+<pre><code>var redis = require(&apos;redis&apos;),
+    client = redis.createClient();
+
+/**
+ * 扔一个漂流瓶,随机分配一个id当存入redis的建,然后根据不同的类型存放到不同的数据库
+ * @param  {[type]}   bottle   [description]
+ * @param  {Function} callback [description]
+ * @return {[type]}            [description]
+ */
+exports.throw = function (bottle, callback) {
+    bottle.time = bottle.time || Date.now();
+    var bottleId = Math.random().toString(16),
+    //    为每个瓶子随机生成一个id
+
+        type = {
+            &apos;male&apos;: 0,
+            &apos;female&apos;: 1
+        };
+    //    根据不同类型将不同漂流瓶保存到不同的数据库
+
+    console.log(&apos;现在应该选择&apos; + type[bottle.type] + &apos;号数据库进行插入&apos;);
+
+    client.SELECT(type[bottle.type], function () {
+        client.HMSET(bottleId, bottle, function (err, res) {
+            //    以hash类型保存漂流瓶对象
+
+            if (err) {
+                return callback({
+                    &apos;code&apos;: 0,
+                    &apos;msg&apos;: &apos;过会再试吧!&apos;
+                });
+            }
+            //    保存出错
+
+            callback({
+                &apos;code&apos;: 1,
+                &apos;msg&apos;: res
+            });
+            //    保存成功
+
+            client.EXPIRE(bottleId, 86400);
+            //    设置过期时间,每个漂流瓶的生成时间为1天
+        });
+    });
+};
+</code></pre><p>这是原来的实现方法,然后路由是这样实现的:</p>
+<pre><code>//    扔一个漂流瓶
+//    post ?owner=xxx&amp;type=xxx&amp;content=xxx[&amp;time=xxx]modules
+app.post(&apos;/&apos;,function(req,res){
+    if(!req.body.owner || !req.body.type || !req.body.content){
+        if(req.body.type &amp;&amp; ([&apos;male&apos;,&apos;female&apos;].indexOf(req.body.type) == -1)){
+            return res.json({
+                &apos;code&apos;:0,
+                &apos;msg&apos;:&apos;类型错误!&apos;
+            });
+            return res.json({
+                &apos;code&apos;:0,
+                &apos;msg&apos;:&apos;信息不完整!&apos;
+            });
+        }
+    }
+    redis.throw(req.body,function(result){
+        res.json(result);
+    });
+});
+</code></pre><p>再写了几条测试数据:</p>
+<pre><code>var request = require(&apos;request&apos;);
+//  Nodejs的request模块,用来模拟请求
+
+for(var i = 1;i &lt;= 5;i ++){
+    (function(i){
+        request.post({
+            &apos;url&apos;:&apos;http://127.0.0.1:3000/&apos;,
+            &apos;json&apos;:{
+                &apos;owner&apos;:&apos;bottle&apos; + i,
+                &apos;type&apos;:&apos;male&apos;,
+                &apos;content&apos;:&apos;content&apos; + i
+            }
+        });
+    })(i);
+}
+//    循环5条male数据
+
+for(var j = 6;j &lt;= 10;j ++){
+    (function(j){
+        request.post({
+            &apos;url&apos;:&apos;http://127.0.0.1:3000/&apos;,
+            &apos;json&apos;:{
+                &apos;owner&apos;:&apos;bottle&apos; + j,
+                &apos;type&apos;:&apos;female&apos;,
+                &apos;content&apos;:&apos;content&apos; + j
+            }
+        });
+    })(j);
+}
+//    循环5条female数据
+</code></pre><p>模拟请求,发现根据类型取要插入的数据库选择对了,但是到最后都插入到1号库里去了,很奇怪的一个问题。</p>
+<p><img src="/imgs/Node-redis-1.png" alt=""></p>
+<p><img src="/imgs/Node-redis-2.png" alt=""></p>
+<p>后来在网上找帖子,看到开源中国上有一篇关于窜库插入的,发现是由于没有维护好redis对象之间关系导致的这个问题,于是就把代码改成了下面的实现方式:</p>
+<pre><code>var redis = require(&apos;redis&apos;),
+    client = redis.createClient(),
+    client1 = redis.createClient();
+//    redis.createClient(port,host,opt)
+
+/**
+ * 扔一个漂流瓶,随机分配一个id当存入redis的建,然后根据不同的类型存放到不同的数据库
+ * @param  {[type]}   bottle   [description]
+ * @param  {Function} callback [description]
+ * @return {[type]}            [description]
+ */
+exports.throw = function (bottle, callback) {
+    bottle.time = bottle.time || Date.now();
+    var curClient = null,
+        bottleId = Math.random().toString(16),
+    //    为每个瓶子随机生成一个id
+
+        type = {
+            &apos;male&apos;: 0,
+            &apos;female&apos;: 1
+        };
+    //    根据不同类型将不同漂流瓶保存到不同的数据库
+
+    if(type[bottle.type] == 0){
+        curClient = client;
+    }else{
+        curClient = client1;
+    }
+
+    console.log(&apos;现在应该选择&apos; + type[bottle.type] + &apos;号数据库进行插入&apos;);
+
+    curClient.SELECT(type[bottle.type], function () {
+        curClient.HMSET(bottleId, bottle, function (err, res) {
+            //    以hash类型保存漂流瓶对象
+
+            if (err) {
+                return callback({
+                    &apos;code&apos;: 0,
+                    &apos;msg&apos;: &apos;过会再试吧!&apos;
+                });
+            }
+            //    保存出错
+
+            callback({
+                &apos;code&apos;: 1,
+                &apos;msg&apos;: res
+            });
+            //    保存成功
+
+            curClient.EXPIRE(bottleId, 86400);
+            //    设置过期时间,每个漂流瓶的生成时间为1天
+        });
+    });
+};
+</code></pre><p>用两个redis对象,根据具体的类型判断取得那个对象,再测试就解决了这个问题。</p>
+<p><img src="/imgs/Node-redis-3.png" alt=""></p>
+<p><img src="/imgs/Node-redis-4.png" alt=""></p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+
+
+
+    <!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <p class="copyright text-muted">
+          Build By <a target="_blank" href="https://github.com/rwson">rwson</a>
+        <p class="copyright text-muted">
+          Powered By <a target="_blank" href="https://hexo.io/">Hexo.</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    <!-- After Footer Scripts -->
+<script src="/js/highlight.pack.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function(event) {
+    var codeBlocks = Array.prototype.slice.call(document.getElementsByTagName('pre'))
+    codeBlocks.forEach(function(block, index) {
+      hljs.highlightBlock(block);
+    });
+  });
+</script>
+
+  </body>
+</html>
+

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+  <!-- Html Head Tag-->
+  <head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="rwson">
+  <!-- Open Graph Data -->
+  <meta property="og:title" content="javascript中的短路语法"/>
+  <meta property="og:description" content="" />
+  <meta property="og:site_name" content="小宋"/>
+  <meta property="og:type" content="article" />
+  <meta property="og:image" content="http://www.rwson.xyzundefined"/>
+  
+    <link rel="alternate" href="/atom.xml" title="小宋" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+
+  <!-- Site Title -->
+  <title>小宋</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <!-- Custom CSS -->
+  
+  <link rel="stylesheet" href="/css/style.light.css">
+
+  <!-- Google Analytics -->
+  
+
+</head>
+
+  <body>
+    <!-- Page Header -->
+
+
+<header class="site-header header-background" style="background-image: url(/img/banner.jpeg)">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="page-title with-background-image">
+          <p class="title">javascript中的短路语法</p>
+          <p class="subtitle"></p>
+        </div>
+        <div class="site-menu with-background-image">
+          <ul>
+            
+              <li>
+                <a href="/">
+                  
+                  Home
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="/archives">
+                  
+                  Archives
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="https://github.com/rwson">
+                  
+                  Github
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="mailto:862121312@qq.com">
+                  
+                  Email
+                  
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<article>
+  <div class="container typo">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-info text-muted">
+          
+            <!-- Author -->
+            <span class="author info">By rwson</span>
+          
+          <!-- Date -->
+          <span class="date-time info">On
+            <span class="date">2015-02-26</span>
+          </span>
+          
+          <!--  Categories  -->
+            <span class="categories info">Under 
+
+<a href="/categories/javascript/">javascript</a> / <a href="/categories/javascript/短路语法/">短路语法</a>
+</span>
+          
+        </div>
+        <!-- Tags -->
+        
+        <!-- Post Main Content -->
+        <div class="post-content">
+          <p>在js代码中，以前写判断都是通过最简单的”if…else…”来判断,最近无意中改了个写法,发现也可以用,而且相对于的判断方法,省去了”if…else…”,取而代之的是”&amp;&amp;”或者”||“,下面我们一起看下关于短路语法。</p>
+<p>与或非语法中，有一种经典的短路语法：</p>
+<pre><code>var a = boolean || function(){
+    do some thing
+}();
+//    这种情况下,只有当前面的boolean值为false时,才会执行后面的匿名方法
+//    当前面的boolean值为true时,出于性能优化机制,后面的匿名方法就不会继续执行
+
+var b = boolean &amp;&amp; function(){
+    do some thing
+}();
+//    这种情况则与上面相反,只有boolean值为true时,才会执行后的匿名方法
+</code></pre><p>再看一个例子：</p>
+<pre><code>if(typeof obj === &quot;undefined&quot;) obj = {};
+可以改写成这样
+obj === undefined &amp;&amp; (obj = {});
+//    需要注意的是,当判断依据后面的为赋值语句的时候,该语句需加括号，否则会报&quot;无效左值&quot;的错
+</code></pre><p>下面看看传统判断和    短路语法的性能对比：</p>
+<pre><code>var i = 1;
+
+console.time(&quot;普通的if else判断&quot;);
+for (var j = 0; j &lt; 100000; j++) {
+    if (i === 1) {
+        i = 2;
+    } else {
+        i = 1;
+    }
+}
+console.timeEnd(&quot;普通的if else判断&quot;);
+
+i = 1;
+console.time(&quot;短路语法&quot;);
+for (var j = 0; j &lt; 100000; j++) {
+    i === 1 &amp;&amp; (i = 2);
+    i !== 1 &amp;&amp; (i = 1);
+}
+console.timeEnd(&quot;短路语法&quot;);
+
+//    我把两种方法各循环执行了100000次
+</code></pre><p>下面是运行时间对比</p>
+<p><img src="/imgs/run-times-compare.jpg" alt="canvas刮刮卡"></p>
+<p>从图中可见,在一样的执行次数中,短路语法执行需要的时间更短,性能更好</p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+
+
+
+    <!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <p class="copyright text-muted">
+          Build By <a target="_blank" href="https://github.com/rwson">rwson</a>
+        <p class="copyright text-muted">
+          Powered By <a target="_blank" href="https://hexo.io/">Hexo.</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    <!-- After Footer Scripts -->
+<script src="/js/highlight.pack.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function(event) {
+    var codeBlocks = Array.prototype.slice.call(document.getElementsByTagName('pre'))
+    codeBlocks.forEach(function(block, index) {
+      hljs.highlightBlock(block);
+    });
+  });
+</script>
+
+  </body>
+</html>
+

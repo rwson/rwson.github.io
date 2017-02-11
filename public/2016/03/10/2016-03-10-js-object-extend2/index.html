@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+  <!-- Html Head Tag-->
+  <head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="rwson">
+  <!-- Open Graph Data -->
+  <meta property="og:title" content="javascript实现继承之2"/>
+  <meta property="og:description" content="" />
+  <meta property="og:site_name" content="小宋"/>
+  <meta property="og:type" content="article" />
+  <meta property="og:image" content="http://www.rwson.xyzundefined"/>
+  
+    <link rel="alternate" href="/atom.xml" title="小宋" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+
+  <!-- Site Title -->
+  <title>小宋</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <!-- Custom CSS -->
+  
+  <link rel="stylesheet" href="/css/style.light.css">
+
+  <!-- Google Analytics -->
+  
+
+</head>
+
+  <body>
+    <!-- Page Header -->
+
+
+<header class="site-header header-background" style="background-image: url(/img/banner.jpeg)">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="page-title with-background-image">
+          <p class="title">javascript实现继承之2</p>
+          <p class="subtitle"></p>
+        </div>
+        <div class="site-menu with-background-image">
+          <ul>
+            
+              <li>
+                <a href="/">
+                  
+                  Home
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="/archives">
+                  
+                  Archives
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="https://github.com/rwson">
+                  
+                  Github
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="mailto:862121312@qq.com">
+                  
+                  Email
+                  
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<article>
+  <div class="container typo">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-info text-muted">
+          
+            <!-- Author -->
+            <span class="author info">By rwson</span>
+          
+          <!-- Date -->
+          <span class="date-time info">On
+            <span class="date">2016-03-10</span>
+          </span>
+          
+          <!--  Categories  -->
+            <span class="categories info">Under 
+
+<a href="/categories/javascript/">javascript</a> / <a href="/categories/javascript/继承/">继承</a>
+</span>
+          
+        </div>
+        <!-- Tags -->
+        
+        <!-- Post Main Content -->
+        <div class="post-content">
+          <p>在前面的一篇文章<a href="http://rwson.github.io/%E6%8A%80%E6%9C%AF/2015/05/26/js-object-extend.html" target="_blank" rel="external">JavaScript实现继承</a>介绍过js中通过原型来继承的两种方法</p>
+<ol>
+<li>伪造对象继承:通过把父类的实例赋值给子类的prototype，然后在子类的构造函数中调用父类的构造方法；</li>
+<li>类式继承(原型式继承):通过一个空函数中转，把父类的示例赋值给该空函数的原型，然后再把该空函数的prototype赋值给子类的prototype，再在子类的构造方法中调用父类的构造器，实现继承。</li>
+</ol>
+<p>综合上面两个方法，其实都通过两次调用父类的构造器来实现，第二种方法相对于第一种只是在子类原型上少了些父类的实例属性。</p>
+<p>在《javaScript高级程序》中，介绍了另外一种继承的实现方式，名为”寄生式组合继承”。所谓的寄生式组合继承，不必为了子类的原型而调用超类型的构造函数，要实现继承只需要父类原型的一个副本。下面的具体的代码:</p>
+<pre><code>/**
+ * 寄生式组合继承
+ * @param subType   子类
+ * @param superType 父类
+ **/
+function inheritPrototype(subType,subperType){
+    var prototype = Object(superType.prototype);
+    prototype.constructor = subType;
+    subType.prototype = prototype;
+}
+
+/**
+ * 父类
+ * @param name   name属性
+ **/
+function superClass(name) {
+    this.name = name;
+}
+
+superClass.prototype.sayName = function() {
+    alert(this.name);    
+};
+
+/**
+ * 子类
+ * @param name   name属性
+ * @param age    age属性
+ **/
+function subClass(name,age) {
+    superClass.call(this,name);
+    this.age = age;
+}
+
+//  实现继承
+inheritPrototype(subClass,superClass);
+</code></pre><p>这样就只调用了一次父类的构造方法，在性能上更优秀。</p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+
+
+
+    <!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <p class="copyright text-muted">
+          Build By <a target="_blank" href="https://github.com/rwson">rwson</a>
+        <p class="copyright text-muted">
+          Powered By <a target="_blank" href="https://hexo.io/">Hexo.</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    <!-- After Footer Scripts -->
+<script src="/js/highlight.pack.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function(event) {
+    var codeBlocks = Array.prototype.slice.call(document.getElementsByTagName('pre'))
+    codeBlocks.forEach(function(block, index) {
+      hljs.highlightBlock(block);
+    });
+  });
+</script>
+
+  </body>
+</html>
+
