@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+  <!-- Html Head Tag-->
+  <head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="rwson">
+  <!-- Open Graph Data -->
+  <meta property="og:title" content="decorator的学习"/>
+  <meta property="og:description" content="" />
+  <meta property="og:site_name" content="小宋"/>
+  <meta property="og:type" content="article" />
+  <meta property="og:image" content="http://yoursite.comundefined"/>
+  
+    <link rel="alternate" href="/atom.xml" title="小宋" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+
+  <!-- Site Title -->
+  <title>小宋</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <!-- Custom CSS -->
+  
+  <link rel="stylesheet" href="/css/style.light.css">
+
+  <!-- Google Analytics -->
+  
+
+</head>
+
+  <body>
+    <!-- Page Header -->
+
+
+<header class="site-header header-background" style="background-image: url(/img/banner.jpeg)">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="page-title with-background-image">
+          <p class="title">decorator的学习</p>
+          <p class="subtitle"></p>
+        </div>
+        <div class="site-menu with-background-image">
+          <ul>
+            
+              <li>
+                <a href="/">
+                  
+                  Home
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="/archives">
+                  
+                  Archives
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="https://github.com/rwson">
+                  
+                  Github
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="mailto:862121312@qq.com">
+                  
+                  Email
+                  
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<article>
+  <div class="container typo">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-info text-muted">
+          
+            <!-- Author -->
+            <span class="author info">By rwson</span>
+          
+          <!-- Date -->
+          <span class="date-time info">On
+            <span class="date">2017-02-17</span>
+          </span>
+          
+          <!--  Categories  -->
+            <span class="categories info">Under 
+
+<a href="/categories/javascript/">javascript</a> / <a href="/categories/javascript/ES7/">ES7</a> / <a href="/categories/javascript/ES7/decorator/">decorator</a>
+</span>
+          
+        </div>
+        <!-- Tags -->
+        
+        <!-- Post Main Content -->
+        <div class="post-content">
+          <p>随着前端技术的发展,越来越多人把ES6、7用在日常开发中,在ES7中除了广为人知的async/await之外,还有一大特性 — decorator(装饰器)。</p>
+<p>在之前原生javascript设计模式中的一篇文章(<a href="http://rwson.github.io/2015/07/15/2015-07-15-js-design-mode-decorator/" target="_blank" rel="external">javascript装饰者模式</a>)中说道: js装饰者模式可以把一个对象(类/函数)透明地包装在另外一个对象上,完成对被装饰者添加一些新功能的作用。简单的说我们可以在不修改类/函数内部代码的情况下,来达到给类/函数加入一些新功能。</p>
+<p>装饰器可以作用于类或者类的成员属性/方法上,下面我们通过两段代码来分别解释:</p>
+<pre><code>//  作用于类
+
+/**
+ * 需求:
+ * 封装4个方法,分别实现加减乘除四个功能
+ * 通过装饰器给类添加这四个方法,并且可指定是否作为类的静态方法添加
+ **/
+
+//  加减乘除的实现
+
+function add() {
+    return [].slice.call(arguments).reduce((a, b) =&gt; a + b);
+}
+
+function reduce() {
+    return [].slice.call(arguments).reduce((a, b) =&gt; a - b);
+}
+
+function mul() {
+    return [].slice.call(arguments).reduce((a, b) =&gt; a * b);
+}
+
+function div() {
+    return [].slice.call(arguments).reduce((a, b) =&gt; a / b);
+}
+
+
+@bindCal(add, true)
+@bindCal(reduce, true)
+@bindCal(mul, false)
+@bindCal(div, false)
+class MyMath {
+
+}
+</code></pre><p>上面我们完成了需求中的四个函数的封装以及对MyMath类应用了装饰器,下面我们就来实现这个装饰器:</p>
+<pre><code>/**
+ * @param    {Function}   method    指向需要被添加方法的指针
+ * @param    {String}     isStatic  是否添加为静态属性,默认为true
+ * @return   {Function}
+ */
+function bindCal(method, isStatic = true) {
+    //  获取到方法名
+    const {name} = method;
+    //  当作用于类上时,会返回一个匿名函数,将类的构造函数作为第一个参数
+    return function(target) {
+        //  获取类的原型
+        const {prototype} = target;
+        //  添加为原型属性(非静态属性)
+        if (!isStatic) {
+            //  检测要添加的属性是否存在
+            if (prototype[name]) {
+                throw `${prototype.name}.${name} already exits!`;
+            } else {
+                //  利用ES5中的Object.defineProperty来添加相关属性
+                Object.defineProperty(target.prototype, name, {
+                    value: method
+                });
+            }
+        } else {
+            //  添加为静态属性
+            //  检测要添加的属性是否存在
+            if (target[name]) {
+                throw `${target}.${name} already exits!`;
+            }
+            //  利用ES5中的Object.defineProperty来添加相关属性
+            Object.defineProperty(target, name, {
+                value: method
+            });
+        }
+        //  返回类的构造器
+        return target;
+    }
+}
+</code></pre><p>我们把add和reduce作为静态方法添加给MyMath类,把mul和div作为原型方法给了MyMath类,所以调用应该看起来像下面的样子:</p>
+<pre><code>const math = new MyMath();
+
+console.log(MyMath.add(1, 2, 3, 4));        //  10
+console.log(MyMath.reduce(1, 2, 3, 4));     //  -8
+
+
+console.log(math.mul(1, 2, 3, 4));          //  24
+console.log(math.div(10000, 1000, 10, 5));  //  0.2
+</code></pre><p>上面就是我们在类上应用装饰器的一个例子,下面再一起看下如果在成员属性/方法上应用构造器的例子:</p>
+<pre><code>/**
+ * 需求:
+ * 实现在类中可以冻结成员属性(外部无法修改,只读)
+ * 实现修改类中成员方法中的this指向
+ **/
+
+
+//  实现一个类,并且对其成员属性/方法应用装饰器、定义一个对象,作为成员方法中的this指向
+
+
+const obj = {
+    name: &quot;rwson&quot;,
+    age: 24,
+    sex: &quot;male&quot;,
+    job: &quot;web developer&quot;
+};
+
+class Context {
+
+    constructor() {
+
+    }
+
+    @readonly
+    version = &quot;1.0.0&quot;;
+
+    @bindContext(obj)
+    showContext() {
+        console.log(this);
+    }
+
+} 
+</code></pre><p>上面我们完成了对装饰器应用过程,下面一起看下readonly和bindContext两个装饰器的实现:</p>
+<pre><code>/**
+ * @param    {Object}   target    当前类的prototype
+ * @param    {String}   key       将要被装饰的属性名
+ * @param    {Object}   decorator ES5中Object.defineProperty的最后一个参数
+ * @return   {Object}   decorator
+ */
+function readonly(target, key, decorator) {
+    decorator.configurable = false;
+    decorator.enumerable = false;
+    decorator.writable = false;
+    decorator.value = decorator.value;
+    return decorator;
+}
+
+/**
+ * @param    {Object}   context    需要绑定成this的对象
+ * @return   {Function}
+ */
+function bindContext(context) {
+    /**
+     * @param    {Object}   target    当前类的prototype
+     * @param    {String}   key       将要被装饰的属性名
+     * @param    {Object}   decorator ES5中Object.defineProperty的最后一个参数
+     * @return   {Object}   decorator
+     */
+    return function(target, key, decorator) {
+        if (typeof context === &quot;undefined&quot;) {
+            context = target;
+        }
+        decorator.value = decorator.value.bind(context);
+        return decorator;
+    }
+}
+</code></pre><p>好了上面就是我们的两个作用于成员属性/方法上的装饰器,下面一起来看下简单的调用吧:</p>
+<pre><code>const context = new Context();
+
+context.showContext();          //  打印出刚才定义的obj对象
+context.version = &quot;1.1.0&quot;;      //  抛出异常 Uncaught TypeError: Cannot assign to read only property &apos;version&apos; of object &apos;#&lt;Context&gt;&apos;
+</code></pre><p>好了,上面就装饰器的几种用法和实现,我们可能会发现刚才在定义装饰器函数的时候,当该装饰器作用于类上的时候返回出的匿名函数都是一个参数;而作用于成员属性或者成员方法上的,都是三个参数,这又是为啥呢?</p>
+<p>一起来分析下编译后的代码:</p>
+<pre><code>/**
+ * @param    {Object}               target     当前类的prototype
+ * @param    {String}               property   将要被装饰的属性名
+ * @param    {Array.&lt;Function&gt;}       decorators 装饰器函数列表
+ * @param    {Object}               descriptor ES5中Object.defineProperty的最后一个参数
+ * @param    {[type]}   context    [description]
+ * @return   {[type]}              [description]
+ * @private
+ */
+function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) {
+
+    //    属性对象
+    var desc = {};
+
+    //    Object[&quot;keys&quot;]    -&gt; [&quot;value&quot;, &quot;writable&quot;, &quot;enumerable&quot;, &quot;configurable&quot;]
+    //    把ES5中Object.defineProperty的最后一个参数的属性变成外部指定的
+    Object[&apos;ke&apos; + &apos;ys&apos;](descriptor).forEach(function (key) {
+        desc[key] = descriptor[key];
+    });
+    desc.enumerable = !!desc.enumerable;
+    desc.configurable = !!desc.configurable;
+
+    if (&apos;value&apos; in desc || desc.initializer) {
+        desc.writable = true;
+    }
+
+    desc = decorators.slice().reverse().reduce(function (desc, decorator) {
+        return decorator(target, property, desc) || desc;
+    }, desc);
+
+    if (context &amp;&amp; desc.initializer !== void 0) {
+        desc.value = desc.initializer ? desc.initializer.call(context) : void 0;
+        desc.initializer = undefined;
+    }
+
+    //    利用Object.defineProperty定义属性
+    if (desc.initializer === void 0) {
+        Object[&apos;define&apos; + &apos;Property&apos;](target, property, desc);
+        desc = null;
+    }
+
+    //    返回当前属性对象
+    return desc;
+}
+</code></pre><p>可以看出其实decorator最后也是通过Object.defineProperty实现的,所以参数和Object.defineProperty是一致的。</p>
+<p>那日常开发中,我们可能需要借助babel来对带有decorator的代码进行编译,首先我们需要安装babel:</p>
+<pre><code>npm install babel -g
+</code></pre><p>然后切换到项目目录运行:</p>
+<pre><code>npm install babel-plugin-transform-decorators-legacy --save-dev
+</code></pre><p>然后创建.babelrc配置文件,在plugins选项中添加以下配置:</p>
+<pre><code>//  ...
+&quot;plugins&quot;: [
+    &quot;transform-decorators-legacy&quot;
+]
+//  ...
+</code></pre><p>最后我们就可以编译之前写的代码了:</p>
+<pre><code>babel decorator.js &gt; decorator.es5.js
+</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+
+
+
+    <!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <p class="copyright text-muted">
+          Build By <a target="_blank" href="https://github.com/rwson">rwson</a>
+        <p class="copyright text-muted">
+          Powered By <a target="_blank" href="https://hexo.io/">Hexo.</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    <!-- After Footer Scripts -->
+<script src="/js/highlight.pack.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function(event) {
+    var codeBlocks = Array.prototype.slice.call(document.getElementsByTagName('pre'))
+    codeBlocks.forEach(function(block, index) {
+      hljs.highlightBlock(block);
+    });
+  });
+</script>
+
+  </body>
+</html>
+
