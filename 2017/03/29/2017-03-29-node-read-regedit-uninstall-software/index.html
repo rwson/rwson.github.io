@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+  <!-- Html Head Tag-->
+  <head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="rwson">
+  <!-- Open Graph Data -->
+  <meta property="og:title" content="NodeJs读取windows注册表来对软件进行卸载"/>
+  <meta property="og:description" content="" />
+  <meta property="og:site_name" content="小宋"/>
+  <meta property="og:type" content="article" />
+  <meta property="og:image" content="http://yoursite.com/childundefined"/>
+  
+    <link rel="alternate" href="/atom.xml" title="小宋" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+
+  <!-- Site Title -->
+  <title>小宋</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <!-- Custom CSS -->
+  
+  <link rel="stylesheet" href="/css/style.light.css">
+
+  <!-- Google Analytics -->
+  
+
+</head>
+
+  <body>
+    <!-- Page Header -->
+
+
+<header class="site-header header-background" style="background-image: url(/img/banner.jpeg)">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="page-title with-background-image">
+          <p class="title">NodeJs读取windows注册表来对软件进行卸载</p>
+          <p class="subtitle"></p>
+        </div>
+        <div class="site-menu with-background-image">
+          <ul>
+            
+              <li>
+                <a href="/">
+                  
+                  Home
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="/archives">
+                  
+                  Archives
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="https://github.com/rwson">
+                  
+                  Github
+                  
+                </a>
+              </li>
+            
+              <li>
+                <a href="mailto:862121312@qq.com">
+                  
+                  Email
+                  
+                </a>
+              </li>
+            
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<article>
+  <div class="container typo">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-info text-muted">
+          
+            <!-- Author -->
+            <span class="author info">By rwson</span>
+          
+          <!-- Date -->
+          <span class="date-time info">On
+            <span class="date">2017-03-29</span>
+          </span>
+          
+          <!--  Categories  -->
+            <span class="categories info">Under 
+
+<a href="/categories/nodejs/">nodejs</a> / <a href="/categories/nodejs/桌面exe/">桌面exe</a>
+</span>
+          
+        </div>
+        <!-- Tags -->
+        
+        <!-- Post Main Content -->
+        <div class="post-content">
+          <p>最近在基于node-webkit(以下简称NW)开发windows桌面app,里面有个类似于软件市场的功能,后台管理员提供一些软件,可以从该app上进行下载、安装、卸载、升级等等。</p>
+<p>安装或升级可以直接通过把下载好的zip包解压出来然后执行里面的exe程序安装就好,但是卸载相对来说比较麻烦,几乎每个第三方exe在安装后的目录里面都有一个uninstall.exe,但是我们不知道这个软件具体安装在哪,所以要卸载也无从下手,这时候就想到了注册表,通过注册表可以获取到某个软件的安装目录,所以可以先把当前注册表的目录取得,再去相应目录下找卸载该软件的那个exe并执行。</p>
+<p>由于NW是基于nodejs的,所以可以通过一些第三方的npm包来操作,在这里主要主要用到的包是<a href="https://github.com/fresc81/node-winreg" target="_blank" rel="external">winreg</a>,首先我们先分析下注册表:</p>
+<p><img src="/imgs/regedit-nalysis.png" alt="注册表分析"></p>
+<p>可以看到根下面有5个大项(HKEY_CLASSES_ROOT、HKEY_CURRENT_USER、HKEY_LOCAL_MACHINE、HKEY_USERS、HKEY_CURRENT_CONFIG),第三方软件基本上都是在HKEY_LOCAL_MACHINE下面的,所以读取的时候就从HKEY_LOCAL_MACHINE下面开始找,这里以搜狗输入法为例:</p>
+<p><img src="/imgs/sogouinput.png" alt="搜狗输入法分析"></p>
+<p>从上图中看到该项的全路径为”HKEY_LOCAL_MACHINE\SOFTWARE\SogouInput”,注册项里的第一项就是安装路径,对应的名称是默认,所以我们读取的时候从就可以读取刚才的那个路径,下面是主要的实现:</p>
+<pre><code>const Registry = require(&quot;winreg&quot;),
+    child_process = require(&quot;child_process&quot;),
+    path = require(&quot;path&quot;),
+    key = new Registry({
+        //  打开HKEY_LOCAL_MACHINE这个大类
+        //  一共有5个属性,分别是&apos;HKLM&apos;, &apos;HKCU&apos;, &apos;HKCR&apos;, &apos;HKU&apos;, &apos;HKCC&apos;
+        //  就是上面那5大项的简称
+        hive: Registry.HKLM,
+        //  反斜杠前面需要加&quot;\&quot;进行转义
+        key: &quot;\\SOFTWARE\\SogouInput&quot;
+    });
+
+let pre, end, cur, target;
+
+//  获取到注册项中中所有配置项,以键值对的形式返回
+//  每一小项分别包含(host、hive、key、name、type、value、arch)这几个属性
+key.values((err, res) =&gt; {
+    if (err) {
+        console.log(err);
+    } else {
+        for(var i in res) {
+            cur = res[i];
+            //  判断当前项的名称是否包含default或者version
+            if (/default/gi.test(cur.name)) {
+                pre = cur.value;
+            } else if (/^version$/gi.test(cur.name)) {
+                end = cur.value;
+            }
+        }
+
+        //  拼接软件的安装全路径
+        target = `${pre}\\${end}`;
+
+        //  结合nodejs中子进程模块中的execFile方法执行卸载的exe
+        child_process.execFile(path.join(target, &quot;Uninstall.exe&quot;), (err, res) =&gt; {
+            if (err) {
+                console.log(&quot;卸载失败,请重试!&quot;);
+            }
+        });
+    }
+});
+</code></pre><p>最后执行写好的js文件,就会顺利打开相关卸载窗口:</p>
+<p><img src="/imgs/uninstall-screenshoot.png" alt="卸载窗口"></p>
+<p>当然这只是一个简单的实现,是分析好了软件安装目录下的卸载文件在什么地方去调用它的,肯定不能应用于所有场景,应该遍历该软件安装的根目录和子目录搜索卸载程序所在的最终目录来执行并进行卸载。</p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+
+
+
+    <!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <p class="copyright text-muted">
+          Build By <a target="_blank" href="https://github.com/rwson">rwson</a>
+        <p class="copyright text-muted">
+          Powered By <a target="_blank" href="https://hexo.io/">Hexo.</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    <!-- After Footer Scripts -->
+<script src="/js/highlight.pack.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function(event) {
+    var codeBlocks = Array.prototype.slice.call(document.getElementsByTagName('pre'))
+    codeBlocks.forEach(function(block, index) {
+      hljs.highlightBlock(block);
+    });
+  });
+</script>
+
+  </body>
+</html>
+
