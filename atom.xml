@@ -1,0 +1,2981 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>小宋</title>
+  
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="http://yoursite.com/"/>
+  <updated>2017-03-30T13:28:52.000Z</updated>
+  <id>http://yoursite.com/</id>
+  
+  <author>
+    <name>rwson</name>
+    
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>NodeJs读取windows注册表来对软件进行卸载</title>
+    <link href="http://yoursite.com/2017/03/29/2017-03-29-node-read-regedit-uninstall-software/"/>
+    <id>http://yoursite.com/2017/03/29/2017-03-29-node-read-regedit-uninstall-software/</id>
+    <published>2017-03-28T16:00:00.000Z</published>
+    <updated>2017-03-30T13:28:52.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>最近在基于node-webkit(以下简称NW)开发windows桌面app,里面有个类似于软件市场的功能,后台管理员提供一些软件,可以从该app上进行下载、安装、卸载、升级等等。</p>
+<p>安装或升级可以直接通过把下载好的zip包解压出来然后执行里面的exe程序安装就好,但是卸载相对来说比较麻烦,几乎每个第三方exe在安装后的目录里面都有一个uninstall.exe,但是我们不知道这个软件具体安装在哪,所以要卸载也无从下手,这时候就想到了注册表,通过注册表可以获取到某个软件的安装目录,所以可以先把当前注册表的目录取得,再去相应目录下找卸载该软件的那个exe并执行。</p>
+<p>由于NW是基于nodejs的,所以可以通过一些第三方的npm包来操作,在这里主要主要用到的包是<a href="https://github.com/fresc81/node-winreg" target="_blank" rel="external">winreg</a>,首先我们先分析下注册表:</p>
+<p><img src="/imgs/regedit-nalysis.png" alt="注册表分析"></p>
+<p>可以看到根下面有5个大项(HKEY_CLASSES_ROOT、HKEY_CURRENT_USER、HKEY_LOCAL_MACHINE、HKEY_USERS、HKEY_CURRENT_CONFIG),第三方软件基本上都是在HKEY_LOCAL_MACHINE下面的,所以读取的时候就从HKEY_LOCAL_MACHINE下面开始找,这里以搜狗输入法为例:</p>
+<p><img src="/imgs/sogouinput.png" alt="搜狗输入法分析"></p>
+<p>从上图中看到该项的全路径为”HKEY_LOCAL_MACHINE\SOFTWARE\SogouInput”,注册项里的第一项就是安装路径,对应的名称是默认,所以我们读取的时候从就可以读取刚才的那个路径,下面是主要的实现:</p>
+<pre><code>const Registry = require(&quot;winreg&quot;),
+    child_process = require(&quot;child_process&quot;),
+    path = require(&quot;path&quot;),
+    key = new Registry({
+        //  打开HKEY_LOCAL_MACHINE这个大类
+        //  一共有5个属性,分别是&apos;HKLM&apos;, &apos;HKCU&apos;, &apos;HKCR&apos;, &apos;HKU&apos;, &apos;HKCC&apos;
+        //  就是上面那5大项的简称
+        hive: Registry.HKLM,
+        //  反斜杠前面需要加&quot;\&quot;进行转义
+        key: &quot;\\SOFTWARE\\SogouInput&quot;
+    });
+
+let pre, end, cur, target;
+
+//  获取到注册项中中所有配置项,以键值对的形式返回
+//  每一小项分别包含(host、hive、key、name、type、value、arch)这几个属性
+key.values((err, res) =&gt; {
+    if (err) {
+        console.log(err);
+    } else {
+        for(var i in res) {
+            cur = res[i];
+            //  判断当前项的名称是否包含default或者version
+            if (/default/gi.test(cur.name)) {
+                pre = cur.value;
+            } else if (/^version$/gi.test(cur.name)) {
+                end = cur.value;
+            }
+        }
+
+        //  拼接软件的安装全路径
+        target = `${pre}\\${end}`;
+
+        //  结合nodejs中子进程模块中的execFile方法执行卸载的exe
+        child_process.execFile(path.join(target, &quot;Uninstall.exe&quot;), (err, res) =&gt; {
+            if (err) {
+                console.log(&quot;卸载失败,请重试!&quot;);
+            }
+        });
+    }
+});
+</code></pre><p>最后执行写好的js文件,就会顺利打开相关卸载窗口:</p>
+<p><img src="/imgs/uninstall-screenshoot.png" alt="卸载窗口"></p>
+<p>当然这只是一个简单的实现,是分析好了软件安装目录下的卸载文件在什么地方去调用它的,肯定不能应用于所有场景,应该遍历该软件安装的根目录和子目录搜索卸载程序所在的最终目录来执行并进行卸载。</p>
+<h5 id="记在2017-03-30"><a href="#记在2017-03-30" class="headerlink" title="记在2017-03-30"></a>记在2017-03-30</h5><p>今天尝试用昨天的写法来实现软件卸载,发现实现起来并不是那么简单,而且遍历文件的话面临一个性能问题,层级一多,递归循环就可能导致需要等好久才能开始卸载,所以又深入研究了下注册表,真是得来全不费工夫,注册表里面就给我们提供了某个软件的卸载路径,具体位置在</p>
+<pre><code>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\
+</code></pre><p>这边都是我们安装的所有软件,需要注意的是在64位系统中该路径有所不同,大问题解决了,我们又面临一个其他问题,就是有些软件在安装后,卸载那一级的最后一层并不是它自己的名字,而是一串花括号开始花括号结尾的字符串,类似于下图所示:</p>
+<p><img src="/imgs/uninstall-id.png" alt="卸载id"></p>
+<p>于是又在好几种不同版本的windows电脑上进行尝试,发现这个id始终是唯一的,最后和需求商量决定后台管理员在提供软件的时候把这个id也带上,这样就解决了问题,这样唯一的不好就是后台管理员的工作可能会稍微繁琐点。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;最近在基于node-webkit(以下简称NW)开发windows桌面app,里面有个类似于软件市场的功能,后台管理员提供一些软件,可以从该app上进行下载、安装、卸载、升级等等。&lt;/p&gt;
+&lt;p&gt;安装或升级可以直接通过把下载好的zip包解压出来然后执行里面的exe程序安装就
+    
+    </summary>
+    
+      <category term="nodejs" scheme="http://yoursite.com/categories/nodejs/"/>
+    
+      <category term="桌面exe" scheme="http://yoursite.com/categories/nodejs/%E6%A1%8C%E9%9D%A2exe/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>decorator的学习</title>
+    <link href="http://yoursite.com/2017/02/17/2017-02-17-es7-decorator-tourial/"/>
+    <id>http://yoursite.com/2017/02/17/2017-02-17-es7-decorator-tourial/</id>
+    <published>2017-02-16T16:00:00.000Z</published>
+    <updated>2017-02-17T12:44:15.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>随着前端技术的发展,越来越多人把ES6、7用在日常开发中,在ES7中除了广为人知的async/await之外,还有一大特性 — decorator(装饰器)。</p>
+<p>在之前原生javascript设计模式中的一篇文章(<a href="http://rwson.github.io/2015/07/15/2015-07-15-js-design-mode-decorator/" target="_blank" rel="external">javascript装饰者模式</a>)中说道: js装饰者模式可以把一个对象(类/函数)透明地包装在另外一个对象上,完成对被装饰者添加一些新功能的作用。简单的说我们可以在不修改类/函数内部代码的情况下,来达到给类/函数加入一些新功能。</p>
+<p>装饰器可以作用于类或者类的成员属性/方法上,下面我们通过两段代码来分别解释:</p>
+<pre><code>//  作用于类
+
+/**
+ * 需求:
+ * 封装4个方法,分别实现加减乘除四个功能
+ * 通过装饰器给类添加这四个方法,并且可指定是否作为类的静态方法添加
+ **/
+
+//  加减乘除的实现
+
+function add() {
+    return [].slice.call(arguments).reduce((a, b) =&gt; a + b);
+}
+
+function reduce() {
+    return [].slice.call(arguments).reduce((a, b) =&gt; a - b);
+}
+
+function mul() {
+    return [].slice.call(arguments).reduce((a, b) =&gt; a * b);
+}
+
+function div() {
+    return [].slice.call(arguments).reduce((a, b) =&gt; a / b);
+}
+
+
+@bindCal(add, true)
+@bindCal(reduce, true)
+@bindCal(mul, false)
+@bindCal(div, false)
+class MyMath {
+
+}
+</code></pre><p>上面我们完成了需求中的四个函数的封装以及对MyMath类应用了装饰器,下面我们就来实现这个装饰器:</p>
+<pre><code>/**
+ * @param    {Function}   method    指向需要被添加方法的指针
+ * @param    {String}     isStatic  是否添加为静态属性,默认为true
+ * @return   {Function}
+ */
+function bindCal(method, isStatic = true) {
+    //  获取到方法名
+    const {name} = method;
+    //  当作用于类上时,会返回一个匿名函数,将类的构造函数作为第一个参数
+    return function(target) {
+        //  获取类的原型
+        const {prototype} = target;
+        //  添加为原型属性(非静态属性)
+        if (!isStatic) {
+            //  检测要添加的属性是否存在
+            if (prototype[name]) {
+                throw `${prototype.name}.${name} already exits!`;
+            } else {
+                //  利用ES5中的Object.defineProperty来添加相关属性
+                Object.defineProperty(target.prototype, name, {
+                    value: method
+                });
+            }
+        } else {
+            //  添加为静态属性
+            //  检测要添加的属性是否存在
+            if (target[name]) {
+                throw `${target}.${name} already exits!`;
+            }
+            //  利用ES5中的Object.defineProperty来添加相关属性
+            Object.defineProperty(target, name, {
+                value: method
+            });
+        }
+        //  返回类的构造器
+        return target;
+    }
+}
+</code></pre><p>我们把add和reduce作为静态方法添加给MyMath类,把mul和div作为原型方法给了MyMath类,所以调用应该看起来像下面的样子:</p>
+<pre><code>const math = new MyMath();
+
+console.log(MyMath.add(1, 2, 3, 4));        //  10
+console.log(MyMath.reduce(1, 2, 3, 4));     //  -8
+
+
+console.log(math.mul(1, 2, 3, 4));          //  24
+console.log(math.div(10000, 1000, 10, 5));  //  0.2
+</code></pre><p>上面就是我们在类上应用装饰器的一个例子,下面再一起看下如果在成员属性/方法上应用构造器的例子:</p>
+<pre><code>/**
+ * 需求:
+ * 实现在类中可以冻结成员属性(外部无法修改,只读)
+ * 实现修改类中成员方法中的this指向
+ **/
+
+
+//  实现一个类,并且对其成员属性/方法应用装饰器、定义一个对象,作为成员方法中的this指向
+
+
+const obj = {
+    name: &quot;rwson&quot;,
+    age: 24,
+    sex: &quot;male&quot;,
+    job: &quot;web developer&quot;
+};
+
+class Context {
+
+    constructor() {
+
+    }
+
+    @readonly
+    version = &quot;1.0.0&quot;;
+
+    @bindContext(obj)
+    showContext() {
+        console.log(this);
+    }
+
+} 
+</code></pre><p>上面我们完成了对装饰器应用过程,下面一起看下readonly和bindContext两个装饰器的实现:</p>
+<pre><code>/**
+ * @param    {Object}   target    当前类的prototype
+ * @param    {String}   key       将要被装饰的属性名
+ * @param    {Object}   decorator ES5中Object.defineProperty的最后一个参数
+ * @return   {Object}   decorator
+ */
+function readonly(target, key, decorator) {
+    decorator.configurable = false;
+    decorator.enumerable = false;
+    decorator.writable = false;
+    decorator.value = decorator.value;
+    return decorator;
+}
+
+/**
+ * @param    {Object}   context    需要绑定成this的对象
+ * @return   {Function}
+ */
+function bindContext(context) {
+    /**
+     * @param    {Object}   target    当前类的prototype
+     * @param    {String}   key       将要被装饰的属性名
+     * @param    {Object}   decorator ES5中Object.defineProperty的最后一个参数
+     * @return   {Object}   decorator
+     */
+    return function(target, key, decorator) {
+        if (typeof context === &quot;undefined&quot;) {
+            context = target;
+        }
+        decorator.value = decorator.value.bind(context);
+        return decorator;
+    }
+}
+</code></pre><p>好了上面就是我们的两个作用于成员属性/方法上的装饰器,下面一起来看下简单的调用吧:</p>
+<pre><code>const context = new Context();
+
+context.showContext();          //  打印出刚才定义的obj对象
+context.version = &quot;1.1.0&quot;;      //  抛出异常 Uncaught TypeError: Cannot assign to read only property &apos;version&apos; of object &apos;#&lt;Context&gt;&apos;
+</code></pre><p>好了,上面就装饰器的几种用法和实现,我们可能会发现刚才在定义装饰器函数的时候,当该装饰器作用于类上的时候返回出的匿名函数都是一个参数;而作用于成员属性或者成员方法上的,都是三个参数,这又是为啥呢?</p>
+<p>一起来分析下编译后的代码:</p>
+<pre><code>/**
+ * @param    {Object}               target     当前类的prototype
+ * @param    {String}               property   将要被装饰的属性名
+ * @param    {Array.&lt;Function&gt;}       decorators 装饰器函数列表
+ * @param    {Object}               descriptor ES5中Object.defineProperty的最后一个参数
+ * @param    {[type]}   context    [description]
+ * @return   {[type]}              [description]
+ * @private
+ */
+function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) {
+
+    //    属性对象
+    var desc = {};
+
+    //    Object[&quot;keys&quot;]    -&gt; [&quot;value&quot;, &quot;writable&quot;, &quot;enumerable&quot;, &quot;configurable&quot;]
+    //    把ES5中Object.defineProperty的最后一个参数的属性变成外部指定的
+    Object[&apos;ke&apos; + &apos;ys&apos;](descriptor).forEach(function (key) {
+        desc[key] = descriptor[key];
+    });
+    desc.enumerable = !!desc.enumerable;
+    desc.configurable = !!desc.configurable;
+
+    if (&apos;value&apos; in desc || desc.initializer) {
+        desc.writable = true;
+    }
+
+    desc = decorators.slice().reverse().reduce(function (desc, decorator) {
+        return decorator(target, property, desc) || desc;
+    }, desc);
+
+    if (context &amp;&amp; desc.initializer !== void 0) {
+        desc.value = desc.initializer ? desc.initializer.call(context) : void 0;
+        desc.initializer = undefined;
+    }
+
+    //    利用Object.defineProperty定义属性
+    if (desc.initializer === void 0) {
+        Object[&apos;define&apos; + &apos;Property&apos;](target, property, desc);
+        desc = null;
+    }
+
+    //    返回当前属性对象
+    return desc;
+}
+</code></pre><p>可以看出其实decorator最后也是通过Object.defineProperty实现的,所以参数和Object.defineProperty是一致的。</p>
+<p>那日常开发中,我们可能需要借助babel来对带有decorator的代码进行编译,首先我们需要安装babel:</p>
+<pre><code>npm install babel -g
+</code></pre><p>然后切换到项目目录运行:</p>
+<pre><code>npm install babel-plugin-transform-decorators-legacy --save-dev
+</code></pre><p>然后创建.babelrc配置文件,在plugins选项中添加以下配置:</p>
+<pre><code>//  ...
+&quot;plugins&quot;: [
+    &quot;transform-decorators-legacy&quot;
+]
+//  ...
+</code></pre><p>最后我们就可以编译之前写的代码了:</p>
+<pre><code>babel decorator.js &gt; decorator.es5.js
+</code></pre>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;随着前端技术的发展,越来越多人把ES6、7用在日常开发中,在ES7中除了广为人知的async/await之外,还有一大特性 — decorator(装饰器)。&lt;/p&gt;
+&lt;p&gt;在之前原生javascript设计模式中的一篇文章(&lt;a href=&quot;http://rwson.gi
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+      <category term="ES7" scheme="http://yoursite.com/categories/javascript/ES7/"/>
+    
+      <category term="decorator" scheme="http://yoursite.com/categories/javascript/ES7/decorator/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>实现一个拷贝文件夹以及文件夹下所有文件的方法</title>
+    <link href="http://yoursite.com/2017/01/20/2017-01-20-copy-a-directory-and-files-under-it/"/>
+    <id>http://yoursite.com/2017/01/20/2017-01-20-copy-a-directory-and-files-under-it/</id>
+    <published>2017-01-19T16:00:00.000Z</published>
+    <updated>2017-03-30T12:19:21.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>实现这个方法依赖了<a href="https://www.npmjs.com/package/fs-extra" target="_blank" rel="external">fs-extra</a>模块,实现目的是为了一个方法拷贝所有当前目录下所有文件,具体实现如下:</p>
+<pre><code>let fs = require(&quot;fs-extra&quot;);
+
+/**
+ * 批量拷贝文件
+ * @param src           源目录          String
+ * @param target        目标目录        String
+ * @param filetypes     文件类型        RegExp
+ * @param ignorefiles   忽略文件列表    Array
+ **/
+fs.copyAllFiles = (src, target, filetypes, ignorefiles) =&gt; {
+    let argus = arguments,
+        readSrc = src,
+        targetSrc = target,
+        fileSrc, targeFileSrc;
+
+    fs.readdir(readSrc, (ex, files) =&gt; {
+        if (files.length) {
+            files.forEach((file) =&gt; {
+
+                //  当前文件不在忽略列表中
+                if (!(~ignoreFiles.indexOf(file))) {
+                    fileSrc = path.resolve(readSrc, file);
+                    if (filetypes.test(file)) {
+                        targeFileSrc = path.resolve(targetSrc, file);
+                        fs.copySync(fileSrc, targeFileSrc);
+                    } else {
+                        targeFileSrc = path.resolve(targetSrc, file);
+                        fs.copySync(fileSrc, targeFileSrc);
+                        //  递归拷贝下一级目录
+                        fs.copyAllFiles.call(fileSrc, targeFileSrc, filetypes, ignorefiles);
+                    }
+                }
+            });
+        }
+    });
+};
+</code></pre><p>上面的就是要实现的方法,调用的方法就看起来像下面的样子:</p>
+<pre><code>const ignoreFiles = [&quot;.DS_Store&quot;, &quot;.idea&quot;, &quot;.git&quot;, &quot;.svn&quot;];
+fs.copyAllFiles(&quot;a&quot;, &quot;b&quot;, /\.jpe?g|\.png/, ignoreFiles);
+</code></pre>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;实现这个方法依赖了&lt;a href=&quot;https://www.npmjs.com/package/fs-extra&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;fs-extra&lt;/a&gt;模块,实现目的是为了一个方法拷贝所有当前目录下所有文件,具体实现如下:&lt;
+    
+    </summary>
+    
+      <category term="nodejs" scheme="http://yoursite.com/categories/nodejs/"/>
+    
+      <category term="文件操作" scheme="http://yoursite.com/categories/nodejs/%E6%96%87%E4%BB%B6%E6%93%8D%E4%BD%9C/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>实现一个webpack loader</title>
+    <link href="http://yoursite.com/2017/01/18/2017-01-18-wrire-a-webpack-loader/"/>
+    <id>http://yoursite.com/2017/01/18/2017-01-18-wrire-a-webpack-loader/</id>
+    <published>2017-01-17T16:00:00.000Z</published>
+    <updated>2017-03-30T12:19:21.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在React,ES6开发模式越来越普及的今天,webpack就成了前端构建的一个标配。webpack有两大重要部分组成: loader和plugin。loader是用在应用源码上的转换原件,比如最常用到的babel-loader/jsx-loader/file-loader/css-loader/url-loader等等。</p>
+<p>loader可链式执行,一种文件类型可以用多个loader(比如css文件,可能就需要用到css-loader和style-loader),loader之间用”!”分隔,当前loader处理完,把处理结果带到下一个loader,最后一个loader返回一个String或者String Buffer返回给compiler。</p>
+<p>loader调用方式大体有3种形式:</p>
+<ol>
+<li><p>引用时调用</p>
+<pre><code>//  a.js
+
+require(&quot;style-loader/url!css-loader!./xxx.css&quot;);
+</code></pre></li>
+<li><p>webpack直接调用</p>
+<pre><code>//  webpack.config.js
+
+//  ...
+
+module: {
+    loaders: [
+        //  ...
+
+        {
+            test: /\.css$/,
+            loader: &quot;style-loader!css-loader&quot;
+        }
+    ]
+}
+</code></pre></li>
+<li><p>指定loaders数组</p>
+<pre><code>//  webpack.config.js
+
+//  ...
+
+module: {
+    loaders: [
+        //  ...
+
+        {
+            test: /\.css$/,
+            loaders: [
+                &quot;style-loader&quot;,
+                &quot;css-loader&quot;
+            ]
+        }
+    ]
+}
+</code></pre></li>
+</ol>
+<p>webpack官网上说”A loader is a node module exporting a function”,也就是说一个loader就是一个暴露出去的node模块,既然是一个node module,也就基本可以写成下面的样子:</p>
+<pre><code>module.exports = function() {
+
+    //  ...
+};
+</code></pre><p>需要注意的是,在该模块被调用时,传入的第一个参数是文件的内容,所以我们可以再改改:</p>
+<pre><code>/**
+ * @param content  将被处理的内容
+ *
+ **/
+module.exports = function(content) {
+
+    //  ...
+
+    //  运行下一个loader
+    this.callback(content);
+};
+</code></pre><p>知道了大体写法,现在我们就来实现一个简单的loader,主要功能就是把css中的px单位转换成rem单位</p>
+<pre><code>//  px2rem-loader/index.js
+
+&quot;use strict&quot;;
+
+//  用来获取调用loader时传入的参数等等
+var loaderUtils = require(&quot;loader-utils&quot;);
+
+//  css解析模块
+var css = require(&quot;css&quot;);
+
+//  乘除模块,防止在计算中出现精度丢失的问题
+var privateMath = {
+
+    mul: function(num1, num2) {
+        var m = 0,
+            s1 = num1.toString(),
+            s2 = num2.toString();
+        try {
+            m += s1.split(&quot;.&quot;)[1].length
+        } catch (e) {}
+        try {
+            m += s2.split(&quot;.&quot;)[1].length
+        } catch (e) {}
+        return Number(s1.replace(&quot;.&quot;, &quot;&quot;)) * Number(s2.replace(&quot;.&quot;, &quot;&quot;)) / Math.pow(10, m);
+    },
+    div: function(num1, num2) {
+        var t1, t2, r1, r2;
+        try {
+            t1 = num1.toString().split(&apos;.&apos;)[1].length;
+        } catch (e) {
+            t1 = 0;
+        }
+        try {
+            t2 = num2.toString().split(&quot;.&quot;)[1].length;
+        } catch (e) {
+            t2 = 0;
+        }
+        r1 = Number(num1.toString().replace(&quot;.&quot;, &quot;&quot;));
+        r2 = Number(num2.toString().replace(&quot;.&quot;, &quot;&quot;));
+        return (r1 / r2) * Math.pow(10, t2 - t1);
+    }
+};
+
+module.exports = function(content) {
+
+    //  把当成css内容解析成AST对象
+    var contentAST = css.parse(content);
+
+    //  使用loader时的queryString(相关参数)
+    var query = loaderUtils.parseQuery(this.query);
+
+    //  最小px值,当数组小于它是忽略计算
+    var minSize = query.minSize || 1;
+
+    //  基数(最后计算出的结果 = (原先的大小 / base / scale) + &quot;rem&quot;)
+    var base = query.base || 37.5;
+
+    //  忽略的样式规则名称
+    var ignore = query.ignore.length ? query.ignore.split(&quot;|&quot;) : [];
+
+    //  缩放比
+    var scale = query.scale || 1;
+
+    //  匹配10px或者10.5px这种单位
+    var pxUnitReg = /\d+[\.{1}\d+]?px/gi;
+
+    var tmp;
+
+    //  遍历样式树
+    contentAST.stylesheet.rules.forEach(function(rule) {
+        //  遍历样式表
+        rule.declarations.forEach(function(style) {
+            if (ignore.indexOf(style.property) &lt; 0) {
+                style.value = style.value.replace(pxUnitReg, function(match) {
+                    tmp = parseFloat(match);
+                    if(tmp &gt; minSize) {
+                        return privateMath.div(tmp, privateMath.mul(base, scale)) + &quot;rem&quot;;
+                    }
+                });
+            }
+        });
+    });
+
+
+    //  再把处理好的AST对象转成css String
+    content = css.stringify(contentAST);
+
+    //  调用下一个loader
+    this.callback(null, content);
+
+};
+</code></pre><p>到这里,一个简单的load就算实现了,一起来看下调用把:</p>
+<pre><code>//  webpack.config.js
+const webpack = require(&quot;webpack&quot;);
+
+module.exports = {
+    entry: &quot;./src/js/entry.js&quot;,
+    output: {
+        path: __dirname,
+        filename: &quot;build/bundle.js&quot;
+    },
+    module: {
+        loaders: [{
+            test: /\.js$/,
+            loader: &apos;babel-loader?presets[]=es2015&apos;
+        }, {
+            test: /\.css$/,
+            loader: &apos;style-loader!css-loader!px2rem-loader?base=37.5&amp;scale=2&amp;minSize=1&amp;ignore=border|margin|padding&apos;
+        }]
+    },
+    plugins: [
+    ]
+};
+</code></pre><p>之前的css:</p>
+<p><img src="/imgs/webpack-loader-1.png" alt=""></p>
+<p>打包之后:</p>
+<p><img src="/imgs/webpack-px-2rem-compiled.png" alt=""></p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在React,ES6开发模式越来越普及的今天,webpack就成了前端构建的一个标配。webpack有两大重要部分组成: loader和plugin。loader是用在应用源码上的转换原件,比如最常用到的babel-loader/jsx-loader/file-loader
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+      <category term="构建工具" scheme="http://yoursite.com/categories/javascript/%E6%9E%84%E5%BB%BA%E5%B7%A5%E5%85%B7/"/>
+    
+      <category term="webpack" scheme="http://yoursite.com/categories/javascript/%E6%9E%84%E5%BB%BA%E5%B7%A5%E5%85%B7/webpack/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>Shadow DOM研究</title>
+    <link href="http://yoursite.com/2016/12/12/2016-12-12-chrome-shadow-dom-tourial/"/>
+    <id>http://yoursite.com/2016/12/12/2016-12-12-chrome-shadow-dom-tourial/</id>
+    <published>2016-12-11T16:00:00.000Z</published>
+    <updated>2017-02-11T03:55:27.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在<a href="https://github.com/Polymer/polymer" target="_blank" rel="external">Polymer</a>中,提出了<a href="https://developer.mozilla.org/zh-CN/docs/Web/Web_Components" target="_blank" rel="external">Web Component</a>的概念,旨在让开发者可以封装出很多可复用的组件。现在,webkit添加了对该API支持,也就意味着我们不用借助框架,也可以自己封装出可复用的组件(通过自定义元素的形式),而不需要依赖其他框架来实现。</p>
+<p>假设我们这边需要封装一个进度条组件,实现代码大概是这样的:</p>
+<pre><code>//  javascript
+
+class CustomProgressBar extends HTMLElement {
+
+    constructor(args) {
+        super(args);
+
+        //  createShadowRoot用来创建一个shadowDOM实例
+        const shadowRoot = this.createShadowRoot();
+
+        //  设置组件内的布局结构和样式
+        shadowRoot.innerHTML = `
+            &lt;style type=&quot;text/css&quot;&gt;
+                :host {
+                    display: inline-block;
+                    width: 200px;
+                    height: 30px;
+                    box-sizing: border-box;
+                    padding: 1px;
+                }
+                :host * {
+                    -webkit-touch-callout: none;
+                    -webkit-user-select: none;
+                    -khtml-user-select: none;
+                    -moz-user-select: none;
+                    -ms-user-select: none;
+                    user-select: none;
+                }
+                .progress {
+                    display: inline-block;
+                    width: 200px;
+                    height: 30px;
+                    position: relative;
+                    border: 1px solid #000;
+                }
+                .progress &gt; .bar {
+                    background: red;
+                    height: 100%;
+                    width: 0;
+                    transition: all 0.2s;
+                }
+
+                .progress .label {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    text-align: center;
+                    font-size: 14px;
+                    line-height: 30px;
+                    color: #000;
+                }
+            &lt;/style&gt;
+            &lt;div class=&quot;progress&quot; aria-valuenow=&quot;0&quot; aria-valuemin=&quot;0&quot; aria-valuemax=&quot;100&quot;&gt;
+                &lt;div class=&quot;bar&quot;&gt;&lt;/div&gt;
+                &lt;div class=&quot;label&quot;&gt;0%&lt;/div&gt;
+            &lt;/div&gt;
+        `;
+
+        //  将相关元素存储到成员变量中
+        this._progressElement = shadowRoot.querySelector(&quot;.progress&quot;);
+        this._bar = shadowRoot.querySelector(&quot;.bar&quot;);
+        this._label = shadowRoot.querySelector(&quot;.label&quot;);
+    }
+
+    /**
+     * 取得当前进度
+     * @return {string}
+     */
+    get progress() {
+        return Number(this._progressElement.getAttribute(&quot;aria-valuenow&quot;));
+    }
+
+    /**
+     * 设置进度
+     * @param value
+     */
+    set progress(value) {
+        //  最大值值最小值
+        const max = this._progressElement.getAttribute(&quot;aria-valuemax&quot;),
+              min = this._progressElement.getAttribute(&quot;aria-valuemin&quot;);
+
+        //  类型判断
+        if(Number.isNaN(Number(value))) {
+            throw new Error(`value must be an number type, you specified ${value} which is ${{}.toString.call(value).slice(8, -1).toLowerCase()}!`);
+        }
+
+        //  范围检测
+        if(value &gt; max || value &lt; min) {
+            throw new Error(`value must between ${min} to ${max} , you specified ${value}!`);
+        }
+
+        //  设置相关属性
+        this._progressElement.setAttribute(&quot;aria-valuenow&quot;, value);
+        this._bar.style.width = `${value}%`;
+        this._label.textContent = `${value}%`;
+    }
+
+    /**
+     * 提供可以绑定onclick的接口
+     * @param callback
+     */
+    set onclick(callback) {
+        if(typeof callback === &quot;function&quot;) {
+            this._progressElement.addEventListener(&quot;click&quot;, e =&gt; {
+                callback.call(this, e);
+            }, false);
+        }
+    }
+
+}
+
+//  调用 customElements.define定义自定义元素,第一个参数自定义元素名,第二个参数是HTMLElement的一个子类
+customElements.define(&quot;custom-progress-bar&quot;, CustomProgressBar);
+
+window.onload = () =&gt; {
+
+    let customProgressBar = document.querySelector(&quot;custom-progress-bar&quot;),
+        progress;
+
+    /**
+     * 给进度条组件绑定onclick事件,每次点击进度加10
+     * @param e
+     */
+    customProgressBar.onclick = (e) =&gt; {
+        progress = Number(this.progress);
+        if(progress &gt;= 100) {
+            progress = 0;
+        } else {
+            progress += 10;
+        }
+        this.progress = progress;
+    };
+
+};
+
+//  HTML
+//  现在我们可以通过new CustomProgressBar()或者custom-progress-bar来使用自定义元素了
+
+&lt;custom-progress-bar&gt;&lt;/custom-progress-bar&gt;
+</code></pre><p>至此我们的一个进度条组件就算封装完成了,需要注意的是,customElements.define方法对第一个参数有一些要求:</p>
+<ul>
+<li>必须以小写字母 a-z 开头</li>
+<li>不能包含大写字母 A-Z</li>
+<li>必须包含”-“</li>
+</ul>
+<p>最后渲染出来是如下的布局结构:</p>
+<p><img src="/imgs/shadow-dom-rendered.png" alt=""></p>
+<p>一起看看实际的效果:</p>
+<p><img src="/imgs/shadow-dom-gif.gif" alt=""></p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在&lt;a href=&quot;https://github.com/Polymer/polymer&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;Polymer&lt;/a&gt;中,提出了&lt;a href=&quot;https://developer.mozilla.org/zh-CN
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+      <category term="Shadow DOM" scheme="http://yoursite.com/categories/javascript/Shadow-DOM/"/>
+    
+      <category term="Web Component" scheme="http://yoursite.com/categories/javascript/Shadow-DOM/Web-Component/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>Gulp插件的研究</title>
+    <link href="http://yoursite.com/2016/11/29/2016-11-29-gulp-plugin-tourial/"/>
+    <id>http://yoursite.com/2016/11/29/2016-11-29-gulp-plugin-tourial/</id>
+    <published>2016-11-28T16:00:00.000Z</published>
+    <updated>2017-03-30T12:19:21.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。</p>
+<p>今天研究了下gulp插件,写点心得体会吧。看了两个gulp插件源码,发现里面都引入了<a href="https://github.com/rvagg/through2" target="_blank" rel="external">through2</a>这个包,官方的说法就是”Node Stream的简单封装，目的是让链式流操作更加简单;”,就也照葫芦画瓢,引用了这个包,简单实现一个gulp插件,功能就是压缩css,并且把css中的”background: url(xxxx.png)”中的”xxxx.png”转换成base64编码的形式,减少http请求数。</p>
+<pre><code>&quot;use strict&quot;;
+
+const through = require(&quot;through2&quot;),
+    path = require(&quot;path&quot;),
+    fs = require(&quot;fs&quot;),
+
+    //  引用async/await,方便处理文件读写的异步操作
+    async = require(&quot;asyncawait&quot;).async,
+    await = require(&quot;asyncawait&quot;).await,
+
+    //  匹配url(../xxx.yyy)这种表达式
+    imgReg = /url\s*\((\s*[A-Za-z0-9\-\_\.\/\:]+\s*)\);?/gi,
+
+    //  将fs.readFile封装成Promise
+    readFile = (path) =&gt; {
+        return new Promise((resolve, reject) =&gt; {
+            fs.readFile(path, (ex, file) =&gt; {
+                if (ex) {
+                    reject(ex);
+                }
+                resolve(file);
+            });
+        });
+    };
+
+let base, contents, match, tmp, url;
+
+//  暴露出去的函数
+module.exports = (opt) =&gt; {
+
+    return through.obj(function(file, enc, cb) {
+
+        //  文件为空直接执行回调函数
+        if (file.isNull()) {
+            cb(null, file);
+        }
+
+        //  取得当前css的绝对路径
+        base = file.base;
+
+        //  匹配css中的无效字符,并且转换成buffer
+        file.contents = new Buffer(file._contents.toString()
+            //  去换行符
+            .replace(/\n/gm, &quot;&quot;)
+
+            //  去&quot;{&quot;之后到第一条样式间的空白字符
+            .replace(/\{\s+/g, &quot;{&quot;)
+
+            //  去&quot;;&quot;之后的空白字符
+            .replace(/\;\s+/g, &quot;;&quot;));
+
+        //  将文件内容转换成普通字符串并缓存
+        contents = file.contents.toString();
+
+        //  取得url(../../xxx.yyy),并且缓存
+        match = contents.match(imgReg);
+
+        //  async-await读取图片文件成base64编码
+        async(() =&gt; {
+
+            //  遍历之前的缓存项
+            match.forEach((item) =&gt; {
+
+                //  拼凑文件绝对路径
+                url = item.replace(&quot;url(&quot;, &quot;&quot;).replace(&quot;)&quot;, &quot;&quot;).trim();
+
+                //  用await读取文件,避免嵌套
+                tmp = await (readFile(path.resolve(base, url)));
+
+                //  替换之前匹配的字符串
+                contents = contents.replace(item, `url(data:image/png;base64,${tmp.toString(&quot;base64&quot;)})`);
+            });
+
+            //  把文件内容转成buffer
+            file.contents = new Buffer(contents);
+
+            //  回调函数
+            cb(null, file);
+
+        })();
+    });
+
+};
+</code></pre><p>至此,一个简单的插件就实现了,当然,还有很多不足,比如对图片进行压缩,减少base64字符串的长度,用request模块处理对网络图片的引用等等。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。&lt;/
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+      <category term="Gulp" scheme="http://yoursite.com/categories/javascript/Gulp/"/>
+    
+      <category term="构建工具" scheme="http://yoursite.com/categories/javascript/Gulp/%E6%9E%84%E5%BB%BA%E5%B7%A5%E5%85%B7/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>javascript模块化编程-同步模式</title>
+    <link href="http://yoursite.com/2016/11/29/2016-11-23-js-sync-module-mode/"/>
+    <id>http://yoursite.com/2016/11/29/2016-11-23-js-sync-module-mode/</id>
+    <published>2016-11-28T16:00:00.000Z</published>
+    <updated>2017-03-30T12:19:21.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在日常开发中,为了便于多人协作开发,我们通常都会采用模块化开发的模式,今天看张荣铭的《javascript设计模式》的时候,看到同步模式这一章,结合自己之前的立即,也来实现一个简单的同步模块化模式。</p>
+<pre><code>const module = (() =&gt; {
+
+    //  缓存之前声明的模块
+    let modules = {};
+
+    /**
+     * [description]
+     * @param  deps     依赖列表
+     * @return Array
+     */
+    let _loadDeps = (deps) =&gt; {
+        return deps.map((dep) =&gt; {
+            return modules[dep];
+        });
+    };
+
+    return {
+
+        /**
+         * 声明一个模块
+         * @param   id      模块id
+         * @param   deps    依赖数组(模块id)
+         * @param   factory 构造函数
+         */
+        define: (id, deps, factory) =&gt; {
+
+            //  获取依赖,并且取得模块返回的对象
+            deps = _loadDeps(deps);
+
+            deps.map(function(dep) {
+                return dep.factory.apply(window, dep.deps);
+            });
+
+            //  判断模块名是否重复
+            if (modules[id]) {
+                 throw new Error(&quot;module &quot; + id + &quot; has been declared!&quot;);
+            }
+
+            //  缓存模块
+            modules[id] = {
+                id: id,
+                factory: factory,
+                deps: deps
+            };
+        },
+
+        /**
+         * 使用定义好的模块
+         * @param   depArr  依赖数组(模块id)
+         * @param   factory 构造函数
+         */
+        use: (depArr, factory) =&gt; {
+
+            //  获取依赖,并且取得模块返回的对象
+            depArr = depArr.map((dep) =&gt; {
+                return modules[dep].factory.apply(window, modules[dep].deps);
+            });
+
+            //  运行构造函数
+            factory.apply(window, depArr);
+        }
+
+    };
+
+})();
+</code></pre><p>下面我们声明几个模块做测试:</p>
+<pre><code>//  A模块
+module.define(&quot;A&quot;, [], () =&gt; {
+    return {
+        method: () =&gt; {
+            console.log(&quot;method under module A&quot;);
+        }
+    };
+});
+
+//  B模块
+module.define(&quot;B&quot;, [], () =&gt; {
+    return {
+        method: () =&gt; {
+            console.log(&quot;method under module B&quot;);
+        }
+    };
+});
+
+//  Person类
+module.define(&quot;PersonClass&quot;, [], () =&gt; {
+
+    class Person {
+        constructor(name, age, sex, job) {
+            this.name = name;
+            this.age = age;
+            this.sex = sex;
+            this.job = job;
+        }
+
+        hello() {
+            console.log(&quot;hello &quot; + this.name);
+        }
+
+        eat() {
+            console.log(this.name + &quot; will eat&quot;);
+        }
+
+        getProfile() {
+            return {
+                name: this.name,
+                age: this.age,
+                sex: this.sex,
+                job: this.job
+            };
+        }
+    }
+
+    return Person;
+});
+</code></pre><p>最后我们调用module.use来使用这些模块:</p>
+<pre><code>module.use([&quot;A&quot;, &quot;B&quot;, &quot;PersonClass&quot;], (A, B, PersonClass) =&gt; {
+
+    A.method();
+    B.method();
+
+    let person = new PersonClass(&quot;rwson&quot;, 24, &quot;male&quot;, &quot;web developer&quot;);
+    person.hello();
+
+    setTimeout(function() {
+        person.eat();
+    }, 5000);
+
+    console.log(person.getProfile());
+
+});
+</code></pre><p>最后浏览器控制台输出如下图的结果:</p>
+<p><img src="/imgs/sync-module-mode.png" alt="javascript模块化-同步模式"></p>
+<p>至此一个简单的模块化工具就开发完成了。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在日常开发中,为了便于多人协作开发,我们通常都会采用模块化开发的模式,今天看张荣铭的《javascript设计模式》的时候,看到同步模式这一章,结合自己之前的立即,也来实现一个简单的同步模块化模式。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;const module = (() =&amp;g
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+      <category term="模块化" scheme="http://yoursite.com/categories/javascript/%E6%A8%A1%E5%9D%97%E5%8C%96/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>async/await学习</title>
+    <link href="http://yoursite.com/2016/11/09/2016-11-09-async:await-tourial/"/>
+    <id>http://yoursite.com/2016/11/09/2016-11-09-async:await-tourial/</id>
+    <published>2016-11-08T16:00:00.000Z</published>
+    <updated>2017-03-30T12:19:21.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在处理javascript中异步的时候,回调往往是最让人恶心的,之前介绍过用<a href="http://123.207.98.169:81/2016/05/04/2016-05-04-es6-promise/" target="_blank" rel="external">Promise</a>来处理异步的问题,但是即使用上了Promise,在处理回调上还是会有各种嵌套,今天来介绍下ES7中的async/await,由于在Nodejs中还未得到支持,所以需要借助一些npm包来实践,在这里用的是<a href="https://github.com/yortus/asyncawait" target="_blank" rel="external">asyncawait</a>。</p>
+<p>先来个原生文件读取的例子:</p>
+<pre><code>const fs = require(&quot;fs&quot;);
+fs.readFile(&quot;test.txt&quot;, (ex, res) =&gt; {
+   console.log(res.toString()); 
+
+   //   do something...
+
+   fs.readFile(&quot;test2.txt&quot;, (ex, res) =&gt; {
+        console.log(res.toString());
+
+        //  do something
+   });
+});
+
+//  控制台输出
+xxxxx
+yyyyy
+</code></pre><p>下面我们再用async/await实现一遍:</p>
+<pre><code>const async = require(&quot;asyncawait&quot;).async;
+const await = require(&quot;asyncawait&quot;).await;
+let readFile = function(path) {
+    return new Promise((resolve, reject) =&gt; {
+        fs.readFile(path, (ex, res) =&gt; {
+            if (ex) {
+                reject(ex);
+            }
+            resolve(res);
+        });
+    });
+}
+
+let asyncReadFile = async(() =&gt; {
+
+    let fs = await (readFile(&quot;test.txt&quot;));
+    let fs2 = await (readFile(&quot;test2.txt&quot;));
+
+    console.log(fs.toString());
+    console.log(fs2.toString());
+});
+
+asyncReadFile();
+</code></pre><p>虽然代码可能比上面的多了一点,但是已经完全看不到回调嵌套的影子了,也能完成同样的功能,何乐而不为。😉</p>
+<p>下面我们再来模拟一个异步请求的例子:</p>
+<pre><code>const async = require(&quot;asyncawait&quot;).async;
+const await = require(&quot;asyncawait&quot;).await;
+const http = require(&quot;http&quot;);
+
+http.createServer((req, res) =&gt; {
+
+    switch (req.url) {
+
+        case &quot;/async-await&quot;:
+            setTimeout(() =&gt; {
+                res.writeHead(200, { &quot;Content-Type&quot;: &quot;text/plain&quot; });
+                res.end(&quot;request end&quot;);
+            }, 5000);
+            break;
+
+        case &quot;/async-await2&quot;:
+            setTimeout(() =&gt; {
+                res.writeHead(200, { &quot;Content-Type&quot;: &quot;text/plain&quot; });
+                res.end(&quot;request end2&quot;);
+            }, 8000);
+            break;
+
+        default:
+            break;
+
+    }
+}).listen(3000, &quot;127.0.0.1&quot;);
+
+let requestUrl = function(path) {
+    return new Promise((resolve, reject) =&gt; {
+        http.get({
+            hostname: &apos;localhost&apos;,
+            port: 3000,
+            path: path,
+            agent: false
+        }, (res) =&gt; {
+            res.on(&quot;data&quot;, (data) =&gt; {
+                resolve(data);
+            });
+            res.on(&quot;error&quot;, (ex) =&gt; {
+                reject(ex);
+            })
+        });
+    });
+}
+
+let asyncRequest = async(() =&gt; {
+    let resp, resp2;
+    await (requestUrl(&quot;/async-await&quot;).then((res) =&gt; {
+        console.log(res.toString());
+        resp = res.toString();
+    }).catch((ex) =&gt; {
+        resp = &quot;发生错误!&quot;;
+    }));
+
+    await (requestUrl(&quot;/async-await2&quot;).then((res) =&gt; {
+        resp2 = res.toString();
+    }).catch((ex) =&gt; {
+        resp = &quot;发生错误!&quot;;
+    }));
+    console.log(resp);
+    console.log(resp2);
+});
+
+asyncRequest();
+
+//  控制台输出
+request end
+request end2
+</code></pre><p>由此我们可以将async/await用在很多地方,比如例子中的文件读取、异步请求、nodejs中的查询数据库等等。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在处理javascript中异步的时候,回调往往是最让人恶心的,之前介绍过用&lt;a href=&quot;http://123.207.98.169:81/2016/05/04/2016-05-04-es6-promise/&quot; target=&quot;_blank&quot; rel=&quot;external
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+      <category term="ES7" scheme="http://yoursite.com/categories/javascript/ES7/"/>
+    
+      <category term="async/await" scheme="http://yoursite.com/categories/javascript/ES7/async-await/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>IE下AngularJs中的ajax缓存</title>
+    <link href="http://yoursite.com/2016/11/02/2016-11-02-ie-ajax-cache/"/>
+    <id>http://yoursite.com/2016/11/02/2016-11-02-ie-ajax-cache/</id>
+    <published>2016-11-01T16:00:00.000Z</published>
+    <updated>2017-03-30T12:19:21.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在单页应用越来越普及的今天,越来越多的项目都会采用这种方案,这几天用AngularJs做了一个PC端应用,有登录注册的功能,登录注册的功能是通过ajax实现的,在登录注册以后页面不刷新,只修改$rootScope下的某些属性值,然后在页面里面通过ng-if之类的指令来控制相关元素的显示隐藏。</p>
+<p>之前的大概实现如下:</p>
+<pre><code>//  js
+var app = angular.module(&quot;app&quot;, []);
+app.run([&quot;$rootScope&quot;, &quot;$http&quot;, function($rootScope, $http) {
+    $rootScope.isLogin = false;
+    $rootScope.$on(&quot;$routeChangeStart&quot;, function (event, next, current) {
+    $http.get(&quot;xxxx&quot;)
+        .success(function(res) {
+            $rootScope.isLogin = !!(res.isLogin);
+            //  ...
+        })
+        .error(function() {
+            //  ...
+        });
+    });
+}]);
+
+//  HTML
+&lt;div class=&quot;container&quot;&gt;
+    &lt;a href=&quot;/user/center&quot; ng-if=&quot;isLogin&quot;&gt;用户中心&lt;/a&gt;
+    &lt;a href=&quot;javascript:;&quot; ng-click=&quot;logout()&quot; ng-if=&quot;isLogin&quot;&gt;登出&lt;/a&gt;
+    &lt;a href=&quot;/login&quot; ng-if=&quot;!isLogin&quot;&gt;登录&lt;/a&gt;
+&lt;/div&gt;
+</code></pre><p>后来发现在Chrome/Firefox下都是好的,到了IE下登录以后不刷新就显示不对。原来以为是ng-if在IE下重新渲染过慢的问题,改成ng-show以后还是不行,然后看http状态码,发现是304,想到可能和缓存有关系,后来改了配置中关键ajax请求那边的东西,发现可以了,核心代码如下:</p>
+<pre><code>app.config([&quot;$routeProvider&quot;, &quot;$httpProvider&quot;, function($routeProvider, $httpProvider){
+    //  ...
+
+    if (!$httpProvider.defaults.headers.get) {
+        $httpProvider.defaults.headers.get = {};
+    }
+    $httpProvider.defaults.headers.common[&quot;X-Requested-With&quot;] = &quot;XMLHttpRequest&quot;;
+    $httpProvider.defaults.headers.get[&quot;Cache-Control&quot;] = &quot;no-cache&quot;;
+    $httpProvider.defaults.headers.get[&quot;Pragma&quot;] = &quot;no-cache&quot;;
+}]);
+</code></pre>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在单页应用越来越普及的今天,越来越多的项目都会采用这种方案,这几天用AngularJs做了一个PC端应用,有登录注册的功能,登录注册的功能是通过ajax实现的,在登录注册以后页面不刷新,只修改$rootScope下的某些属性值,然后在页面里面通过ng-if之类的指令来控制相
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+      <category term="AngularJs" scheme="http://yoursite.com/categories/javascript/AngularJs/"/>
+    
+      <category term="ajax" scheme="http://yoursite.com/categories/javascript/AngularJs/ajax/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>javascript中的序列化</title>
+    <link href="http://yoursite.com/2016/09/17/2016-09-17-javascript-serialize/"/>
+    <id>http://yoursite.com/2016/09/17/2016-09-17-javascript-serialize/</id>
+    <published>2016-09-16T16:00:00.000Z</published>
+    <updated>2017-03-30T12:19:21.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在用jQuery发送ajax(POST)请求的时候,最常见的提交方式就是”application/x-www-form-urlencoded”,通常都会传入一个data属性作为传输给后端的数据,在ajax发送之前,那么我们直接如果直接传入把这个对象传递给后端,后端就不能对该对象进行解析,因为对象会被转成字符串”[object Object]”,所以就需要我们对该对象进行url编码,并且转换成字符串,再传给后端。</p>
+<p>假设我们先传递一个简单的对象(所有的key对应的value都不是引用类型[Array、Object]),就像下面这样:</p>
+<pre><code>{
+    string: &quot;string&quot;,
+    number: 1
+}
+</code></pre><p>用jQuery中的$.ajax方法,POST提交,打开请求面板,在form data那边,点击view source,可以看到下面这一串字符串,就像下面的样子:</p>
+<pre><code>string=string&amp;number=1
+</code></pre><p>在jQuery中,$.param这个方法可以实现进行url编码的作用。</p>
+<p>现在可以自己实现一个:</p>
+<pre><code>//  获取对象上的类名
+function _typeOf(obj) {
+    return {}.toString.call(obj).slice(8, -1);
+}
+
+//  encodeURIComponent简写
+function _encode(data) {
+    data = data || &quot;&quot;;
+    return encodeURIComponent(data);
+}
+
+//  序列化主函数
+function _serializenData(data) {
+    var res = data,
+        typeIn;
+
+    //  判断传入的是否是一个Object类型的数据
+    if (_typeOf(data) === &quot;Object&quot;) {
+        res = [];
+        for (var i in data) {
+            typeIn = _typeOf(data[i]);
+            switch (typeIn) {
+
+                //  遇到Object、Array时需要进行遍历或者枚举,对其内部元素、属性做处理后再放到结果集数组中
+                case &quot;Object&quot;:
+                    res.push(_loopObject(data[i], i));
+                    break;
+
+                case &quot;Array&quot;:
+                    res.push(_loopArray(data[i], i));
+                    break;
+
+                //  其他类型直接推到结果集数组
+                default:
+                    res.push(_encode(i) + &quot;=&quot; + _encode(data[i]));
+                    break;
+
+            }
+        }
+        //  把结果集数组转换成&quot;xxx=111&amp;yyy=333&amp;zzz=444&quot;的形式
+        res = res.join(&quot;&amp;&quot;).replace(&quot;%20&quot;, &quot;+&quot;)
+    }
+    return (&quot;&quot; + res);
+}
+
+/**
+ * 深层遍历一个数组
+ * @param  {[type]} array [description]
+ * @param  {[type]} key   [description]
+ * @return {[type]}       [description]
+ */
+function _loopArray(array, key) {
+    var res = [],
+        typeIn;
+    for (var i = 0, len = array.length; i &lt; len; i++) {
+
+        //  获取每一项的类名,如果是Object/则递归调用_loopArray/_loopObject,传入当前项和属性名,处理子项,再放到结果集中
+        typeIn = _typeOf(array[i]);
+        switch (typeIn) {
+
+            case &quot;Array&quot;:
+                res.push(_loopArray(array[i], (key + &quot;[&quot; + i + &quot;]&quot;)));
+                break;
+
+            case &quot;Object&quot;:
+                res.push(_loopObject(array[i], (key + &quot;[&quot; + i + &quot;]&quot;)));
+                break;
+
+            //    其他类型的直接推到结果集数组
+            default:
+                res.push(_encode(key + &quot;[]&quot;) + &quot;=&quot; + _encode((&quot;&quot; + array[i])));
+                break;
+
+        }
+    }
+
+    //  把结果集转换成&quot;xxx=111&amp;yyy=333&amp;zzz=444&quot;的形式
+    return res.join(&quot;&amp;&quot;);
+}
+
+/**
+ * 深层遍历一个对象
+ * @param  {[type]} object [description]
+ * @param  {[type]} key    [description]
+ * @return {[type]}        [description]
+ */
+function _loopObject(object, key) {
+    var res = [],
+        typeIn;
+    for (var i in object) {
+        //  取得一个当前key对应value的类名,如果是Object/Array,则进行递归调用
+        typeIn = _typeOf(object[i]);
+        switch (typeIn) {
+            case &quot;Array&quot;:
+                res.push(_loopArray(object[i], key + &quot;[&quot; + i + &quot;]&quot;));
+                break;
+
+            case &quot;Object&quot;:
+                res.push(_loopObject(object[i], key + &quot;[&quot; + i + &quot;]&quot;));
+                break;
+
+            //    其他类型的直接推到结果集数组中
+            default:
+                res.push(_encode(key + &quot;[&quot; + i + &quot;]&quot;) + &quot;=&quot; + _encode((&quot;&quot; + object[i])));
+                break;
+        }
+    }
+
+    //  把结果集转换成&quot;xxx=111&amp;yyy=333&amp;zzz=444&quot;的形式
+    return res.join(&quot;&amp;&quot;);
+}
+</code></pre><p>下面我们模拟几个复杂点的对象,调用封装的序列化方法,和$.param进行对比:</p>
+<pre><code>var obj = {
+    string: &quot;string&quot;,
+    number: 1,
+    array: [1, 2, 3, 4, 5]
+};
+
+var obj2 = {
+    string: &quot;string&quot;,
+    number: 1,
+    array: [
+        1, 2, 3, 4, 5, {
+            key1: &quot;value1&quot;,
+            key2: &quot;value2&quot;,
+            key3: &quot;value3&quot;
+        }
+    ]
+};
+
+var obj3 = {
+    array: [1, 2, 3, 4, 5],
+    arrayobject: [{
+        key1: &quot;value1&quot;,
+        key2: &quot;value2&quot;,
+        key3: &quot;value3&quot;
+    }, {
+        key1: &quot;value1&quot;,
+        key2: &quot;value2&quot;,
+        key3: &quot;value3&quot;
+    }, {
+        key1: &quot;value1&quot;,
+        key2: &quot;value2&quot;,
+        key3: &quot;value3&quot;
+    }]
+};
+
+var deepObj1 = {
+    arr: [{
+        string: &quot;string&quot;,
+        number: 1,
+        arr: [1, 2, 3, 4],
+        mixArr: [{
+            key1: &quot;value1&quot;,
+            key2: &quot;value2&quot;
+        }, {
+            key1: &quot;value1&quot;,
+            key2: &quot;value2&quot;
+        }, {
+            key1: &quot;value1&quot;,
+            key2: &quot;value2&quot;
+        }]
+    }]
+};
+
+var deepObj2 = {
+    obj: {
+        key1: &quot;value1&quot;,
+        key2: &quot;value2&quot;,
+        key3: &quot;value3&quot;
+    },
+    array: [1, 2, 3, 4, 5],
+    objectArray: {
+        array: [1, 2, 3, 4, 5, {
+            key1: &quot;value1&quot;,
+            key2: &quot;value2&quot;,
+            key3: &quot;value3&quot;
+        }]
+    },
+    arrayObj: [{
+        key1: &quot;value1&quot;,
+        key2: &quot;value2&quot;,
+        key3: &quot;value3&quot;
+    }, {
+        key1: &quot;value1&quot;,
+        key2: &quot;value2&quot;,
+        key3: &quot;value3&quot;
+    }, {
+        key1: &quot;value1&quot;,
+        key2: &quot;value2&quot;,
+        key3: &quot;value3&quot;
+    }]
+};
+
+//  打开控制台的console面板,查看输出
+
+console.group(&quot;serialize obj&quot;);
+console.log(_serializenData(obj));  //  ...
+console.log($.param(obj));  //  ...
+console.log(_serializenData(obj) === $.param(obj)); //  true
+console.groupEnd();
+
+console.group(&quot;serialize obj2&quot;);
+console.log(_serializenData(obj2)); //  ...
+console.log($.param(obj2)); //  ...
+console.log(_serializenData(obj2) === $.param(obj2));   //  true
+console.groupEnd();    
+
+console.group(&quot;serialize obj3&quot;);
+console.log(_serializenData(obj3)); //  ...
+console.log($.param(obj3)); //  ...
+console.log(_serializenData(obj3) === $.param(obj3));   //  true
+console.groupEnd();
+
+console.group(&quot;serialize deepObj1&quot;);
+console.log(_serializenData(deepObj1)); //  ...
+console.log($.param(deepObj1)); //  ...
+console.log(_serializenData(deepObj1) === $.param(deepObj1));   //  true
+console.groupEnd();
+
+console.group(&quot;serialize deepObj2&quot;);
+console.log(_serializenData(deepObj2)); //  ...
+console.log($.param(deepObj2)); //  ...
+console.log(_serializenData(deepObj2) === $.param(deepObj2));   //  true
+console.groupEnd();
+</code></pre>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在用jQuery发送ajax(POST)请求的时候,最常见的提交方式就是”application/x-www-form-urlencoded”,通常都会传入一个data属性作为传输给后端的数据,在ajax发送之前,那么我们直接如果直接传入把这个对象传递给后端,后端就不能对该
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+      <category term="序列化" scheme="http://yoursite.com/categories/javascript/%E5%BA%8F%E5%88%97%E5%8C%96/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>javascript中Date细节</title>
+    <link href="http://yoursite.com/2016/08/30/2016-08-30-something-about-javascript-Date/"/>
+    <id>http://yoursite.com/2016/08/30/2016-08-30-something-about-javascript-Date/</id>
+    <published>2016-08-29T16:00:00.000Z</published>
+    <updated>2017-03-30T12:19:21.000Z</updated>
+    
+    <content type="html"><![CDATA[<h5 id="Safri浏览器new-Date-“yyyy-mm-dd”-返回invalid-Date"><a href="#Safri浏览器new-Date-“yyyy-mm-dd”-返回invalid-Date" class="headerlink" title="Safri浏览器new Date(“yyyy-mm-dd”)返回invalid Date"></a>Safri浏览器new Date(“yyyy-mm-dd”)返回invalid Date</h5><p>许多时候我们需要初始化一个具体某天的日期对象的时候,会用到new Date(),这个方法,我们可以传入一个字符串作为参数来指定具体的日期,而一般我们会传入一个”yyyy-mm-dd hh:ii:ss”这种格式作为一个初始日期,但到了Safri浏览器下,就会返回一个invalid Date,调用该Date实例下的所有方法都会返回NaN值,原因是Safri不能正常解析中间的”-“分隔符,解决办法也很简单,有两种:</p>
+<p>直接</p>
+<pre><code>var myDate1 = Date.parseExact(&quot;29-11-2010&quot;, &quot;dd-MM-yyyy&quot;);
+var myDate2 = Date.parseExact(&quot;11-29-2010&quot;, &quot;MM-dd-yyyy&quot;);
+var myDate3 = Date.parseExact(&quot;2010-11-29&quot;, &quot;yyyy-MM-dd&quot;);
+var myDate4 = Date.parseExact(&quot;2010-29-11&quot;, &quot;yyyy-dd-MM&quot;);
+</code></pre><p>或者</p>
+<pre><code>new Date(&quot;2011-04-12&quot;.replace(/-/g, &quot;/&quot;));
+</code></pre><h5 id="setMonth溢出问题"><a href="#setMonth溢出问题" class="headerlink" title="setMonth溢出问题"></a>setMonth溢出问题</h5><p>实例化一个Date对象,通过如下的方式,然后调用该实例的setMonth方法,把当前月份加1,就像下面这样</p>
+<pre><code>var date = new Date(&quot;2016/01/30&quot;);
+date.setMonth(date.getMonth() + 1);
+console.log(date.getMonth());       //  Tue Mar 01 2016 00:00:00 GMT+0800 (CST)
+</code></pre><p>或者</p>
+<pre><code>var date = new Date(&quot;2016/10/31&quot;);
+date.setMonth(date.getMonth() + 1);
+console.log(date);                 //  Thu Dec 01 2016 00:00:00 GMT+0800 (CST)
+</code></pre><p>上面两段我们都希望是返回的是2月和11月,但是真正返回了3月和12月</p>
+<p>出现这种情况的原因是2月没有28/29号以后的日期,而当前日期对象的日期为30号,调用setMonth,就导致溢出,下面的例子同理。</p>
+<p>解决办法也很简单,在调用setMonth之前,拿下个月的最后一天和当前的比较下,再做相应处理就好,或者更简单粗暴的方法,把当前Date对象的date改成1,哈哈。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h5 id=&quot;Safri浏览器new-Date-“yyyy-mm-dd”-返回invalid-Date&quot;&gt;&lt;a href=&quot;#Safri浏览器new-Date-“yyyy-mm-dd”-返回invalid-Date&quot; class=&quot;headerlink&quot; title=&quot;Safr
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+      <category term="Date" scheme="http://yoursite.com/categories/javascript/Date/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>javascript函数节流</title>
+    <link href="http://yoursite.com/2016/07/20/2016-07-20-javascript-function-throttle/"/>
+    <id>http://yoursite.com/2016/07/20/2016-07-20-javascript-function-throttle/</id>
+    <published>2016-07-19T16:00:00.000Z</published>
+    <updated>2017-03-30T12:19:21.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>如果我们需要做一个过滤的功能,类似于下面这个效果</p>
+<p><img src="/imgs/screen.gif" alt=""></p>
+<p>我们需要给input绑定一个keyup事件,然后根据它的value操作页面或者过滤数据重新渲染页面,但是在数据比较多的时候,如果在keyup里面不做一定限制的话,在性能方面就会有一些影响,这时候,就需要”函数节流”这个东西。</p>
+<p>在underscore这个库中提供了一个函数节流的方法,其实就是在一定时间内判断某个函数是否被执行过。</p>
+<p>就拿我们上面的效果来说:</p>
+<pre><code>//  HTML
+&lt;input type=&quot;text&quot; id=&quot;input&quot; /&gt;
+&lt;ul id=&quot;ul&quot;&gt;
+    &lt;li&gt;111111111&lt;/li&gt;
+    &lt;li&gt;22222222&lt;/li&gt;
+    &lt;li&gt;333333&lt;/li&gt;
+    &lt;li&gt;4444&lt;/li&gt;
+    &lt;li&gt;1234&lt;/li&gt;
+    &lt;li&gt;5678&lt;/li&gt;
+    &lt;li&gt;9999&lt;/li&gt;
+    &lt;li&gt;6789&lt;/li&gt;
+    &lt;li&gt;01234&lt;/li&gt;
+&lt;/ul&gt;
+
+
+//  javascript
+    window.onload = function() {
+        var input = document.getElementById(&quot;input&quot;);
+        var ul = document.getElementById(&quot;ul&quot;);
+        var li = ul.getElementsByTagName(&quot;li&quot;);
+        var len = li.length;
+        var value, timeout = null;
+        input.onkeyup = function(ev) {
+            //  上次的还没执行
+            if(timeout) {
+                return;
+            }
+            timeout = setTimeout(function() {
+                clearTimeout(timeout);
+                value = ev.target.value.trim();
+                for(var i = 0; i &lt; len; i ++) {
+                    if(li[i].innerHTML.indexOf(value) &gt; -1) {
+                        li[i].style.display = &quot;block&quot;;
+                    } else {
+                        li[i].style.display = &quot;none&quot;;
+                    }
+                }
+            }, 200);
+        };
+
+};
+</code></pre><p>下面可以把这个函数再次进行封装:</p>
+<pre><code>/**
+ * 函数节流
+ * @param fn        回调函数
+ * @param delay     延迟多久
+ * @param atleast   至少多久触发一次
+ * @return Function
+ */
+function throttle(fn, delay, atleast) {
+    var timer = null;
+    var previous = null;
+
+    return function () {
+        var now = +(new Date());
+
+        if ( !previous ) {
+            previous = now;
+        }
+
+        if ( now - previous &gt; atleast ) {
+            fn();
+            // 重置上一次开始时间为本次结束时间
+            previous = now;
+        } else {
+            clearTimeout(timer);
+            timer = setTimeout(function() {
+                fn();
+            }, delay);
+        }
+    }
+};
+</code></pre><p>在平时可以有好多地方用到函数节流,比如浏览器的resize,鼠标滚轮事件等等。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;如果我们需要做一个过滤的功能,类似于下面这个效果&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/imgs/screen.gif&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;我们需要给input绑定一个keyup事件,然后根据它的value操作页面或者过滤数据重新渲染页面,但是在数据比较多的时候,
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+      <category term="函数节流" scheme="http://yoursite.com/categories/javascript/%E5%87%BD%E6%95%B0%E8%8A%82%E6%B5%81/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>fetch中的Timeout</title>
+    <link href="http://yoursite.com/2016/07/10/2016-07-10-fetch-timeout/"/>
+    <id>http://yoursite.com/2016/07/10/2016-07-10-fetch-timeout/</id>
+    <published>2016-07-09T16:00:00.000Z</published>
+    <updated>2017-03-30T12:19:21.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>随着ES6的普及,fetch已经渐渐取代了普通ajax在异步请求中的位置,以前在用jQuery中的ajax时,可以指定一个timeout属性,设置该请求的超时时间,但是原生的fetch并不支持该属性,如果遇到遇到一个请求一直pedding状态,就只能干等着,什么也干不了。由于fetch本身在被初始化后返回一个Promise对象,我们就可以对其再包一层Promise来实现在fetch请求中加入timeout的功能。</p>
+<p>先来看下fetch的基本用法:</p>
+<pre><code>fetch(&quot;some url&quot;, {
+    &quot;method&quot;: &quot;POST&quot;,
+    &quot;body&quot;: JSON.stringify({
+        &quot;key&quot;: &quot;value&quot;,
+        &quot;arr&quot;: [1,2,3]
+    }),
+    ...
+})
+//  parse response to JSON object
+.then((res) =&gt; res.json())
+.then((res) =&gt; {
+    //   success dome something
+})
+.catch((ex) =&gt; {
+    //  exception occurded
+});
+</code></pre><p>在Promise中有个静态方法,叫<a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Promise/race" target="_blank" rel="external">Promise.race()</a>,该方法接受一个数组作为参数,数组中的每个元素都是一个Promise的实例,大致用法如下:</p>
+<pre><code>let promise1 = new Promise((resoleve, reject) =&gt; {
+    //  do something
+});
+
+let promise2 = new Promise((resoleve, reject) =&gt; {
+    //  do something
+});
+
+//  ...
+
+let race = Promise.race([promise1, promise2, ...]);
+</code></pre><p>它返回一个Promise,该Promise根据传入的Promise的第一个完成状态(resolve/reject),只要该Promise已完成,就将其返回。</p>
+<p>看个下面的例子:</p>
+<pre><code>const promise1 = new Promise((resolve, reject) =&gt; {
+    //  1s后执行reject
+    setTimeout(() =&gt; {
+        reject(&quot;reject&quot;);
+    }, 1000);
+});
+
+const promise2 = new Promise((resolve, reject) =&gt; {
+    //  2s后执行resolve
+    setTimeout(() =&gt; {
+        resolve(&quot;success&quot;);
+    }, 2000);
+});
+
+const racedPromise = Promise.race([promise1, promise2]);
+
+racedPromise()
+.then(() =&gt; {
+    alert(&quot;success&quot;);
+})
+.catch(() =&gt; {
+    alert(&quot;fail&quot;);
+});
+</code></pre><p>//  显然上面的代码最终会弹出fail,因为promise1的状态比promise2先确定,所以Promise.race最终返回的是Promise1,由于状态是reject,所以走到了catch回调。</p>
+<p>上面说了好多废话:</p>
+<p>下面实现一个可设置timeout的fetch:</p>
+<pre><code>/**
+  * @param url      请求地址
+  * @param opt      配置参数
+  * @param timeout  
+  **/
+function abortFetch(url, opt, timeout) {
+    if(typeof url !== &quot;string&quot;) {
+    }
+    const fetchIns = fetch(url, opt || {});
+    const abortIns = new Promise((resolve, reject) =&gt; {
+        if(typeof timeout === &quot;number&quot; &amp;&amp; timeout &gt; 0) {
+            setTimeout(() =&gt; {
+                reject({
+                    &quot;type&quot;: &quot;abord&quot;
+                });
+            }, timeout);
+        }
+    });
+    const finalPromise = Promise.race([fetchIns, abortIns]);
+    return finalPromise;
+}
+
+//  用法
+
+fetch(&quot;/fetch-timeout&quot;, {
+    &quot;method&quot;: &quot;POST&quot;
+})
+.then((res) =&gt; res.json())
+.then((res) =&gt; {
+    if(res.status &gt;= 200 &amp;&amp; res.status &lt; 300 || res.status === 302) {
+        //  do something response success
+    } else {
+        //  do something response failed
+    }
+})
+.catch((ex) =&gt; {
+    switch (ex.type) {
+        case &quot;abord&quot;: 
+            //  do something when request abord
+        break;
+
+            ...
+
+        default:
+            //  ...
+        break;
+    }
+});
+</code></pre><p>到这里,就利用Promise.race实现了一个可配置超时时间的fetch</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;随着ES6的普及,fetch已经渐渐取代了普通ajax在异步请求中的位置,以前在用jQuery中的ajax时,可以指定一个timeout属性,设置该请求的超时时间,但是原生的fetch并不支持该属性,如果遇到遇到一个请求一直pedding状态,就只能干等着,什么也干不了。由
+    
+    </summary>
+    
+      <category term="ES6" scheme="http://yoursite.com/categories/ES6/"/>
+    
+      <category term="fetch" scheme="http://yoursite.com/categories/ES6/fetch/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>实现一个迷你MVVM</title>
+    <link href="http://yoursite.com/2016/06/23/2016-06-23-mvvm-tourial/"/>
+    <id>http://yoursite.com/2016/06/23/2016-06-23-mvvm-tourial/</id>
+    <published>2016-06-22T16:00:00.000Z</published>
+    <updated>2017-03-30T12:19:21.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在近几年,MVVM模式一直很火热,其全称为”Model-View-ViewModel”,MVVM火的主要原因就是在用这种模式开发的,更多的只需要关注数据层的东西,不需要花额外的时间去维护视图,包括angular/Vue都是这种开发模式,但是两者的原理是截然不同的,现在参考Vue的实现原理,简单实现一个MVVM框架,支持的指令有”vm-modle”、”vm-click”、”vm-bind”,代码量大概在300行左右,先来看下用法:</p>
+<pre><code>//  HTML
+...
+
+        &lt;div id=&quot;app&quot;&gt;
+            &lt;input type=&quot;text&quot; class=&quot;text-filed&quot; vm-model=&quot;text&quot; /&gt;
+            &lt;p class=&quot;bind-text&quot; vm-bind=&quot;text&quot;&gt;&lt;/p&gt;
+            &lt;div class=&quot;click-area&quot; vm-click=&quot;clicked()&quot;&gt;点我&lt;/div&gt;
+            &lt;div class=&quot;click-area&quot; vm-click=&quot;clickWitharguments(text)&quot;&gt;点我(带参数)&lt;/div&gt;
+        &lt;/div&gt;
+
+...
+
+//  javascript
+
+window.onload = function() {
+
+    var clickTimes = 0, e;
+
+    //  调用MVVM
+    MVVM({
+        el: document.querySelector(&quot;#app&quot;),
+        data: {
+            text: &quot;I&apos;m an attribute named &apos;text&apos; under data&quot;
+        },
+        methods: {
+            clicked: function () {
+                e = event;
+                clickTimes ++;
+                e.target.innerHTML += &quot;&lt;p&gt;第&quot; + clickTimes  + &quot;次点击 - &quot; + Date.now() + &quot;&lt;/p&gt;&quot;;
+            },
+            clickWitharguments: function (text) {
+                e = event;
+                e.target.innerHTML += &quot;&lt;p&gt;此时data.text = &quot; + text + &quot;&lt;/p&gt;&quot;;
+            }
+        }
+    });
+};
+</code></pre><p>上面就是一个简单的调用了,下面我们先实现几个工具方法和定义一些基本变量:</p>
+<pre><code>//  MVVM.js
+
+//  用匿名函数自执行的方式,前面加分号的原因是为了防止压缩后的保存
+;(function(root) {
+
+    //  ...
+
+
+        //  匹配指令开头(&quot;vm-click&quot;,&quot;vm-model&quot;等)
+    var direcivePrefix = /^vm\-/,
+
+        //  缓存document
+        doc = document,
+
+        //  缓存document.body
+        body = doc.body,
+
+        //  指令Map对象,用于分类存储每个表达式,方便后期更新视图
+        dirsMap = {},
+
+        //  缓存Array.prototype
+        arr2 = [],
+
+        //  缓存Object.prototype
+        obj2 = {};
+
+
+    /**
+     * 获取对象上的类名
+     * @param obj
+     * @return {String}
+     */
+    function typeOf(obj) {
+        return obj2.toString.call(obj).slice(8, -1);
+    }
+
+   /**
+    * 把元素上绑定的指令转换成数组返回
+    * @param el
+    * @return {Array.&lt;Object&gt;}
+    */
+    function mapAttributeToArray(el) {
+        var res = [],
+            attributes, i, len;
+        if (el &amp;&amp; el.nodeType === 1) {
+            attributes = arr2.slice.call(el.attributes);
+            attributes.forEach(function (attr) {
+                if (direcivePrefix.test(attr.name)) {
+                    res.push({
+                        name: attr.name,
+                        value: attr.value,
+                        el: el
+                    });
+                }
+            });
+        }
+        return res;
+    }
+
+    /**
+     * 转换成驼峰写法(vm-bind -&gt; VMBind)
+     * @param str
+     */
+    function toCamelCase(str) {
+        if (str.length) {
+            return str.split(&quot;-&quot;).map(function (str, index) {
+                if(index &gt; 0) {
+                    return str.slice(0,1).toUpperCase() + str.slice(1);
+                }
+                return str.toUpperCase();
+            }).join(&quot;&quot;);
+        }
+        return &quot;&quot;;
+    }
+
+
+    /**
+     * 递归扫描节点
+     * @param rootEl        根节点
+     * @param callback      扫描后的回调
+     */
+    function scanNode(rootEl, callback) {
+        var child = arr2.slice.call(rootEl.childNodes),
+            deepChild;
+        if(child.length) {
+            child.forEach(function (el) {
+                if(el.nodeType === 1 &amp;&amp; !el.vmcomplied) {
+                    callback(el);
+                    scanNode(el, callback);
+                }
+            });
+        }
+    }
+
+    /**
+     * ES5(Object.defineProperty)
+     * @param target
+     * @param key
+     */
+    function defineProperty(target, key) {
+        //  同时设置一个&quot;_&quot; + key的属性值,后面取值直接用
+        target[&quot;_&quot; + key] = target[key];
+        Object.defineProperty(target, key, {
+            get: function() {
+                return this[&quot;_&quot; + key];
+            },
+            set: function(newV) {
+                //  用之前设置的&quot;_&quot; + key的值来比较
+                if(newV !== this[&quot;_&quot; + key]) {
+                    this[&quot;_&quot; + key] = newV;
+                    this[key] = newV;
+
+                    //  取得当前属性绑定的指令并且判断,更新视图
+                    if(typeOf(dirsMap[key]) === &quot;Array&quot; &amp;&amp; dirsMap[key].length) {
+                        dirsMap[key].forEach(function(dir) {
+                            dir.update();
+                        });
+                    }
+                }
+            }
+        });
+        return target;
+    }
+
+    //  ...
+
+
+})(window)
+</code></pre><p>上面实现了一些工具方法,完成的功能主要有扫描子节点,把元素上绑定 的属性绑定的指令取出来变成一个数组,转驼峰等等,下面就是MVVM的入口了:</p>
+<pre><code>//  MVVM.js
+
+//  ...
+
+/**
+ * MVVM构造函数
+ * @param opt
+ * @return {MVVM.init}
+ * @constructor
+ */
+function MVVM(opt) {
+    //  模仿jQuery中的无&quot;new&quot;操作符
+    return new MVVM.fn.init(opt);
+}
+
+MVVM.fn = MVVM.prototype = {
+
+    //  修正原型下的构造器
+    constructor: MVVM,
+
+    /**
+     * MVVM入口
+     * @param opt
+     */
+    init: function (opt) {
+        //    参数校验,转换
+        this.el = (opt.el &amp;&amp; opt.el.nodeType === 1) ? opt.el : body;
+        this.data = (typeOf(opt.data) === &quot;Object&quot;) ? opt.data : {};
+        this.methods = (typeOf(opt.methods) === &quot;Object&quot;) ? opt.methods : {};
+        this.scan();
+    },
+
+    /**
+     * 扫描编译
+     */
+    scan: function () {
+
+        //  从根节点开始扫描
+        scanNode(this.el, function (currentEl) {
+
+            //  取得当前元素上的指令数组
+            var dirList = mapAttributeToArray(currentEl);
+            if(dirList.length) {
+
+                //  循环编译指令
+                dirList.forEach(function (dir) {
+                    dir.dirName = toCamelCase(dir.name);
+                    if(directiveMap[dir.dirName]) {
+
+                        //  实例化指令
+                        dir.dirIns = new directiveMap[dir.dirName](currentEl, dir.value, this.data, this.methods);
+
+                        //  给当前属性指定getter/setter
+                        if(this.data[dir.value]) {
+                            defineProperty(this.data, dir.value);
+                           }
+
+                        //  dirsMap[dir.value]类型判断
+                        if(typeOf(dirsMap[dir.value]) !== &quot;Array&quot;) {
+                            dirsMap[dir.value] = [];
+                        }
+
+                        //  vm-modle之类不需要更新视图
+                        if(dir.name !== &quot;vm-model&quot;) {
+                            dirsMap[dir.value].push(dir.dirIns);
+                        }
+                    } else {
+                        //  没有找到相关指令构造函数
+                        throw new Error(&quot;unsupported directive&quot; + dir.name + &quot;!&quot;);
+                    }
+                }, this);
+            }
+        }.bind(this));
+    }
+
+};
+
+//  修改MVVM.fn.init的prototype
+MVVM.fn.init.prototype = MVVM.fn;
+
+//  挂载到全局对象
+root.MVVM = MVVM;
+
+//  ...
+</code></pre><p>上面就是MVVM.js的全部内容了,MVVM的入口算是完成了,下面我们一起构造之前提到的指令:</p>
+<pre><code>//  directive.js
+
+;(function (root) {
+
+        //  匹配指令值中的&quot;clicked()&quot;后面的&quot;()&quot;
+    var bracketsReg = /\(\)/,
+
+        //  匹配指令值中的&quot;clickWitharguments(text)&quot;后面的&quot;(text)&quot;
+        bracketsArguReg = /\([\s\S]+\)/;
+
+    /**
+     * vm-bind指令
+     * @param el
+     * @param expr
+     * @param data
+     * @param methods
+     * @constructor
+     */
+    function VMBind(el, expr, data, methods) {
+        this.el = el;
+        this.expr = expr;
+        this.data = data;
+        this.methods = methods;
+        this.init();
+    }
+
+    VMBind.prototype = {
+
+        constructor: VMBind,
+
+        /**
+         * 初始化方法
+         */
+        init: function () {
+            this.el.textContent = this.data[&quot;_&quot; + this.expr];
+        },
+
+        /**
+         * 更新视图
+         */
+        update: function () {
+            this.init();
+        }
+
+    };
+
+    /**
+     * vm-model指令
+     * @param el
+     * @param expr
+     * @param data
+     * @param methods
+     * @constructor
+     */
+    function VMModel(el, expr, data, methods) {
+        this.oldVal = &quot;&quot;;
+        this.el = el;
+        this.expr = expr;
+        this.data = data;
+        this.methods = methods;
+        this.init();
+    }
+
+    VMModel.prototype = {
+
+        constructor: VMModel,
+
+        /**
+         * 初始化方法
+         */
+        init: function () {
+            var currentVal;
+            this.oldVal = this.data[this.expr];
+            this.el.value = this.oldVal;
+
+            //  input元素的校验
+            if (this.el.tagName.toLowerCase() === &quot;input&quot;) {
+                this.el.addEventListener(&quot;keyup&quot;, function () {
+                    currentVal = this.el.value;
+
+                    //  输入值较之前有变化
+                    if (currentVal !== this.oldVal) {
+                        this.update(currentVal);
+                        this.oldVal = currentVal;
+                    }
+                }.bind(this), false);
+            }
+        },
+
+        /**
+         * 更新model中的相关属性值,触发其他指令实例下的update方法
+         */
+        update: function (newV) {
+            this.data[this.expr] = newV;
+        }
+
+    };
+
+    /**
+     * vm-click指令
+     * @param el
+     * @param expr
+     * @param data
+     * @param methods
+     * @constructor
+     */
+    function VMClick(el, expr, data, methods) {
+        this.el = el;
+        this.expr = expr;
+        this.data = data;
+        this.methods = methods;
+        this.init();
+    }
+
+    VMClick.prototype = {
+        constructor: VMClick,
+
+        /**
+         * 初始化方法
+         */
+        init: function () {
+            //  取得方法相对于methods中的指针
+            var callback = this.methods[this.expr.replace(bracketsReg, &quot;&quot;).replace(bracketsArguReg, &quot;&quot;)],
+                data = this.data,
+                tmp = &quot;&quot;,
+                args = [];
+
+            //  类型校验
+            if (typeof callback === &quot;function&quot;) {
+                this.el.addEventListener(&quot;click&quot;, function (e) {
+                    //  参数处理,当前指令对应的值是&quot;abc(de)&quot;而不是&quot;abc&quot;的形式
+                    if(!bracketsReg.test(this.expr) &amp;&amp; bracketsArguReg.test(this.expr)) {
+                        tmp = this.expr.match(bracketsArguReg)[0].replace(&quot;)&quot;, &quot;&quot;).replace(&quot;(&quot;, &quot;&quot;).split(&quot;,&quot;);
+
+                        //  依次取得相关参数
+                        args = tmp.map(function (name) {
+                            return data[&quot;_&quot; + name.trim()];
+                        });
+                    }
+
+                    //  执行相关方法
+                    callback.apply(root, args);
+                }.bind(this), false);
+            }
+        }
+    };
+
+    //  挂载到window对象下
+    root.directiveMap = {
+        VMBind: VMBind,
+        VMModel: VMModel,
+        VMClick: VMClick,
+    };
+
+})(window)
+</code></pre><p>好了,到这里我们的MVVM入口和指令都全部实现好了,下面一起看下效果吧:</p>
+<p><img src="/imgs/mvvm-run.gif" alt="运行效果"></p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在近几年,MVVM模式一直很火热,其全称为”Model-View-ViewModel”,MVVM火的主要原因就是在用这种模式开发的,更多的只需要关注数据层的东西,不需要花额外的时间去维护视图,包括angular/Vue都是这种开发模式,但是两者的原理是截然不同的,现在参考V
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+      <category term="MVVM" scheme="http://yoursite.com/categories/javascript/MVVM/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>ES6中的Promise</title>
+    <link href="http://yoursite.com/2016/05/04/2016-05-04-es6-promise/"/>
+    <id>http://yoursite.com/2016/05/04/2016-05-04-es6-promise/</id>
+    <published>2016-05-03T16:00:00.000Z</published>
+    <updated>2017-03-30T12:19:21.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在执行一些异步操作(典型的有JavaScript中的ajax/NodeJs中读取文件等等)的时候,我们不知道该操作什么时候完成,所以就需要在不同的时候写上回调,等到有返回的时候,再执行下一步操作,下面就用jQuery中的一个ajax来做示例:</p>
+<pre><code>$.ajax({
+    &quot;url&quot;: &quot;xxx&quot;,
+    &quot;type&quot;: &quot;GET&quot;,
+    &quot;dataType&quot;: &quot;&quot;JSON,
+    &quot;success&quot;: function(res){},
+    &quot;error&quot;: function(ex){
+        //  do some thing
+    }
+});
+</code></pre><p>最基础的一个ajax示例,当我们有多个ajax嵌套请求的时候,就中了所谓的”回调地狱”,类似于下面的写法:</p>
+<pre><code>$.ajax({
+    //  some configs
+    &quot;success&quot;: function(res){
+        $.ajax({
+            //  ...
+            &quot;success&quot;: function(res){
+                $.ajax({
+                    //  ...
+                    &quot;success&quot;:function(res){
+                        .
+                        .
+                        .
+                    }
+                });
+            }
+        });
+    }
+});
+</code></pre><p>一层套着一层,代码可读性很差,且不容易后期的维护</p>
+<p>这时候就需要一个比前者好的解决方案来解决该问题,ES6中的Promise一定程度上解决了该问题:</p>
+<p>我们可以利用Promise对ajax进行一层封装</p>
+<pre><code>function _ajax(url, method, args) {
+    let promise = new Promise((resolve, reject) =&gt; {
+
+        let client = new XMLHttpRequest();
+        let uri = url;
+
+        if (args &amp;&amp; (method == &quot;POST&quot; || method == &quot;PUT&quot;)) {
+            let argcount = 0;
+            uri += &quot;?&quot;;
+            for (var key in args) {
+                if (args.hasOwnProperty(key)) {
+                    if (argcount++) {
+                        uri += &apos;&amp;&apos;;
+                    }
+                    uri += encodeURIComponent(key) + &apos;=&apos; + encodeURIComponent(args[key]);
+                }
+            }
+        }
+
+        client.open(method, uri);
+        client.send();
+
+        client.onload = function() {
+            if (this.status &gt;= 200 &amp;&amp; this.status &lt; 300) {
+                resolve(this.response);
+            } else {
+                reject(this.statusText);
+            }
+        };
+        client.onerror = function() {
+            reject(this.statusText);
+        };
+
+    });
+
+    return promise;
+}
+
+let core = {
+
+    &quot;GET&quot;: function(args) {
+        return _ajax(url, &quot;GET&quot;, args);
+    },
+
+    &quot;POST&quot;: function(args) {
+        return _ajax(url, &quot;POST&quot;, args);
+    },
+
+    &quot;PUT&quot;: function(args) {
+        return _ajax(url, &quot;PUT&quot;, args);
+    },
+
+    &quot;DELETE&quot;: function(args) {
+        return _ajax(url, &quot;DELETE&quot;, args);
+    }
+
+};
+</code></pre><p>上面这段代码是JavaScript MDN上的代码(可能稍微有点改动),它对ajax进行了一层封装,经过这层封装,我们可以像下面这样写一些异步代码:</p>
+<pre><code>$http(&quot;xxx&quot;)
+.GET()
+.then((data) =&gt; {
+
+    //  do something
+
+    $http(&quot;xxx2&quot;)
+    .GET()
+    .then((data) =&gt; {
+
+        //  do something
+
+        $http(&quot;xxx3&quot;)
+        .GET({&quot;key&quot;,&quot;value&quot;})
+        .then((data) =&gt; {
+            //  do something...
+        })
+
+
+    },(ex) =&gt; {});
+
+})
+.catch((ex) =&gt; {});
+</code></pre><p>虽然还有嵌套,但是代码看起来已经舒服了很多。</p>
+<p>Promise是一个异步编程的抽象,它是一个返回值或抛出exception的代理对象,一般promise对象都有一个then方法,这个then方法是我们如何获得返回值(成功实现承诺的结果值,称为fulfillment)或抛出exception(拒绝承诺的理由,称为rejection)，then是用两个可选的回调作为参数,我们可以称为onFulfilled和OnRejected,也可以把OnRejected写在catch里面</p>
+<p>所以一个Promise一共有下面几个状态</p>
+<ol>
+<li>pending待承诺 - promise初始状态</li>
+<li>fulfilled实现承诺 - 一个承诺成功实现状态</li>
+<li>rejected拒绝承诺 - 一个承诺失败的状态</li>
+</ol>
+<p>再来个NodeJs中读取文件的例子:</p>
+<pre><code>function readFile(path) {
+    var fs = require(&quot;fs&quot;);
+    var prromise = new Promise((resolve, reject) =&gt; {
+        fs.readdir(path, (ex, files) =&gt; {
+            if (ex) {
+                return reject(ex);
+            }
+            return resolve(files);
+        });
+    });
+
+    return prromise;
+}
+
+readFile(config.avatarPath + &quot;1&quot;).then((files) =&gt; {
+    //  do some thing
+    console.log(files);
+}).catch((ex) =&gt; {
+    //  do something...
+    console.log(ex);
+});
+</code></pre><p>如果不用Promise和一些ES6的特性,上面的代码应该看起来是下面的这样子:</p>
+<pre><code>var fs = require(&quot;fs&quot;);
+fs.readdir(path, function (ex, files) {
+    if (ex) {
+        //  do something
+        return console.log();
+    }
+
+    //  do some thing
+    console.log(files);
+});
+</code></pre><p>代码量可能更少,但是陷入”回调地狱”的可能就更大了,在ES7中,又新增了async/await特性来针对异步操作的,后面介绍😄</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在执行一些异步操作(典型的有JavaScript中的ajax/NodeJs中读取文件等等)的时候,我们不知道该操作什么时候完成,所以就需要在不同的时候写上回调,等到有返回的时候,再执行下一步操作,下面就用jQuery中的一个ajax来做示例:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;
+    
+    </summary>
+    
+      <category term="ES6" scheme="http://yoursite.com/categories/ES6/"/>
+    
+      <category term="Promise" scheme="http://yoursite.com/categories/ES6/Promise/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>实现模块化编程</title>
+    <link href="http://yoursite.com/2016/03/24/2016-03-24-javascript-self-loader/"/>
+    <id>http://yoursite.com/2016/03/24/2016-03-24-javascript-self-loader/</id>
+    <published>2016-03-23T16:00:00.000Z</published>
+    <updated>2017-03-30T12:19:21.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>先上个小例子(工资计算器):</p>
+<ul>
+<li>传统</li>
+</ul>
+<pre><code>//  绩效奖金
+function performanceCoefficient(salary) {
+    return salary * 0.2;
+}
+
+//  住房公积金
+function companyReserve(salary) {
+    return salary * 0.2;
+}
+
+//  个人所得税、五险一金
+function incomeTax(remain) {
+    return (remain - 3500) * 0.2;
+}
+
+//  基本工资
+var salary = 10000;
+
+//  最后税前工资
+var finalSalary = salary + performanceCoefficient(salary);
+
+finalSalary = finalSalary - incomeTax(finalSalary - companyReserve(finalSalary));
+
+console.log(finalSalary);
+</code></pre><ul>
+<li><p>类模块化</p>
+<pre><code>//  全局变量,存储已经声明的模块
+var modules = {};
+
+//  先来实现几个工具函数
+var define = (function() {
+
+//  根据depArrs中的模块名称找出modules中的相关对象
+var _require = function(depArrs) {
+    return depArrs.map(function(dep) {
+        return modules[dep];
+    });
+};
+
+    //  define函数实际做的事情
+    return function(id, depArrs, factory) {
+
+        //  判断是否已经声明过同名模块
+        deps.map(function(dep) {
+            return dep.factory.apply(window, dep.deps);
+        });
+
+        var deps = _require(depArrs);
+        if (modules[id]) {
+            throw new Error(&quot;module &quot; + id + &quot; has been declared!&quot;);
+        }
+        modules[id] = {
+            id: id,
+            factory: factory,
+            deps: deps
+        };
+    };
+})();
+
+//  实现一个调用主入口文件,只需传入模块id即可
+//  类似于sea中的sea.use(&quot;id&quot;, [], function(){ /*...*/ })
+//  或者requirejs中的require([&quot;id&quot;])
+var loader = function(id) {
+    if (!modules[id]) {
+        throw new Error(&quot;module&quot; + id + &quot; has not been declared!&quot;);
+    }
+    var deps = modules[id].deps;
+    deps = deps.map(function(dep) {
+        return dep.factory.apply(window, dep.deps);
+    });
+    modules[id].factory.apply(window, deps);
+};
+
+//  声明一个计算模块
+define(&quot;calc&quot;, [], function() {
+    return {
+        performanceCoefficient: function(salary) {
+            return salary * 0.2;
+        },
+        companyReserve: function(salary) {
+            return salary * 0.2;
+        },
+        incomeTax: function(remain) {
+            return (remain - 3500) * 0.2;
+        }
+    };
+});
+
+//  最终用来计算工资的模块
+define(&quot;salary&quot;,[&quot;calc&quot;], function(calc) {
+    var slary = 10000000,
+        finalSalary = slary + calc.performanceCoefficient(slary);
+
+    finalSalary = finalSalary - calc.incomeTax(finalSalary - calc.companyReserve(finalSalary));
+
+    console.log(finalSalary);
+
+});
+
+loader(&quot;salary&quot;);
+</code></pre></li>
+</ul>
+<p>上面两段代码都完成了相同的功能,但是在写法上差别很大,称第二种方式是类模块化的原因是现在的代码还没有完全实现模块化,所有的模块都在同一文件,没有实现完全解耦,这时就需要加载器(require)来帮我们完成各功能模块分文件的目的,模块化的优势不言而喻,后面介绍一步步实现一个符合AMD规范的加载器。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;先上个小例子(工资计算器):&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;传统&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre&gt;&lt;code&gt;//  绩效奖金
+function performanceCoefficient(salary) {
+    return salary * 0.2;
+}
+
+//  住
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+      <category term="继承" scheme="http://yoursite.com/categories/javascript/%E7%BB%A7%E6%89%BF/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>javascript实现继承之2</title>
+    <link href="http://yoursite.com/2016/03/10/2016-03-10-js-object-extend2/"/>
+    <id>http://yoursite.com/2016/03/10/2016-03-10-js-object-extend2/</id>
+    <published>2016-03-09T16:00:00.000Z</published>
+    <updated>2017-03-30T12:19:21.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在前面的一篇文章<a href="http://rwson.github.io/%E6%8A%80%E6%9C%AF/2015/05/26/js-object-extend.html" target="_blank" rel="external">JavaScript实现继承</a>介绍过js中通过原型来继承的两种方法</p>
+<ol>
+<li>伪造对象继承:通过把父类的实例赋值给子类的prototype，然后在子类的构造函数中调用父类的构造方法；</li>
+<li>类式继承(原型式继承):通过一个空函数中转，把父类的示例赋值给该空函数的原型，然后再把该空函数的prototype赋值给子类的prototype，再在子类的构造方法中调用父类的构造器，实现继承。</li>
+</ol>
+<p>综合上面两个方法，其实都通过两次调用父类的构造器来实现，第二种方法相对于第一种只是在子类原型上少了些父类的实例属性。</p>
+<p>在《javaScript高级程序》中，介绍了另外一种继承的实现方式，名为”寄生式组合继承”。所谓的寄生式组合继承，不必为了子类的原型而调用超类型的构造函数，要实现继承只需要父类原型的一个副本。下面的具体的代码:</p>
+<pre><code>/**
+ * 寄生式组合继承
+ * @param subType   子类
+ * @param superType 父类
+ **/
+function inheritPrototype(subType,subperType){
+    var prototype = Object(superType.prototype);
+    prototype.constructor = subType;
+    subType.prototype = prototype;
+}
+
+/**
+ * 父类
+ * @param name   name属性
+ **/
+function superClass(name) {
+    this.name = name;
+}
+
+superClass.prototype.sayName = function() {
+    alert(this.name);    
+};
+
+/**
+ * 子类
+ * @param name   name属性
+ * @param age    age属性
+ **/
+function subClass(name,age) {
+    superClass.call(this,name);
+    this.age = age;
+}
+
+//  实现继承
+inheritPrototype(subClass,superClass);
+</code></pre><p>这样就只调用了一次父类的构造方法，在性能上更优秀。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在前面的一篇文章&lt;a href=&quot;http://rwson.github.io/%E6%8A%80%E6%9C%AF/2015/05/26/js-object-extend.html&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;JavaScript实现继
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+      <category term="继承" scheme="http://yoursite.com/categories/javascript/%E7%BB%A7%E6%89%BF/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>javascript的高阶函数</title>
+    <link href="http://yoursite.com/2016/01/16/2016-01-16-javascript-higher-order-functions/"/>
+    <id>http://yoursite.com/2016/01/16/2016-01-16-javascript-higher-order-functions/</id>
+    <published>2016-01-15T16:00:00.000Z</published>
+    <updated>2017-03-30T12:19:21.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>高阶函数:听到高阶感觉很高大上的一个词,但是实现起来并不是那么难。</p>
+<p>记得有一次在看js面试题相关资料时,看到类似于下面一个题目,实现一个函数,能有如下写法,实现两个值相加并返回,写法大概是这样的:</p>
+<pre><code>add(10)(5);
+</code></pre><p>以前没见过这种写法,相信大家对下面的写法肯定不陌生:</p>
+<pre><code>function add(){
+    return function(a,b){
+        return a + b;
+    };
+}
+
+//  然后调用的时候写成下面的样子
+
+add()(10,5);
+
+//  最后返回15
+</code></pre><p>仔细观察这两种写法,发现它们在写法上差别很小,第一种写法是一个括号里放一个参数,而第二种写法是把两个参数放在同一个括号里,既然写法类似,实现起来肯定区别也不是特别大,且看下面的实现:</p>
+<pre><code>function add(a){
+    return function(b){
+        return a + b;
+    }
+}
+</code></pre><p>这样我们就实现了一个高阶函数。在上面两个例子中,调用add并没有立即返回一个计算后的值,而是返回了一个函数,调用该返回的函数后,才会返回具体计算后的值,这样就有了第二对括号。</p>
+<p>再来看个例子:</p>
+<pre><code>function func(p1){
+    var self = this;
+
+    function fd(p2) {
+        this.add1 = function (p3) {
+            return p1 + &quot;,&quot; + p2 + &quot; &quot; + p3;
+        };
+    }
+
+    self.add =  function (p2){
+        fd.call(this, p2);
+        return this.add1;
+    };
+
+    return self.add;
+}
+
+//  也可以直接这样实现
+function func(p1){
+    return function(p2){
+        return function(p3){
+            return p1 + &quot;,&quot; + p2 + &quot; &quot; + p3;
+        }
+    }
+}
+</code></pre><p>再来个实例,解决数组元素累加的问题:</p>
+<pre><code>function addArray(arr){
+    var res = 0;
+    if(Array.prototype.forEach){
+        arr.forEach(function(item){
+            res += item;
+        });
+        return res;
+    }
+    for(var i = 0,len = arr.length;i &lt; len;i ++){
+        res += arr[i];
+    }
+    return res;
+}
+
+function applyAdd(func,arr){
+    return func.apply(func,Array.prototype.slice.call(arguments, 1));
+}
+
+console.log(applyAdd(addArray,[1,2,3,4,5,6,7,8,9]));
+</code></pre><p>在调用applyAdd时,其实真正走的是addArray方法。</p>
+<p>在著名的js工具库underscoreJs中,也有类似的例子,后面介绍。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;高阶函数:听到高阶感觉很高大上的一个词,但是实现起来并不是那么难。&lt;/p&gt;
+&lt;p&gt;记得有一次在看js面试题相关资料时,看到类似于下面一个题目,实现一个函数,能有如下写法,实现两个值相加并返回,写法大概是这样的:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;add(10)(5);
+&lt;/co
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+      <category term="高阶函数" scheme="http://yoursite.com/categories/javascript/%E9%AB%98%E9%98%B6%E5%87%BD%E6%95%B0/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>React Native自定义原生模块</title>
+    <link href="http://yoursite.com/2016/01/12/2016-01-12-expend-objectc/"/>
+    <id>http://yoursite.com/2016/01/12/2016-01-12-expend-objectc/</id>
+    <published>2016-01-11T16:00:00.000Z</published>
+    <updated>2017-03-30T12:19:21.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>现如今，越来越多的移动开发者选择用React Native来开发他们的app。虽然React Native提供了强大的API供我们调用，但是对于一些功能(比如第三方支付、文件上传之类的)，原生模块中并没有提供给我们相关的API，这时候就需要我们来自己封装一些东西来给js端调用。这边以ios端的为例来介绍。</p>
+<hr>
+<h6 id="模块配置表"><a href="#模块配置表" class="headerlink" title="模块配置表"></a>模块配置表</h6><p>在RN加载的时候，所有注册并且符合规范的模块都会被导出并且生成相应的模块数据类RCTModuleData，而模块数据中缓存了模块的对象实例，以及模块索引id。</p>
+<p>最后大概生成一个如下的模块配置表:</p>
+<pre><code>{
+    &quot;remoteModuleConfig&quot;: {
+        &quot;className&quot;: {
+            &quot;methods&quot;: {
+                &quot;method&quot;: {
+                    &quot;type&quot;: &quot;remote&quot;,
+                    &quot;methodID&quot;: 0
+                },
+                ...
+            },
+            &quot;moduleID&quot;: 4
+        },
+        ...
+     },
+}
+</code></pre><h6 id="通信流程"><a href="#通信流程" class="headerlink" title="通信流程"></a>通信流程</h6><p>先看一个js调用OC的下的方法走了哪些步骤:</p>
+<p><img src="/imgs/progress.jpg" alt=""></p>
+<p>1.JS端调用某个OC模块暴露出来的方法。</p>
+<p>2.把上一步的调用分解为ModuleName,MethodName,arguments，再扔给MessageQueue处理。</p>
+<p>3.在这一步把JS的callback函数缓存在MessageQueue的一个成员变量里，用CallbackID代表callback。在通过保存在MessageQueue的模块配置表把上一步传进来的ModuleName和MethodName转为ModuleID和MethodID。</p>
+<p>4.把上述步骤得到的ModuleID,MethodId,CallbackID和其他参数argus传给OC。至于具体是怎么传的，后面再说。</p>
+<p>5.OC接收到消息，通过模块配置表拿到对应的模块和方法。</p>
+<p>6.RCTModuleMethod对JS传过来的每一个参数进行处理。</p>
+<p>7.OC模块方法调用完，执行block回调。</p>
+<p>8.调用到第6步说明的RCTModuleMethod生成的block。</p>
+<p>9.block里带着CallbackID和block传过来的参数去调JS里MessageQueue的方法invokeCallbackAndReturnFlushedQueue。</p>
+<p>10.MessageQueue通过CallbackID找到相应的JS callback方法。</p>
+<p>11.调用callback方法，并把OC带过来的参数一起传过去，完成回调。</p>
+<p>整个流程就是这样，简单概括下，差不多就是：JS函数调用转ModuleID/MethodID -&gt; callback转CallbackID -&gt; OC根据ID拿到方法 -&gt; 处理参数 -&gt; 调用OC方法 -&gt; 回调CallbackID -&gt; JS通过CallbackID拿到callback执行</p>
+<p>下面就简单分享一个从OC暴露方法到JS端调用的例子：</p>
+<pre><code>// OC(RCTDeviceExtension.m)
+
+#import &quot;RCTBridgeModule.h&quot;
+#import &quot;RCTUtils.h&quot;
+//  RCTScreenSize用到
+
+@interface RCTDeviceExtension : NSObject &lt;RCTBridgeModule&gt;
+
+@end
+
+@implementation RCTDeviceExtension
+
+RCT_EXPORT_MODULE();
+//  暴露一个模块
+
+/**
+  获取设备的相关信息
+ **/
+static NSDictionary *DynamicDimesions(){
+  CGFloat width = MIN(RCTScreenSize().width,RCTScreenSize().height);
+  //  宽
+  CGFloat height = MAX(RCTScreenSize().width,RCTScreenSize().height);
+  //  高
+  CGFloat scale = RCTScreenScale();
+  //  像素密度
+
+  if(UIDeviceOrientationIsLandscape([UIDevice currentDevice].orientation)){
+    width = MAX(RCTScreenSize().width,RCTScreenSize().height);
+    height = MIN(RCTScreenSize().width,RCTScreenSize().height);
+  }
+
+  return @{
+            @&quot;width&quot;:@(width),
+            @&quot;height&quot;:@(height),
+            @&quot;scale&quot;:@(scale)
+           };
+  //  在回调方法中作为一个对象,有width,height,scale属性
+
+}
+
+RCT_EXPORT_METHOD(getDeviceInfo:(RCTResponseSenderBlock)callback){
+  callback(@[[NSNull null],DynamicDimesions()]);
+};
+//  暴露方法
+
+@end
+</code></pre><p>这里OC暴露一个类,DeviceExtension(RCTDeviceExtension被编译成DeviceExtension)，在JS端，我们就可以通过如下方式来调用相关方法。</p>
+<pre><code>var DeviceExtension = require(&quot;NativeModules&quot;).DeviceExtension;
+//  require(&quot;NativeModules&quot;)用来加载原生模块(包括自定义模块)
+
+DeviceExtension.getDeviceInfo(function(err,info){
+  console.log(info);
+});
+</code></pre><p>这样我们的自定义API就实现了，后面如果再有更复杂的功能的时候，思路都是一样的，只不过步骤会更繁杂一些。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;现如今，越来越多的移动开发者选择用React Native来开发他们的app。虽然React Native提供了强大的API供我们调用，但是对于一些功能(比如第三方支付、文件上传之类的)，原生模块中并没有提供给我们相关的API，这时候就需要我们来自己封装一些东西来给js端调
+    
+    </summary>
+    
+      <category term="React" scheme="http://yoursite.com/categories/React/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>实现一个简单的模板引擎</title>
+    <link href="http://yoursite.com/2015/12/14/2015-12-14-front-end-template-engine/"/>
+    <id>http://yoursite.com/2015/12/14/2015-12-14-front-end-template-engine/</id>
+    <published>2015-12-13T16:00:00.000Z</published>
+    <updated>2017-03-30T12:19:21.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在最开始想要把数据显示到页面上,我们可以需要用到一些后端的模板引擎(比如java中的Freemarker等),随着技术的发展,前端会把数据从后端取回来,用拼接HTML或者模板引擎的方式来呈现页面,如果布局结构简单还好,但是如果碰到复杂结构的时候,前者可能显得比较吃力,且容易出错。</p>
+<p>比较著名的一些前端模板引擎有Handlebars、Underscore.js(一个javascript工具库的集合,带模板引擎)等等。各自也有各自的语法。</p>
+<p>前端模板引擎带来了很多嚎头,(预)编译、缓存、渲染等等,下面我们实现一个简单的模板引擎。</p>
+<p>首先想一下,在用模板引擎和拼接字符串时最大的区别是什么?就是一个是通过手动的绑定属性,一个是像写HTML一样把属性绑定好:</p>
+<pre><code>//  比如有这么一段数据
+var data = [
+    {
+        name: &quot;foo&quot;,
+        age: 23
+    },
+    {
+        name: &quot;bar&quot;,
+        age: 25
+    }
+];
+
+//  字符串拼接的写法
+var html = &quot;&quot;;
+for(var i = 0, len = data.length; i &lt; len; i ++) {
+    html += &quot;&lt;div class=&apos;item&apos;&gt;&lt;span class=&apos;name&apos;&gt;&quot; + data[i].name + &quot;&lt;/span&gt;&lt;span class=&apos;age&apos;&gt;&quot; + data[i].age + &quot;&lt;/span&gt;&lt;/div&gt;&quot;;
+}
+
+document.getElementById(&quot;target&quot;).innerHTML = html;
+
+//  模板引擎
+&lt;script type=&quot;text/template&quot;&gt;
+    &lt;% for(var i in obj) %&gt;
+        &lt;div class=&quot;item&quot;&gt;
+            &lt;span class=&quot;name&quot;&gt;
+                &lt;%= obj[i].name %&gt;
+            &lt;/span&gt;
+            &lt;span class=&quot;age&quot;&gt;
+                &lt;%= obj[i].age %&gt;
+            &lt;/span&gt;
+        &lt;/div&gt;
+    &lt;% } %&gt;
+&lt;/script&gt;
+</code></pre><p>可以看到模板引擎的写法明显清楚了许多。</p>
+<p>要实现一个模板引擎,首先需要定义一个编译方法。我们先来定义一些变量:</p>
+<pre><code>//  缓存,调用编译方法的时候,先检测缓存中是否存在,如果有,直接取出来返回
+var _cache = {};
+
+//  取值表达式正则(&lt;%= obj[i].name %&gt;这种)
+var _valueReg = /&lt;%=(\s\S+?)%&gt;/;
+
+//  js可执行语句正则(&lt;% alert(123); %&gt;这种)
+var _evaluateReg = /&lt;%(\s\S+?)%&gt;/;
+
+//  匹配HTML特殊字符
+var _htmlReg = /&lt;|&gt;|&amp;/g;
+
+//  特殊转义正则(&lt;$ obj.htmlTag $&gt; 防止有些标签被当成普通文本来渲染,比如带链接的a标签,被渲染成了&quot;&lt;a href=&apos;xxxx&apos;&gt;yyyy&lt;/a&gt;&quot;)
+var _escapeReg = /&lt;$(\s\S+?)$&gt;/;
+
+//  特殊字符
+var _charReg = /\\|&apos;|\r|\n|\t|\u2028|\u2029/g;
+
+//  最终的匹配语句
+var _matcher = /&lt;%=([\s\S]+?)%&gt;|&lt;%([\s\S]+?)%&gt;|&lt;\$([\s\S]+?)\$&gt;|$/g;
+
+//  HTML转义
+var _escapeHtml = {
+
+    &quot;escapehash&quot;: {
+        &quot;&lt;&quot;: &quot;&amp;lt;&quot;,
+        &quot;&gt;&quot;: &quot;&amp;gt;&quot;,
+        &quot;&amp;&quot;: &quot;&amp;amp;&quot;
+    },
+
+    //  转义方法,取得escapehash中对应的转义符返回
+    &quot;escaping&quot;: function(char) {
+        return _escapeHtml.escapehash[char];
+    }
+};
+
+//  匹配特殊字符
+var _escapeCharater = {
+
+    &quot;escapehash&quot;: {
+        &apos;&quot;&apos;: &quot;&amp;quot;&quot;,
+        &quot;&apos;&quot;: &quot;&amp;#x27;&quot;,
+        &quot;/&quot;: &quot;&amp;#x2f;&quot;,
+        &quot;\\&quot;: &quot;\\\\&quot;,
+        &quot;\r&quot;: &quot;&quot;,
+        &quot;\n&quot;: &quot;&quot;,
+        &quot;\t&quot;: &quot;&quot;,
+        &quot;\u2028&quot;: &quot;\\u2028&quot;,
+        &quot;\u2029&quot;: &quot;\\u2029&quot;
+    },
+
+    //  转义方法,取得escapehash中对应的转义符返回
+    &quot;escaping&quot;: function(char) {
+        return _escapeCharater.escapehash[char];
+    }
+};
+</code></pre><p>变量都定义完了,开始实现一个编译方法:</p>
+<pre><code>/**
+  * 编译方法
+  * @param  str String   需要被编译的字符串
+  * @return String
+  **/
+function complie(str) {
+
+    //  fnBody存储最后返回的函数体
+    var fnBody = &quot;&quot;;
+
+    //  缓存上一次replace后的偏移
+    var index = 0;
+
+    //  检测缓存
+    if (!_cache[str]) {
+        fnBody = &quot;var _temp = &apos;&apos;;_temp += &apos;&quot;;
+
+        //  替换之前定义的匹配语句中的相关字符串,并做处理
+        str.replace(_matcher, function(match, value, evaluate, escapeStr, offset) {
+
+            //  截取相关字符串拼接到函数体
+            fnBody += str.slice(index, offset).replace(_charReg, _escapeCharater.escaping);
+
+            //  可执行语句
+            if (evaluate) {
+                fnBody += &quot;&apos;;&quot; + evaluate + &quot;_temp += &apos;&quot;;
+            }
+
+            //  &lt;%= xxx[.yyy] %&gt; -&gt; 普通的取值表达式
+            if (value) {
+                fnBody += &quot;&apos; + &quot; + value + &quot; + &apos;&quot;;
+            }
+
+            //  &lt;$ xxx $&gt; -&gt; HTML特殊字符转义
+            if (escapeStr) {
+                fnBody += &quot;&apos; + &quot; + (&quot;obj.&quot; + escapeStr).replace(_htmlReg, _escapeHtml.escaping) + &quot; + &apos;&quot;;
+            }
+
+            //  更新下一次截取字符串的偏移地址
+            index = offset + match.length;
+        });
+        fnBody += &quot;&apos;;return _temp;&quot;;
+
+        //  塞到缓存,方便下次有相同模板的时候,不用再去编译
+        _cache[str] = fnBody;
+    } else {
+
+        //  从缓存区
+        fnBody = _cache[str];
+    }
+
+    return fnBody;
+}
+</code></pre><p>至此一个编译方法就实现好了。再来看render方法的实现:</p>
+<pre><code>/**
+  * 渲染方法
+  * @param  fnBody String   编译出来后的函数体
+  * @param  data            数据
+  * @return String
+  **/
+function render(fnBody, data) {
+    return new Function(&quot;obj&quot;, fnBody)(data);
+}
+
+//  挂载到全局对象
+window.Template = {
+    complie: complie,
+    render: render
+};
+</code></pre><p>到这就完成了一个简单的模板引擎,需要注意的是在render方法中的</p>
+<pre><code>new Function(&quot;obj&quot;, fnBody)(data)
+</code></pre><p>就意味着我们在用该模板引擎绑定相关数据的时候,必须用obj.xxx这种来读取,否则将不能被解析,很多模板利用with这个关键字动态的修改函数体内的this指向的方式,支持可以省略前面的”obj.”,而直接读取数据。</p>
+<p>具体代码请移步我的<a href="https://github.com/rwson/Template" target="_blank" rel="external">GitHub</a></p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在最开始想要把数据显示到页面上,我们可以需要用到一些后端的模板引擎(比如java中的Freemarker等),随着技术的发展,前端会把数据从后端取回来,用拼接HTML或者模板引擎的方式来呈现页面,如果布局结构简单还好,但是如果碰到复杂结构的时候,前者可能显得比较吃力,且容易
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+      <category term="模板引擎" scheme="http://yoursite.com/categories/javascript/%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E/"/>
+    
+    
+  </entry>
+  
+</feed>
