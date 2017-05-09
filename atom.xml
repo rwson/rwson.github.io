@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2017-05-09T13:48:42.000Z</updated>
+  <updated>2017-05-09T13:53:53.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -16,11 +16,35 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>Vue源码阅读-生命周期</title>
+    <link href="http://yoursite.com/2017/05/09/2017-05-09-read-vue-source-code-2/"/>
+    <id>http://yoursite.com/2017/05/09/2017-05-09-read-vue-source-code-2/</id>
+    <published>2017-05-08T16:00:00.000Z</published>
+    <updated>2017-05-09T13:53:53.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>上篇文章分析了</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;上篇文章分析了&lt;/p&gt;
+
+    
+    </summary>
+    
+      <category term="Vue" scheme="http://yoursite.com/categories/Vue/"/>
+    
+      <category term="源码阅读" scheme="http://yoursite.com/categories/Vue/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/"/>
+    
+    
+  </entry>
+  
+  <entry>
     <title>Vue源码阅读-入口</title>
     <link href="http://yoursite.com/2017/05/06/2017-05-06-read-vue-source-code-1/"/>
     <id>http://yoursite.com/2017/05/06/2017-05-06-read-vue-source-code-1/</id>
     <published>2017-05-05T16:00:00.000Z</published>
-    <updated>2017-05-09T13:48:42.000Z</updated>
+    <updated>2017-05-09T14:01:30.000Z</updated>
     
     <content type="html"><![CDATA[<p>Vue.js框架是目前比较火的MVVM框架之一,简单易上手的学习曲线,友好的官方文档,配套的构建工具,让Vue.js在2016年大放异彩,大有赶超React之势。在2016年,Vue2正式发布,在体积优化、性能提升（vertical-dom，server-side-rending等）、API等各方面都更上一层楼。本人阅读的版本为Vue 2.3。</p>
 <h5 id="入口"><a href="#入口" class="headerlink" title="入口"></a>入口</h5><p>我们在使用Vue的时候,都会写下面类似的代码:</p>
@@ -35,6 +59,7 @@
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">initInternalComponent</span> (<span class="params">vm: Component, options: InternalComponentOptions</span>) </span>&#123;</div><div class="line">  <span class="keyword">const</span> opts = vm.$options = <span class="built_in">Object</span>.create(vm.constructor.options)</div><div class="line">  opts.parent = options.parent</div><div class="line">  opts.propsData = options.propsData</div><div class="line">  opts._parentVnode = options._parentVnode</div><div class="line">  opts._parentListeners = options._parentListeners</div><div class="line">  opts._renderChildren = options._renderChildren</div><div class="line">  opts._componentTag = options._componentTag</div><div class="line">  opts._parentElm = options._parentElm</div><div class="line">  opts._refElm = options._refElm</div><div class="line">  <span class="keyword">if</span> (options.render) &#123;</div><div class="line">    opts.render = options.render</div><div class="line">    opts.staticRenderFns = options.staticRenderFns</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <h5 id="resolveConstructorOptions"><a href="#resolveConstructorOptions" class="headerlink" title="resolveConstructorOptions"></a>resolveConstructorOptions</h5><p>该方法用来解析构造函数配置项</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">resolveConstructorOptions</span> (<span class="params">vm: Component</span>) </span>&#123;</div><div class="line">    <span class="keyword">const</span> Ctor = vm.constructor</div><div class="line">    <span class="keyword">let</span> options = Ctor.options</div><div class="line">    <span class="keyword">if</span> (Ctor.super) &#123;</div><div class="line">      <span class="keyword">const</span> superOptions = Ctor.super.options</div><div class="line">      <span class="keyword">const</span> cachedSuperOptions = Ctor.superOptions</div><div class="line">      <span class="keyword">if</span> (superOptions !== cachedSuperOptions) &#123;</div><div class="line">        <span class="comment">// 根组件配置项改变</span></div><div class="line">        Ctor.superOptions = superOptions</div><div class="line">        <span class="comment">// /core/util/options.js</span></div><div class="line">        options = Ctor.options = mergeOptions(superOptions, Ctor.extendOptions)</div><div class="line">         </div><div class="line">        <span class="comment">// 存在有组件名</span></div><div class="line">        <span class="keyword">if</span> (options.name) &#123;</div><div class="line">          options.components[options.name] = Ctor</div><div class="line">        &#125;</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> options</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>关于Vue的启动就先分享到这,下一篇继续分享关于生命周期相关的东西。</p>
 ]]></content>
     
     <summary type="html">
@@ -813,6 +838,116 @@ window.onload = () =&gt; {
   </entry>
   
   <entry>
+    <title>Gulp插件的研究</title>
+    <link href="http://yoursite.com/2016/11/29/2016-11-29-gulp-plugin-tourial/"/>
+    <id>http://yoursite.com/2016/11/29/2016-11-29-gulp-plugin-tourial/</id>
+    <published>2016-11-28T16:00:00.000Z</published>
+    <updated>2017-03-30T12:19:21.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。</p>
+<p>今天研究了下gulp插件,写点心得体会吧。看了两个gulp插件源码,发现里面都引入了<a href="https://github.com/rvagg/through2" target="_blank" rel="external">through2</a>这个包,官方的说法就是”Node Stream的简单封装，目的是让链式流操作更加简单;”,就也照葫芦画瓢,引用了这个包,简单实现一个gulp插件,功能就是压缩css,并且把css中的”background: url(xxxx.png)”中的”xxxx.png”转换成base64编码的形式,减少http请求数。</p>
+<pre><code>&quot;use strict&quot;;
+
+const through = require(&quot;through2&quot;),
+    path = require(&quot;path&quot;),
+    fs = require(&quot;fs&quot;),
+
+    //  引用async/await,方便处理文件读写的异步操作
+    async = require(&quot;asyncawait&quot;).async,
+    await = require(&quot;asyncawait&quot;).await,
+
+    //  匹配url(../xxx.yyy)这种表达式
+    imgReg = /url\s*\((\s*[A-Za-z0-9\-\_\.\/\:]+\s*)\);?/gi,
+
+    //  将fs.readFile封装成Promise
+    readFile = (path) =&gt; {
+        return new Promise((resolve, reject) =&gt; {
+            fs.readFile(path, (ex, file) =&gt; {
+                if (ex) {
+                    reject(ex);
+                }
+                resolve(file);
+            });
+        });
+    };
+
+let base, contents, match, tmp, url;
+
+//  暴露出去的函数
+module.exports = (opt) =&gt; {
+
+    return through.obj(function(file, enc, cb) {
+
+        //  文件为空直接执行回调函数
+        if (file.isNull()) {
+            cb(null, file);
+        }
+
+        //  取得当前css的绝对路径
+        base = file.base;
+
+        //  匹配css中的无效字符,并且转换成buffer
+        file.contents = new Buffer(file._contents.toString()
+            //  去换行符
+            .replace(/\n/gm, &quot;&quot;)
+
+            //  去&quot;{&quot;之后到第一条样式间的空白字符
+            .replace(/\{\s+/g, &quot;{&quot;)
+
+            //  去&quot;;&quot;之后的空白字符
+            .replace(/\;\s+/g, &quot;;&quot;));
+
+        //  将文件内容转换成普通字符串并缓存
+        contents = file.contents.toString();
+
+        //  取得url(../../xxx.yyy),并且缓存
+        match = contents.match(imgReg);
+
+        //  async-await读取图片文件成base64编码
+        async(() =&gt; {
+
+            //  遍历之前的缓存项
+            match.forEach((item) =&gt; {
+
+                //  拼凑文件绝对路径
+                url = item.replace(&quot;url(&quot;, &quot;&quot;).replace(&quot;)&quot;, &quot;&quot;).trim();
+
+                //  用await读取文件,避免嵌套
+                tmp = await (readFile(path.resolve(base, url)));
+
+                //  替换之前匹配的字符串
+                contents = contents.replace(item, `url(data:image/png;base64,${tmp.toString(&quot;base64&quot;)})`);
+            });
+
+            //  把文件内容转成buffer
+            file.contents = new Buffer(contents);
+
+            //  回调函数
+            cb(null, file);
+
+        })();
+    });
+
+};
+</code></pre><p>至此,一个简单的插件就实现了,当然,还有很多不足,比如对图片进行压缩,减少base64字符串的长度,用request模块处理对网络图片的引用等等。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。&lt;/
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+      <category term="Gulp" scheme="http://yoursite.com/categories/javascript/Gulp/"/>
+    
+      <category term="构建工具" scheme="http://yoursite.com/categories/javascript/Gulp/%E6%9E%84%E5%BB%BA%E5%B7%A5%E5%85%B7/"/>
+    
+    
+  </entry>
+  
+  <entry>
     <title>javascript模块化编程-同步模式</title>
     <link href="http://yoursite.com/2016/11/29/2016-11-23-js-sync-module-mode/"/>
     <id>http://yoursite.com/2016/11/29/2016-11-23-js-sync-module-mode/</id>
@@ -966,116 +1101,6 @@ module.define(&quot;PersonClass&quot;, [], () =&gt; {
       <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
     
       <category term="模块化" scheme="http://yoursite.com/categories/javascript/%E6%A8%A1%E5%9D%97%E5%8C%96/"/>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>Gulp插件的研究</title>
-    <link href="http://yoursite.com/2016/11/29/2016-11-29-gulp-plugin-tourial/"/>
-    <id>http://yoursite.com/2016/11/29/2016-11-29-gulp-plugin-tourial/</id>
-    <published>2016-11-28T16:00:00.000Z</published>
-    <updated>2017-03-30T12:19:21.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。</p>
-<p>今天研究了下gulp插件,写点心得体会吧。看了两个gulp插件源码,发现里面都引入了<a href="https://github.com/rvagg/through2" target="_blank" rel="external">through2</a>这个包,官方的说法就是”Node Stream的简单封装，目的是让链式流操作更加简单;”,就也照葫芦画瓢,引用了这个包,简单实现一个gulp插件,功能就是压缩css,并且把css中的”background: url(xxxx.png)”中的”xxxx.png”转换成base64编码的形式,减少http请求数。</p>
-<pre><code>&quot;use strict&quot;;
-
-const through = require(&quot;through2&quot;),
-    path = require(&quot;path&quot;),
-    fs = require(&quot;fs&quot;),
-
-    //  引用async/await,方便处理文件读写的异步操作
-    async = require(&quot;asyncawait&quot;).async,
-    await = require(&quot;asyncawait&quot;).await,
-
-    //  匹配url(../xxx.yyy)这种表达式
-    imgReg = /url\s*\((\s*[A-Za-z0-9\-\_\.\/\:]+\s*)\);?/gi,
-
-    //  将fs.readFile封装成Promise
-    readFile = (path) =&gt; {
-        return new Promise((resolve, reject) =&gt; {
-            fs.readFile(path, (ex, file) =&gt; {
-                if (ex) {
-                    reject(ex);
-                }
-                resolve(file);
-            });
-        });
-    };
-
-let base, contents, match, tmp, url;
-
-//  暴露出去的函数
-module.exports = (opt) =&gt; {
-
-    return through.obj(function(file, enc, cb) {
-
-        //  文件为空直接执行回调函数
-        if (file.isNull()) {
-            cb(null, file);
-        }
-
-        //  取得当前css的绝对路径
-        base = file.base;
-
-        //  匹配css中的无效字符,并且转换成buffer
-        file.contents = new Buffer(file._contents.toString()
-            //  去换行符
-            .replace(/\n/gm, &quot;&quot;)
-
-            //  去&quot;{&quot;之后到第一条样式间的空白字符
-            .replace(/\{\s+/g, &quot;{&quot;)
-
-            //  去&quot;;&quot;之后的空白字符
-            .replace(/\;\s+/g, &quot;;&quot;));
-
-        //  将文件内容转换成普通字符串并缓存
-        contents = file.contents.toString();
-
-        //  取得url(../../xxx.yyy),并且缓存
-        match = contents.match(imgReg);
-
-        //  async-await读取图片文件成base64编码
-        async(() =&gt; {
-
-            //  遍历之前的缓存项
-            match.forEach((item) =&gt; {
-
-                //  拼凑文件绝对路径
-                url = item.replace(&quot;url(&quot;, &quot;&quot;).replace(&quot;)&quot;, &quot;&quot;).trim();
-
-                //  用await读取文件,避免嵌套
-                tmp = await (readFile(path.resolve(base, url)));
-
-                //  替换之前匹配的字符串
-                contents = contents.replace(item, `url(data:image/png;base64,${tmp.toString(&quot;base64&quot;)})`);
-            });
-
-            //  把文件内容转成buffer
-            file.contents = new Buffer(contents);
-
-            //  回调函数
-            cb(null, file);
-
-        })();
-    });
-
-};
-</code></pre><p>至此,一个简单的插件就实现了,当然,还有很多不足,比如对图片进行压缩,减少base64字符串的长度,用request模块处理对网络图片的引用等等。</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。&lt;/
-    
-    </summary>
-    
-      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
-    
-      <category term="Gulp" scheme="http://yoursite.com/categories/javascript/Gulp/"/>
-    
-      <category term="构建工具" scheme="http://yoursite.com/categories/javascript/Gulp/%E6%9E%84%E5%BB%BA%E5%B7%A5%E5%85%B7/"/>
     
     
   </entry>
@@ -2710,114 +2735,6 @@ console.log(applyAdd(addArray,[1,2,3,4,5,6,7,8,9]));
       <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
     
       <category term="高阶函数" scheme="http://yoursite.com/categories/javascript/%E9%AB%98%E9%98%B6%E5%87%BD%E6%95%B0/"/>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>React Native自定义原生模块</title>
-    <link href="http://yoursite.com/2016/01/12/2016-01-12-expend-objectc/"/>
-    <id>http://yoursite.com/2016/01/12/2016-01-12-expend-objectc/</id>
-    <published>2016-01-11T16:00:00.000Z</published>
-    <updated>2017-03-30T12:19:21.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>现如今，越来越多的移动开发者选择用React Native来开发他们的app。虽然React Native提供了强大的API供我们调用，但是对于一些功能(比如第三方支付、文件上传之类的)，原生模块中并没有提供给我们相关的API，这时候就需要我们来自己封装一些东西来给js端调用。这边以ios端的为例来介绍。</p>
-<hr>
-<h6 id="模块配置表"><a href="#模块配置表" class="headerlink" title="模块配置表"></a>模块配置表</h6><p>在RN加载的时候，所有注册并且符合规范的模块都会被导出并且生成相应的模块数据类RCTModuleData，而模块数据中缓存了模块的对象实例，以及模块索引id。</p>
-<p>最后大概生成一个如下的模块配置表:</p>
-<pre><code>{
-    &quot;remoteModuleConfig&quot;: {
-        &quot;className&quot;: {
-            &quot;methods&quot;: {
-                &quot;method&quot;: {
-                    &quot;type&quot;: &quot;remote&quot;,
-                    &quot;methodID&quot;: 0
-                },
-                ...
-            },
-            &quot;moduleID&quot;: 4
-        },
-        ...
-     },
-}
-</code></pre><h6 id="通信流程"><a href="#通信流程" class="headerlink" title="通信流程"></a>通信流程</h6><p>先看一个js调用OC的下的方法走了哪些步骤:</p>
-<p><img src="/imgs/progress.jpg" alt=""></p>
-<p>1.JS端调用某个OC模块暴露出来的方法。</p>
-<p>2.把上一步的调用分解为ModuleName,MethodName,arguments，再扔给MessageQueue处理。</p>
-<p>3.在这一步把JS的callback函数缓存在MessageQueue的一个成员变量里，用CallbackID代表callback。在通过保存在MessageQueue的模块配置表把上一步传进来的ModuleName和MethodName转为ModuleID和MethodID。</p>
-<p>4.把上述步骤得到的ModuleID,MethodId,CallbackID和其他参数argus传给OC。至于具体是怎么传的，后面再说。</p>
-<p>5.OC接收到消息，通过模块配置表拿到对应的模块和方法。</p>
-<p>6.RCTModuleMethod对JS传过来的每一个参数进行处理。</p>
-<p>7.OC模块方法调用完，执行block回调。</p>
-<p>8.调用到第6步说明的RCTModuleMethod生成的block。</p>
-<p>9.block里带着CallbackID和block传过来的参数去调JS里MessageQueue的方法invokeCallbackAndReturnFlushedQueue。</p>
-<p>10.MessageQueue通过CallbackID找到相应的JS callback方法。</p>
-<p>11.调用callback方法，并把OC带过来的参数一起传过去，完成回调。</p>
-<p>整个流程就是这样，简单概括下，差不多就是：JS函数调用转ModuleID/MethodID -&gt; callback转CallbackID -&gt; OC根据ID拿到方法 -&gt; 处理参数 -&gt; 调用OC方法 -&gt; 回调CallbackID -&gt; JS通过CallbackID拿到callback执行</p>
-<p>下面就简单分享一个从OC暴露方法到JS端调用的例子：</p>
-<pre><code>// OC(RCTDeviceExtension.m)
-
-#import &quot;RCTBridgeModule.h&quot;
-#import &quot;RCTUtils.h&quot;
-//  RCTScreenSize用到
-
-@interface RCTDeviceExtension : NSObject &lt;RCTBridgeModule&gt;
-
-@end
-
-@implementation RCTDeviceExtension
-
-RCT_EXPORT_MODULE();
-//  暴露一个模块
-
-/**
-  获取设备的相关信息
- **/
-static NSDictionary *DynamicDimesions(){
-  CGFloat width = MIN(RCTScreenSize().width,RCTScreenSize().height);
-  //  宽
-  CGFloat height = MAX(RCTScreenSize().width,RCTScreenSize().height);
-  //  高
-  CGFloat scale = RCTScreenScale();
-  //  像素密度
-
-  if(UIDeviceOrientationIsLandscape([UIDevice currentDevice].orientation)){
-    width = MAX(RCTScreenSize().width,RCTScreenSize().height);
-    height = MIN(RCTScreenSize().width,RCTScreenSize().height);
-  }
-
-  return @{
-            @&quot;width&quot;:@(width),
-            @&quot;height&quot;:@(height),
-            @&quot;scale&quot;:@(scale)
-           };
-  //  在回调方法中作为一个对象,有width,height,scale属性
-
-}
-
-RCT_EXPORT_METHOD(getDeviceInfo:(RCTResponseSenderBlock)callback){
-  callback(@[[NSNull null],DynamicDimesions()]);
-};
-//  暴露方法
-
-@end
-</code></pre><p>这里OC暴露一个类,DeviceExtension(RCTDeviceExtension被编译成DeviceExtension)，在JS端，我们就可以通过如下方式来调用相关方法。</p>
-<pre><code>var DeviceExtension = require(&quot;NativeModules&quot;).DeviceExtension;
-//  require(&quot;NativeModules&quot;)用来加载原生模块(包括自定义模块)
-
-DeviceExtension.getDeviceInfo(function(err,info){
-  console.log(info);
-});
-</code></pre><p>这样我们的自定义API就实现了，后面如果再有更复杂的功能的时候，思路都是一样的，只不过步骤会更繁杂一些。</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;现如今，越来越多的移动开发者选择用React Native来开发他们的app。虽然React Native提供了强大的API供我们调用，但是对于一些功能(比如第三方支付、文件上传之类的)，原生模块中并没有提供给我们相关的API，这时候就需要我们来自己封装一些东西来给js端调
-    
-    </summary>
-    
-      <category term="React" scheme="http://yoursite.com/categories/React/"/>
     
     
   </entry>
