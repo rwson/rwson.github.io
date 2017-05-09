@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2017-03-30T13:28:52.000Z</updated>
+  <updated>2017-05-09T13:48:42.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -14,6 +14,41 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Vue源码阅读-入口</title>
+    <link href="http://yoursite.com/2017/05/06/2017-05-06-read-vue-source-code-1/"/>
+    <id>http://yoursite.com/2017/05/06/2017-05-06-read-vue-source-code-1/</id>
+    <published>2017-05-05T16:00:00.000Z</published>
+    <updated>2017-05-09T13:48:42.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>Vue.js框架是目前比较火的MVVM框架之一,简单易上手的学习曲线,友好的官方文档,配套的构建工具,让Vue.js在2016年大放异彩,大有赶超React之势。在2016年,Vue2正式发布,在体积优化、性能提升（vertical-dom，server-side-rending等）、API等各方面都更上一层楼。本人阅读的版本为Vue 2.3。</p>
+<h5 id="入口"><a href="#入口" class="headerlink" title="入口"></a>入口</h5><p>我们在使用Vue的时候,都会写下面类似的代码:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">new</span> Vue(&#123;</div><div class="line">  <span class="attr">el</span>: <span class="string">"#app"</span>,</div><div class="line">  <span class="comment">// ...</span></div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>new Vue就是创建一个Vue的实例,下面就一起来了解下在这个过程之后都执行了哪些步骤:</p>
+<p>在/src/core/index.js这个文件中,export了Vue这个方法给外部,再看export的Vue方法</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//	Vue构造函数</span></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">Vue</span> (<span class="params">options</span>) </span>&#123;</div><div class="line">  <span class="keyword">if</span> (process.env.NODE_ENV !== <span class="string">'production'</span> &amp;&amp;</div><div class="line">    !(<span class="keyword">this</span> <span class="keyword">instanceof</span> Vue)) &#123;</div><div class="line">    warn(<span class="string">'Vue is a constructor and should be called with the `new` keyword'</span>)</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">this</span>._init(options)</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">//	初始化的入口，各种初始化工作</span></div><div class="line">initMixin(Vue)</div><div class="line"></div><div class="line"><span class="comment">//	数据绑定的核心方法，常用的$watch方法</span></div><div class="line">stateMixin(Vue)</div><div class="line"></div><div class="line"><span class="comment">//	事件的核心方法，$on，$off，$emit等方法</span></div><div class="line">eventsMixin(Vue)</div><div class="line"></div><div class="line"><span class="comment">//	生命周期的核心方法</span></div><div class="line">lifecycleMixin(Vue)</div><div class="line"></div><div class="line"><span class="comment">//	渲染的核心方法，用来生成render函数以及VNode</span></div><div class="line">renderMixin(Vue)</div></pre></td></tr></table></figure>
+<p>本文先从_init入手,看看其内部实现:</p>
+<h5 id="initMixin"><a href="#initMixin" class="headerlink" title="initMixin"></a>initMixin</h5><p>在上面的构造函数中,调用了_init方法,这个方法是在initMixin中实现的:    </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div></pre></td><td class="code"><pre><div class="line">Vue.prototype._init = <span class="function"><span class="keyword">function</span> (<span class="params">options?: Object</span>) </span>&#123;</div><div class="line">    <span class="keyword">const</span> vm: Component = <span class="keyword">this</span>;</div><div class="line"></div><div class="line">	<span class="comment">//	生成唯一的uid</span></div><div class="line">    vm._uid = uid++</div><div class="line"></div><div class="line">    <span class="keyword">let</span> startTag, endTag</div><div class="line">    </div><div class="line">    <span class="comment">//	Vue2.2+之后新增的一个特性,关于性能的一个东西(window.performance)</span></div><div class="line">    <span class="comment">//	https://developer.mozilla.org/zh-CN/docs/Web/API/Window/performance</span></div><div class="line">    <span class="keyword">if</span> (process.env.NODE_ENV !== <span class="string">'production'</span> &amp;&amp; config.performance &amp;&amp; mark) &#123;</div><div class="line">      startTag = <span class="string">`vue-perf-init:<span class="subst">$&#123;vm._uid&#125;</span>`</span></div><div class="line">      endTag = <span class="string">`vue-perf-end:<span class="subst">$&#123;vm._uid&#125;</span>`</span></div><div class="line">      mark(startTag)</div><div class="line">    &#125;</div><div class="line"></div><div class="line">  	<span class="comment">//	_isVue标记,避免当前this被观察</span></div><div class="line">    vm._isVue = <span class="literal">true</span></div><div class="line"></div><div class="line">    <span class="keyword">if</span> (options &amp;&amp; options._isComponent) &#123;</div><div class="line">      <span class="comment">//   组件内部实例优化,内部组件的配置项不需要特殊处理(实现在下面)</span></div><div class="line">      initInternalComponent(vm, options)</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">      <span class="comment">//	合并传入的参数到vm.constructor下面</span></div><div class="line">      vm.$options = mergeOptions(</div><div class="line">        </div><div class="line">        <span class="comment">//	解析构造函数配置项[new Vue中传入的内容]</span></div><div class="line">        resolveConstructorOptions(vm.constructor),</div><div class="line">        options || &#123;&#125;,</div><div class="line">        vm</div><div class="line">      )</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">if</span> (process.env.NODE_ENV !== <span class="string">'production'</span>) &#123;</div><div class="line">      initProxy(vm)</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">      <span class="comment">//  _renderProxy属性会在下面调用的initRender中被使用</span></div><div class="line">      vm._renderProxy = vm</div><div class="line">    &#125;</div><div class="line">    vm._self = vm</div><div class="line">    </div><div class="line">	<span class="comment">//	初始化声明周期</span></div><div class="line">    initLifecycle(vm)</div><div class="line">    </div><div class="line">    <span class="comment">//	初始化事件</span></div><div class="line">    initEvents(vm)</div><div class="line">    </div><div class="line">	<span class="comment">//	初始化渲染</span></div><div class="line">    initRender(vm)</div><div class="line">    </div><div class="line">   	<span class="comment">//	执行生命周期中的beforeCreate</span></div><div class="line">    callHook(vm, <span class="string">'beforeCreate'</span>)</div><div class="line">    initInjections(vm) <span class="comment">// resolve injections before data/props</span></div><div class="line">    initState(vm)</div><div class="line">    initProvide(vm) <span class="comment">// resolve provide after data/props</span></div><div class="line">    </div><div class="line">    <span class="comment">//	执行生命周期中的created</span></div><div class="line">    callHook(vm, <span class="string">'created'</span>)</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (process.env.NODE_ENV !== <span class="string">'production'</span> &amp;&amp; config.performance &amp;&amp; mark) &#123;</div><div class="line">      vm._name = formatComponentName(vm, <span class="literal">false</span>)</div><div class="line">      mark(endTag)</div><div class="line">      measure(<span class="string">`<span class="subst">$&#123;vm._name&#125;</span> init`</span>, startTag, endTag)</div><div class="line">    &#125;</div><div class="line"></div><div class="line">	<span class="comment">//	启动</span></div><div class="line">    <span class="keyword">if</span> (vm.$options.el) &#123;</div><div class="line">      vm.$mount(vm.$options.el)</div><div class="line">    &#125;</div><div class="line">  &#125;</div></pre></td></tr></table></figure>
+<h5 id="initInternalComponent"><a href="#initInternalComponent" class="headerlink" title="initInternalComponent"></a>initInternalComponent</h5><p>initInternalComponent被用来合并函数内部组件实例配置项,这边直接赋值的方式会比枚举遍历快,所以直接采用赋值的方式</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">initInternalComponent</span> (<span class="params">vm: Component, options: InternalComponentOptions</span>) </span>&#123;</div><div class="line">  <span class="keyword">const</span> opts = vm.$options = <span class="built_in">Object</span>.create(vm.constructor.options)</div><div class="line">  opts.parent = options.parent</div><div class="line">  opts.propsData = options.propsData</div><div class="line">  opts._parentVnode = options._parentVnode</div><div class="line">  opts._parentListeners = options._parentListeners</div><div class="line">  opts._renderChildren = options._renderChildren</div><div class="line">  opts._componentTag = options._componentTag</div><div class="line">  opts._parentElm = options._parentElm</div><div class="line">  opts._refElm = options._refElm</div><div class="line">  <span class="keyword">if</span> (options.render) &#123;</div><div class="line">    opts.render = options.render</div><div class="line">    opts.staticRenderFns = options.staticRenderFns</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h5 id="resolveConstructorOptions"><a href="#resolveConstructorOptions" class="headerlink" title="resolveConstructorOptions"></a>resolveConstructorOptions</h5><p>该方法用来解析构造函数配置项</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">resolveConstructorOptions</span> (<span class="params">vm: Component</span>) </span>&#123;</div><div class="line">    <span class="keyword">const</span> Ctor = vm.constructor</div><div class="line">    <span class="keyword">let</span> options = Ctor.options</div><div class="line">    <span class="keyword">if</span> (Ctor.super) &#123;</div><div class="line">      <span class="keyword">const</span> superOptions = Ctor.super.options</div><div class="line">      <span class="keyword">const</span> cachedSuperOptions = Ctor.superOptions</div><div class="line">      <span class="keyword">if</span> (superOptions !== cachedSuperOptions) &#123;</div><div class="line">        <span class="comment">// 根组件配置项改变</span></div><div class="line">        Ctor.superOptions = superOptions</div><div class="line">        <span class="comment">// /core/util/options.js</span></div><div class="line">        options = Ctor.options = mergeOptions(superOptions, Ctor.extendOptions)</div><div class="line">         </div><div class="line">        <span class="comment">// 存在有组件名</span></div><div class="line">        <span class="keyword">if</span> (options.name) &#123;</div><div class="line">          options.components[options.name] = Ctor</div><div class="line">        &#125;</div><div class="line">      &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> options</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;Vue.js框架是目前比较火的MVVM框架之一,简单易上手的学习曲线,友好的官方文档,配套的构建工具,让Vue.js在2016年大放异彩,大有赶超React之势。在2016年,Vue2正式发布,在体积优化、性能提升（vertical-dom，server-side-rend
+    
+    </summary>
+    
+      <category term="Vue" scheme="http://yoursite.com/categories/Vue/"/>
+    
+      <category term="源码阅读" scheme="http://yoursite.com/categories/Vue/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/"/>
+    
+    
+  </entry>
   
   <entry>
     <title>NodeJs读取windows注册表来对软件进行卸载</title>
@@ -778,116 +813,6 @@ window.onload = () =&gt; {
   </entry>
   
   <entry>
-    <title>Gulp插件的研究</title>
-    <link href="http://yoursite.com/2016/11/29/2016-11-29-gulp-plugin-tourial/"/>
-    <id>http://yoursite.com/2016/11/29/2016-11-29-gulp-plugin-tourial/</id>
-    <published>2016-11-28T16:00:00.000Z</published>
-    <updated>2017-03-30T12:19:21.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。</p>
-<p>今天研究了下gulp插件,写点心得体会吧。看了两个gulp插件源码,发现里面都引入了<a href="https://github.com/rvagg/through2" target="_blank" rel="external">through2</a>这个包,官方的说法就是”Node Stream的简单封装，目的是让链式流操作更加简单;”,就也照葫芦画瓢,引用了这个包,简单实现一个gulp插件,功能就是压缩css,并且把css中的”background: url(xxxx.png)”中的”xxxx.png”转换成base64编码的形式,减少http请求数。</p>
-<pre><code>&quot;use strict&quot;;
-
-const through = require(&quot;through2&quot;),
-    path = require(&quot;path&quot;),
-    fs = require(&quot;fs&quot;),
-
-    //  引用async/await,方便处理文件读写的异步操作
-    async = require(&quot;asyncawait&quot;).async,
-    await = require(&quot;asyncawait&quot;).await,
-
-    //  匹配url(../xxx.yyy)这种表达式
-    imgReg = /url\s*\((\s*[A-Za-z0-9\-\_\.\/\:]+\s*)\);?/gi,
-
-    //  将fs.readFile封装成Promise
-    readFile = (path) =&gt; {
-        return new Promise((resolve, reject) =&gt; {
-            fs.readFile(path, (ex, file) =&gt; {
-                if (ex) {
-                    reject(ex);
-                }
-                resolve(file);
-            });
-        });
-    };
-
-let base, contents, match, tmp, url;
-
-//  暴露出去的函数
-module.exports = (opt) =&gt; {
-
-    return through.obj(function(file, enc, cb) {
-
-        //  文件为空直接执行回调函数
-        if (file.isNull()) {
-            cb(null, file);
-        }
-
-        //  取得当前css的绝对路径
-        base = file.base;
-
-        //  匹配css中的无效字符,并且转换成buffer
-        file.contents = new Buffer(file._contents.toString()
-            //  去换行符
-            .replace(/\n/gm, &quot;&quot;)
-
-            //  去&quot;{&quot;之后到第一条样式间的空白字符
-            .replace(/\{\s+/g, &quot;{&quot;)
-
-            //  去&quot;;&quot;之后的空白字符
-            .replace(/\;\s+/g, &quot;;&quot;));
-
-        //  将文件内容转换成普通字符串并缓存
-        contents = file.contents.toString();
-
-        //  取得url(../../xxx.yyy),并且缓存
-        match = contents.match(imgReg);
-
-        //  async-await读取图片文件成base64编码
-        async(() =&gt; {
-
-            //  遍历之前的缓存项
-            match.forEach((item) =&gt; {
-
-                //  拼凑文件绝对路径
-                url = item.replace(&quot;url(&quot;, &quot;&quot;).replace(&quot;)&quot;, &quot;&quot;).trim();
-
-                //  用await读取文件,避免嵌套
-                tmp = await (readFile(path.resolve(base, url)));
-
-                //  替换之前匹配的字符串
-                contents = contents.replace(item, `url(data:image/png;base64,${tmp.toString(&quot;base64&quot;)})`);
-            });
-
-            //  把文件内容转成buffer
-            file.contents = new Buffer(contents);
-
-            //  回调函数
-            cb(null, file);
-
-        })();
-    });
-
-};
-</code></pre><p>至此,一个简单的插件就实现了,当然,还有很多不足,比如对图片进行压缩,减少base64字符串的长度,用request模块处理对网络图片的引用等等。</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。&lt;/
-    
-    </summary>
-    
-      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
-    
-      <category term="Gulp" scheme="http://yoursite.com/categories/javascript/Gulp/"/>
-    
-      <category term="构建工具" scheme="http://yoursite.com/categories/javascript/Gulp/%E6%9E%84%E5%BB%BA%E5%B7%A5%E5%85%B7/"/>
-    
-    
-  </entry>
-  
-  <entry>
     <title>javascript模块化编程-同步模式</title>
     <link href="http://yoursite.com/2016/11/29/2016-11-23-js-sync-module-mode/"/>
     <id>http://yoursite.com/2016/11/29/2016-11-23-js-sync-module-mode/</id>
@@ -1041,6 +966,116 @@ module.define(&quot;PersonClass&quot;, [], () =&gt; {
       <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
     
       <category term="模块化" scheme="http://yoursite.com/categories/javascript/%E6%A8%A1%E5%9D%97%E5%8C%96/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>Gulp插件的研究</title>
+    <link href="http://yoursite.com/2016/11/29/2016-11-29-gulp-plugin-tourial/"/>
+    <id>http://yoursite.com/2016/11/29/2016-11-29-gulp-plugin-tourial/</id>
+    <published>2016-11-28T16:00:00.000Z</published>
+    <updated>2017-03-30T12:19:21.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。</p>
+<p>今天研究了下gulp插件,写点心得体会吧。看了两个gulp插件源码,发现里面都引入了<a href="https://github.com/rvagg/through2" target="_blank" rel="external">through2</a>这个包,官方的说法就是”Node Stream的简单封装，目的是让链式流操作更加简单;”,就也照葫芦画瓢,引用了这个包,简单实现一个gulp插件,功能就是压缩css,并且把css中的”background: url(xxxx.png)”中的”xxxx.png”转换成base64编码的形式,减少http请求数。</p>
+<pre><code>&quot;use strict&quot;;
+
+const through = require(&quot;through2&quot;),
+    path = require(&quot;path&quot;),
+    fs = require(&quot;fs&quot;),
+
+    //  引用async/await,方便处理文件读写的异步操作
+    async = require(&quot;asyncawait&quot;).async,
+    await = require(&quot;asyncawait&quot;).await,
+
+    //  匹配url(../xxx.yyy)这种表达式
+    imgReg = /url\s*\((\s*[A-Za-z0-9\-\_\.\/\:]+\s*)\);?/gi,
+
+    //  将fs.readFile封装成Promise
+    readFile = (path) =&gt; {
+        return new Promise((resolve, reject) =&gt; {
+            fs.readFile(path, (ex, file) =&gt; {
+                if (ex) {
+                    reject(ex);
+                }
+                resolve(file);
+            });
+        });
+    };
+
+let base, contents, match, tmp, url;
+
+//  暴露出去的函数
+module.exports = (opt) =&gt; {
+
+    return through.obj(function(file, enc, cb) {
+
+        //  文件为空直接执行回调函数
+        if (file.isNull()) {
+            cb(null, file);
+        }
+
+        //  取得当前css的绝对路径
+        base = file.base;
+
+        //  匹配css中的无效字符,并且转换成buffer
+        file.contents = new Buffer(file._contents.toString()
+            //  去换行符
+            .replace(/\n/gm, &quot;&quot;)
+
+            //  去&quot;{&quot;之后到第一条样式间的空白字符
+            .replace(/\{\s+/g, &quot;{&quot;)
+
+            //  去&quot;;&quot;之后的空白字符
+            .replace(/\;\s+/g, &quot;;&quot;));
+
+        //  将文件内容转换成普通字符串并缓存
+        contents = file.contents.toString();
+
+        //  取得url(../../xxx.yyy),并且缓存
+        match = contents.match(imgReg);
+
+        //  async-await读取图片文件成base64编码
+        async(() =&gt; {
+
+            //  遍历之前的缓存项
+            match.forEach((item) =&gt; {
+
+                //  拼凑文件绝对路径
+                url = item.replace(&quot;url(&quot;, &quot;&quot;).replace(&quot;)&quot;, &quot;&quot;).trim();
+
+                //  用await读取文件,避免嵌套
+                tmp = await (readFile(path.resolve(base, url)));
+
+                //  替换之前匹配的字符串
+                contents = contents.replace(item, `url(data:image/png;base64,${tmp.toString(&quot;base64&quot;)})`);
+            });
+
+            //  把文件内容转成buffer
+            file.contents = new Buffer(contents);
+
+            //  回调函数
+            cb(null, file);
+
+        })();
+    });
+
+};
+</code></pre><p>至此,一个简单的插件就实现了,当然,还有很多不足,比如对图片进行压缩,减少base64字符串的长度,用request模块处理对网络图片的引用等等。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。&lt;/
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+      <category term="Gulp" scheme="http://yoursite.com/categories/javascript/Gulp/"/>
+    
+      <category term="构建工具" scheme="http://yoursite.com/categories/javascript/Gulp/%E6%9E%84%E5%BB%BA%E5%B7%A5%E5%85%B7/"/>
     
     
   </entry>
@@ -2783,197 +2818,6 @@ DeviceExtension.getDeviceInfo(function(err,info){
     </summary>
     
       <category term="React" scheme="http://yoursite.com/categories/React/"/>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>实现一个简单的模板引擎</title>
-    <link href="http://yoursite.com/2015/12/14/2015-12-14-front-end-template-engine/"/>
-    <id>http://yoursite.com/2015/12/14/2015-12-14-front-end-template-engine/</id>
-    <published>2015-12-13T16:00:00.000Z</published>
-    <updated>2017-03-30T12:19:21.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>在最开始想要把数据显示到页面上,我们可以需要用到一些后端的模板引擎(比如java中的Freemarker等),随着技术的发展,前端会把数据从后端取回来,用拼接HTML或者模板引擎的方式来呈现页面,如果布局结构简单还好,但是如果碰到复杂结构的时候,前者可能显得比较吃力,且容易出错。</p>
-<p>比较著名的一些前端模板引擎有Handlebars、Underscore.js(一个javascript工具库的集合,带模板引擎)等等。各自也有各自的语法。</p>
-<p>前端模板引擎带来了很多嚎头,(预)编译、缓存、渲染等等,下面我们实现一个简单的模板引擎。</p>
-<p>首先想一下,在用模板引擎和拼接字符串时最大的区别是什么?就是一个是通过手动的绑定属性,一个是像写HTML一样把属性绑定好:</p>
-<pre><code>//  比如有这么一段数据
-var data = [
-    {
-        name: &quot;foo&quot;,
-        age: 23
-    },
-    {
-        name: &quot;bar&quot;,
-        age: 25
-    }
-];
-
-//  字符串拼接的写法
-var html = &quot;&quot;;
-for(var i = 0, len = data.length; i &lt; len; i ++) {
-    html += &quot;&lt;div class=&apos;item&apos;&gt;&lt;span class=&apos;name&apos;&gt;&quot; + data[i].name + &quot;&lt;/span&gt;&lt;span class=&apos;age&apos;&gt;&quot; + data[i].age + &quot;&lt;/span&gt;&lt;/div&gt;&quot;;
-}
-
-document.getElementById(&quot;target&quot;).innerHTML = html;
-
-//  模板引擎
-&lt;script type=&quot;text/template&quot;&gt;
-    &lt;% for(var i in obj) %&gt;
-        &lt;div class=&quot;item&quot;&gt;
-            &lt;span class=&quot;name&quot;&gt;
-                &lt;%= obj[i].name %&gt;
-            &lt;/span&gt;
-            &lt;span class=&quot;age&quot;&gt;
-                &lt;%= obj[i].age %&gt;
-            &lt;/span&gt;
-        &lt;/div&gt;
-    &lt;% } %&gt;
-&lt;/script&gt;
-</code></pre><p>可以看到模板引擎的写法明显清楚了许多。</p>
-<p>要实现一个模板引擎,首先需要定义一个编译方法。我们先来定义一些变量:</p>
-<pre><code>//  缓存,调用编译方法的时候,先检测缓存中是否存在,如果有,直接取出来返回
-var _cache = {};
-
-//  取值表达式正则(&lt;%= obj[i].name %&gt;这种)
-var _valueReg = /&lt;%=(\s\S+?)%&gt;/;
-
-//  js可执行语句正则(&lt;% alert(123); %&gt;这种)
-var _evaluateReg = /&lt;%(\s\S+?)%&gt;/;
-
-//  匹配HTML特殊字符
-var _htmlReg = /&lt;|&gt;|&amp;/g;
-
-//  特殊转义正则(&lt;$ obj.htmlTag $&gt; 防止有些标签被当成普通文本来渲染,比如带链接的a标签,被渲染成了&quot;&lt;a href=&apos;xxxx&apos;&gt;yyyy&lt;/a&gt;&quot;)
-var _escapeReg = /&lt;$(\s\S+?)$&gt;/;
-
-//  特殊字符
-var _charReg = /\\|&apos;|\r|\n|\t|\u2028|\u2029/g;
-
-//  最终的匹配语句
-var _matcher = /&lt;%=([\s\S]+?)%&gt;|&lt;%([\s\S]+?)%&gt;|&lt;\$([\s\S]+?)\$&gt;|$/g;
-
-//  HTML转义
-var _escapeHtml = {
-
-    &quot;escapehash&quot;: {
-        &quot;&lt;&quot;: &quot;&amp;lt;&quot;,
-        &quot;&gt;&quot;: &quot;&amp;gt;&quot;,
-        &quot;&amp;&quot;: &quot;&amp;amp;&quot;
-    },
-
-    //  转义方法,取得escapehash中对应的转义符返回
-    &quot;escaping&quot;: function(char) {
-        return _escapeHtml.escapehash[char];
-    }
-};
-
-//  匹配特殊字符
-var _escapeCharater = {
-
-    &quot;escapehash&quot;: {
-        &apos;&quot;&apos;: &quot;&amp;quot;&quot;,
-        &quot;&apos;&quot;: &quot;&amp;#x27;&quot;,
-        &quot;/&quot;: &quot;&amp;#x2f;&quot;,
-        &quot;\\&quot;: &quot;\\\\&quot;,
-        &quot;\r&quot;: &quot;&quot;,
-        &quot;\n&quot;: &quot;&quot;,
-        &quot;\t&quot;: &quot;&quot;,
-        &quot;\u2028&quot;: &quot;\\u2028&quot;,
-        &quot;\u2029&quot;: &quot;\\u2029&quot;
-    },
-
-    //  转义方法,取得escapehash中对应的转义符返回
-    &quot;escaping&quot;: function(char) {
-        return _escapeCharater.escapehash[char];
-    }
-};
-</code></pre><p>变量都定义完了,开始实现一个编译方法:</p>
-<pre><code>/**
-  * 编译方法
-  * @param  str String   需要被编译的字符串
-  * @return String
-  **/
-function complie(str) {
-
-    //  fnBody存储最后返回的函数体
-    var fnBody = &quot;&quot;;
-
-    //  缓存上一次replace后的偏移
-    var index = 0;
-
-    //  检测缓存
-    if (!_cache[str]) {
-        fnBody = &quot;var _temp = &apos;&apos;;_temp += &apos;&quot;;
-
-        //  替换之前定义的匹配语句中的相关字符串,并做处理
-        str.replace(_matcher, function(match, value, evaluate, escapeStr, offset) {
-
-            //  截取相关字符串拼接到函数体
-            fnBody += str.slice(index, offset).replace(_charReg, _escapeCharater.escaping);
-
-            //  可执行语句
-            if (evaluate) {
-                fnBody += &quot;&apos;;&quot; + evaluate + &quot;_temp += &apos;&quot;;
-            }
-
-            //  &lt;%= xxx[.yyy] %&gt; -&gt; 普通的取值表达式
-            if (value) {
-                fnBody += &quot;&apos; + &quot; + value + &quot; + &apos;&quot;;
-            }
-
-            //  &lt;$ xxx $&gt; -&gt; HTML特殊字符转义
-            if (escapeStr) {
-                fnBody += &quot;&apos; + &quot; + (&quot;obj.&quot; + escapeStr).replace(_htmlReg, _escapeHtml.escaping) + &quot; + &apos;&quot;;
-            }
-
-            //  更新下一次截取字符串的偏移地址
-            index = offset + match.length;
-        });
-        fnBody += &quot;&apos;;return _temp;&quot;;
-
-        //  塞到缓存,方便下次有相同模板的时候,不用再去编译
-        _cache[str] = fnBody;
-    } else {
-
-        //  从缓存区
-        fnBody = _cache[str];
-    }
-
-    return fnBody;
-}
-</code></pre><p>至此一个编译方法就实现好了。再来看render方法的实现:</p>
-<pre><code>/**
-  * 渲染方法
-  * @param  fnBody String   编译出来后的函数体
-  * @param  data            数据
-  * @return String
-  **/
-function render(fnBody, data) {
-    return new Function(&quot;obj&quot;, fnBody)(data);
-}
-
-//  挂载到全局对象
-window.Template = {
-    complie: complie,
-    render: render
-};
-</code></pre><p>到这就完成了一个简单的模板引擎,需要注意的是在render方法中的</p>
-<pre><code>new Function(&quot;obj&quot;, fnBody)(data)
-</code></pre><p>就意味着我们在用该模板引擎绑定相关数据的时候,必须用obj.xxx这种来读取,否则将不能被解析,很多模板利用with这个关键字动态的修改函数体内的this指向的方式,支持可以省略前面的”obj.”,而直接读取数据。</p>
-<p>具体代码请移步我的<a href="https://github.com/rwson/Template" target="_blank" rel="external">GitHub</a></p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;在最开始想要把数据显示到页面上,我们可以需要用到一些后端的模板引擎(比如java中的Freemarker等),随着技术的发展,前端会把数据从后端取回来,用拼接HTML或者模板引擎的方式来呈现页面,如果布局结构简单还好,但是如果碰到复杂结构的时候,前者可能显得比较吃力,且容易
-    
-    </summary>
-    
-      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
-    
-      <category term="模板引擎" scheme="http://yoursite.com/categories/javascript/%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E/"/>
     
     
   </entry>
