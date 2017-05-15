@@ -2,20 +2,6 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://yoursite.com/2017/05/06/2017-05-06-read-vue-source-code-1/</loc>
-    
-    <lastmod>2017-05-09T14:01:30.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2017/05/09/2017-05-09-read-vue-source-code-2/</loc>
-    
-    <lastmod>2017-05-09T13:53:53.000Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://yoursite.com/2016/01/05/2016-01-05-react-controlled-compoent/</loc>
     
     <lastmod>2017-03-31T05:28:25.000Z</lastmod>
@@ -26,6 +12,20 @@
     <loc>http://yoursite.com/2017/03/29/2017-03-29-node-read-regedit-uninstall-software/</loc>
     
     <lastmod>2017-03-30T13:28:52.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/2015/12/05/2015-12-05-react-dom/</loc>
+    
+    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/2015/03/07/2015-03-07-arguments/</loc>
+    
+    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
     
   </url>
   
@@ -156,14 +156,14 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2015/12/05/2015-12-05-react-dom/</loc>
+    <loc>http://yoursite.com/2015/03/10/2015-03-10-js-object-create-class-mode/</loc>
     
     <lastmod>2017-03-30T12:19:21.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2015/03/10/2015-03-10-js-object-create-class-mode/</loc>
+    <loc>http://yoursite.com/2015/12/14/2015-12-14-front-end-template-engine/</loc>
     
     <lastmod>2017-03-30T12:19:21.000Z</lastmod>
     
@@ -290,20 +290,6 @@
   
   <url>
     <loc>http://yoursite.com/2017/01/20/2017-01-20-copy-a-directory-and-files-under-it/</loc>
-    
-    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2015/03/07/2015-03-07-arguments/</loc>
-    
-    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2015/12/14/2015-12-14-front-end-template-engine/</loc>
     
     <lastmod>2017-03-30T12:19:21.000Z</lastmod>
     
