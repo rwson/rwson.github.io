@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2017-03-30T13:28:52.000Z</updated>
+  <updated>2017-06-14T08:43:06.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -14,6 +14,34 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>编写你自己的async.waterfall</title>
+    <link href="http://yoursite.com/2017/05/14/2017-05-14-write-your-async.waterfall/"/>
+    <id>http://yoursite.com/2017/05/14/2017-05-14-write-your-async.waterfall/</id>
+    <published>2017-05-13T16:00:00.000Z</published>
+    <updated>2017-06-14T08:43:06.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在早期的异步开发中，如果有一些异步任务需要处理，难免会遇到回调地狱，为了解决这种问题，也出现过很多第三方库来避免，其中<a href="[https://caolan.github.io/async/]">async.js</a>就是比较有名的一个，里面有个<code>waterfall</code>方法，本文我们一起来模拟实现一个类似的</p>
+<p>先来看下调用</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line">waterfall([</div><div class="line">	<span class="function"><span class="keyword">function</span>(<span class="params">cb</span>) </span>&#123;</div><div class="line">		<span class="built_in">console</span>.log(<span class="keyword">new</span> <span class="built_in">Date</span>);</div><div class="line">		setTimeout(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">			cb(<span class="literal">null</span>, <span class="number">123</span>);</div><div class="line">		&#125;, <span class="number">2000</span>);</div><div class="line">	&#125;,</div><div class="line">	<span class="function"><span class="keyword">function</span>(<span class="params">arg, cb</span>) </span>&#123;</div><div class="line">		<span class="built_in">console</span>.log(<span class="keyword">new</span> <span class="built_in">Date</span>);</div><div class="line">		setTimeout(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">			<span class="built_in">console</span>.log(arg);</div><div class="line">			cb(<span class="literal">null</span>, <span class="number">123</span>, <span class="number">456</span>);</div><div class="line">		&#125;, <span class="number">2000</span>);</div><div class="line">	&#125;,</div><div class="line">	<span class="function"><span class="keyword">function</span>(<span class="params">arg1, arg2, cb</span>) </span>&#123;</div><div class="line">		<span class="built_in">console</span>.log(<span class="keyword">new</span> <span class="built_in">Date</span>);</div><div class="line">		<span class="built_in">console</span>.log(arg1, arg2);</div><div class="line">	&#125;</div><div class="line">], <span class="function"><span class="keyword">function</span>(<span class="params">ex</span>) </span>&#123;</div><div class="line">	<span class="keyword">if</span> (ex) &#123;</div><div class="line">		<span class="keyword">throw</span> ex;</div><div class="line">	&#125;</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>下面我们一起来看下实现下<code>waterfall</code>这个方法 : </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"> * @param task 任务队列</div><div class="line"> * @param callback 最后的回调</div><div class="line"> **/</div><div class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span>(<span class="params">task = [], callback = noop</span>) </span>&#123;</div><div class="line">  	<span class="comment">//	类型判断</span></div><div class="line">    <span class="keyword">if</span> (!(task <span class="keyword">instanceof</span> <span class="built_in">Array</span>)) &#123;</div><div class="line">        <span class="keyword">return</span> callback(<span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">"task should be an array!"</span>));</div><div class="line">    &#125;</div><div class="line">  </div><div class="line">  </div><div class="line">    (<span class="function"><span class="keyword">function</span> <span class="title">next</span>(<span class="params">...args</span>) </span>&#123;</div><div class="line">        <span class="comment">//  第一个参数如果不为空就直接执行callback</span></div><div class="line">        <span class="keyword">if</span> (args[<span class="number">0</span>]) &#123;</div><div class="line">            <span class="keyword">return</span> callback(args[<span class="number">0</span>]);</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">if</span> (task.length) &#123;</div><div class="line">            <span class="comment">//  取得当前要执行的函数</span></div><div class="line">            <span class="keyword">let</span> fn = task.shift();</div><div class="line">          	<span class="comment">//	第一个参数是error相关的,所以从第二个开始截取</span></div><div class="line">            fn.apply(<span class="literal">null</span>, [...args.slice(<span class="number">1</span>), onlyOnce(next)]);</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">            callback.apply(<span class="literal">null</span>, args);</div><div class="line">        &#125;</div><div class="line">    &#125;)();</div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="comment">/**</span></div><div class="line"> * 包装一个函数确保它只被执行一次</div><div class="line"> **/</div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">onlyOnce</span>(<span class="params">cb</span>) </span>&#123;</div><div class="line">    <span class="keyword">let</span> flag = <span class="literal">false</span>;</div><div class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">function</span>(<span class="params">...args</span>) </span>&#123;</div><div class="line">        <span class="keyword">if</span> (flag) &#123;</div><div class="line">            <span class="keyword">return</span> cb(<span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">'cb already called'</span>));</div><div class="line">        &#125;</div><div class="line">        cb.apply(<span class="literal">null</span>, args);</div><div class="line">        flag = <span class="literal">true</span>;</div><div class="line">    &#125;;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">noop</span>(<span class="params"></span>) </span>&#123;&#125;</div></pre></td></tr></table></figure>
+<p>上面就是对<code>waterfall</code>方法的实现，在<a href="[https://caolan.github.io/async/]">async.js</a>还有很多其他很有用的方法，后面有机会继续模拟实现。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在早期的异步开发中，如果有一些异步任务需要处理，难免会遇到回调地狱，为了解决这种问题，也出现过很多第三方库来避免，其中&lt;a href=&quot;[https://caolan.github.io/async/]&quot;&gt;async.js&lt;/a&gt;就是比较有名的一个，里面有个&lt;code&gt;wa
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+      <category term="异步流控制" scheme="http://yoursite.com/categories/javascript/%E5%BC%82%E6%AD%A5%E6%B5%81%E6%8E%A7%E5%88%B6/"/>
+    
+    
+  </entry>
   
   <entry>
     <title>NodeJs读取windows注册表来对软件进行卸载</title>
@@ -778,116 +806,6 @@ window.onload = () =&gt; {
   </entry>
   
   <entry>
-    <title>Gulp插件的研究</title>
-    <link href="http://yoursite.com/2016/11/29/2016-11-29-gulp-plugin-tourial/"/>
-    <id>http://yoursite.com/2016/11/29/2016-11-29-gulp-plugin-tourial/</id>
-    <published>2016-11-28T16:00:00.000Z</published>
-    <updated>2017-03-30T12:19:21.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。</p>
-<p>今天研究了下gulp插件,写点心得体会吧。看了两个gulp插件源码,发现里面都引入了<a href="https://github.com/rvagg/through2" target="_blank" rel="external">through2</a>这个包,官方的说法就是”Node Stream的简单封装，目的是让链式流操作更加简单;”,就也照葫芦画瓢,引用了这个包,简单实现一个gulp插件,功能就是压缩css,并且把css中的”background: url(xxxx.png)”中的”xxxx.png”转换成base64编码的形式,减少http请求数。</p>
-<pre><code>&quot;use strict&quot;;
-
-const through = require(&quot;through2&quot;),
-    path = require(&quot;path&quot;),
-    fs = require(&quot;fs&quot;),
-
-    //  引用async/await,方便处理文件读写的异步操作
-    async = require(&quot;asyncawait&quot;).async,
-    await = require(&quot;asyncawait&quot;).await,
-
-    //  匹配url(../xxx.yyy)这种表达式
-    imgReg = /url\s*\((\s*[A-Za-z0-9\-\_\.\/\:]+\s*)\);?/gi,
-
-    //  将fs.readFile封装成Promise
-    readFile = (path) =&gt; {
-        return new Promise((resolve, reject) =&gt; {
-            fs.readFile(path, (ex, file) =&gt; {
-                if (ex) {
-                    reject(ex);
-                }
-                resolve(file);
-            });
-        });
-    };
-
-let base, contents, match, tmp, url;
-
-//  暴露出去的函数
-module.exports = (opt) =&gt; {
-
-    return through.obj(function(file, enc, cb) {
-
-        //  文件为空直接执行回调函数
-        if (file.isNull()) {
-            cb(null, file);
-        }
-
-        //  取得当前css的绝对路径
-        base = file.base;
-
-        //  匹配css中的无效字符,并且转换成buffer
-        file.contents = new Buffer(file._contents.toString()
-            //  去换行符
-            .replace(/\n/gm, &quot;&quot;)
-
-            //  去&quot;{&quot;之后到第一条样式间的空白字符
-            .replace(/\{\s+/g, &quot;{&quot;)
-
-            //  去&quot;;&quot;之后的空白字符
-            .replace(/\;\s+/g, &quot;;&quot;));
-
-        //  将文件内容转换成普通字符串并缓存
-        contents = file.contents.toString();
-
-        //  取得url(../../xxx.yyy),并且缓存
-        match = contents.match(imgReg);
-
-        //  async-await读取图片文件成base64编码
-        async(() =&gt; {
-
-            //  遍历之前的缓存项
-            match.forEach((item) =&gt; {
-
-                //  拼凑文件绝对路径
-                url = item.replace(&quot;url(&quot;, &quot;&quot;).replace(&quot;)&quot;, &quot;&quot;).trim();
-
-                //  用await读取文件,避免嵌套
-                tmp = await (readFile(path.resolve(base, url)));
-
-                //  替换之前匹配的字符串
-                contents = contents.replace(item, `url(data:image/png;base64,${tmp.toString(&quot;base64&quot;)})`);
-            });
-
-            //  把文件内容转成buffer
-            file.contents = new Buffer(contents);
-
-            //  回调函数
-            cb(null, file);
-
-        })();
-    });
-
-};
-</code></pre><p>至此,一个简单的插件就实现了,当然,还有很多不足,比如对图片进行压缩,减少base64字符串的长度,用request模块处理对网络图片的引用等等。</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。&lt;/
-    
-    </summary>
-    
-      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
-    
-      <category term="Gulp" scheme="http://yoursite.com/categories/javascript/Gulp/"/>
-    
-      <category term="构建工具" scheme="http://yoursite.com/categories/javascript/Gulp/%E6%9E%84%E5%BB%BA%E5%B7%A5%E5%85%B7/"/>
-    
-    
-  </entry>
-  
-  <entry>
     <title>javascript模块化编程-同步模式</title>
     <link href="http://yoursite.com/2016/11/29/2016-11-23-js-sync-module-mode/"/>
     <id>http://yoursite.com/2016/11/29/2016-11-23-js-sync-module-mode/</id>
@@ -1041,6 +959,116 @@ module.define(&quot;PersonClass&quot;, [], () =&gt; {
       <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
     
       <category term="模块化" scheme="http://yoursite.com/categories/javascript/%E6%A8%A1%E5%9D%97%E5%8C%96/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>Gulp插件的研究</title>
+    <link href="http://yoursite.com/2016/11/29/2016-11-29-gulp-plugin-tourial/"/>
+    <id>http://yoursite.com/2016/11/29/2016-11-29-gulp-plugin-tourial/</id>
+    <published>2016-11-28T16:00:00.000Z</published>
+    <updated>2017-03-30T12:19:21.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。</p>
+<p>今天研究了下gulp插件,写点心得体会吧。看了两个gulp插件源码,发现里面都引入了<a href="https://github.com/rvagg/through2" target="_blank" rel="external">through2</a>这个包,官方的说法就是”Node Stream的简单封装，目的是让链式流操作更加简单;”,就也照葫芦画瓢,引用了这个包,简单实现一个gulp插件,功能就是压缩css,并且把css中的”background: url(xxxx.png)”中的”xxxx.png”转换成base64编码的形式,减少http请求数。</p>
+<pre><code>&quot;use strict&quot;;
+
+const through = require(&quot;through2&quot;),
+    path = require(&quot;path&quot;),
+    fs = require(&quot;fs&quot;),
+
+    //  引用async/await,方便处理文件读写的异步操作
+    async = require(&quot;asyncawait&quot;).async,
+    await = require(&quot;asyncawait&quot;).await,
+
+    //  匹配url(../xxx.yyy)这种表达式
+    imgReg = /url\s*\((\s*[A-Za-z0-9\-\_\.\/\:]+\s*)\);?/gi,
+
+    //  将fs.readFile封装成Promise
+    readFile = (path) =&gt; {
+        return new Promise((resolve, reject) =&gt; {
+            fs.readFile(path, (ex, file) =&gt; {
+                if (ex) {
+                    reject(ex);
+                }
+                resolve(file);
+            });
+        });
+    };
+
+let base, contents, match, tmp, url;
+
+//  暴露出去的函数
+module.exports = (opt) =&gt; {
+
+    return through.obj(function(file, enc, cb) {
+
+        //  文件为空直接执行回调函数
+        if (file.isNull()) {
+            cb(null, file);
+        }
+
+        //  取得当前css的绝对路径
+        base = file.base;
+
+        //  匹配css中的无效字符,并且转换成buffer
+        file.contents = new Buffer(file._contents.toString()
+            //  去换行符
+            .replace(/\n/gm, &quot;&quot;)
+
+            //  去&quot;{&quot;之后到第一条样式间的空白字符
+            .replace(/\{\s+/g, &quot;{&quot;)
+
+            //  去&quot;;&quot;之后的空白字符
+            .replace(/\;\s+/g, &quot;;&quot;));
+
+        //  将文件内容转换成普通字符串并缓存
+        contents = file.contents.toString();
+
+        //  取得url(../../xxx.yyy),并且缓存
+        match = contents.match(imgReg);
+
+        //  async-await读取图片文件成base64编码
+        async(() =&gt; {
+
+            //  遍历之前的缓存项
+            match.forEach((item) =&gt; {
+
+                //  拼凑文件绝对路径
+                url = item.replace(&quot;url(&quot;, &quot;&quot;).replace(&quot;)&quot;, &quot;&quot;).trim();
+
+                //  用await读取文件,避免嵌套
+                tmp = await (readFile(path.resolve(base, url)));
+
+                //  替换之前匹配的字符串
+                contents = contents.replace(item, `url(data:image/png;base64,${tmp.toString(&quot;base64&quot;)})`);
+            });
+
+            //  把文件内容转成buffer
+            file.contents = new Buffer(contents);
+
+            //  回调函数
+            cb(null, file);
+
+        })();
+    });
+
+};
+</code></pre><p>至此,一个简单的插件就实现了,当然,还有很多不足,比如对图片进行压缩,减少base64字符串的长度,用request模块处理对网络图片的引用等等。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。&lt;/
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+      <category term="Gulp" scheme="http://yoursite.com/categories/javascript/Gulp/"/>
+    
+      <category term="构建工具" scheme="http://yoursite.com/categories/javascript/Gulp/%E6%9E%84%E5%BB%BA%E5%B7%A5%E5%85%B7/"/>
     
     
   </entry>
@@ -2779,28 +2807,6 @@ DeviceExtension.getDeviceInfo(function(err,info){
     <summary type="html">
     
       &lt;p&gt;现如今，越来越多的移动开发者选择用React Native来开发他们的app。虽然React Native提供了强大的API供我们调用，但是对于一些功能(比如第三方支付、文件上传之类的)，原生模块中并没有提供给我们相关的API，这时候就需要我们来自己封装一些东西来给js端调
-    
-    </summary>
-    
-      <category term="React" scheme="http://yoursite.com/categories/React/"/>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>React中的受控组件</title>
-    <link href="http://yoursite.com/2016/01/05/2016-01-05-react-controlled-compoent/"/>
-    <id>http://yoursite.com/2016/01/05/2016-01-05-react-controlled-compoent/</id>
-    <published>2016-01-04T16:00:00.000Z</published>
-    <updated>2017-03-31T05:28:25.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>表单是web应用中不可缺少的一部分,不同于其他元素,表单需要响应用户输入,根据输入值的不同响应不同的状态,React基于props和state的渲染机制,可以很好的处理表单。在React中表单分为受控组件和非受控组件两种。</p>
-<h3 id="受控组件-受React控制的值"><a href="#受控组件-受React控制的值" class="headerlink" title="受控组件 - 受React控制的值"></a>受控组件 - 受React控制的值</h3>]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;表单是web应用中不可缺少的一部分,不同于其他元素,表单需要响应用户输入,根据输入值的不同响应不同的状态,React基于props和state的渲染机制,可以很好的处理表单。在React中表单分为受控组件和非受控组件两种。&lt;/p&gt;
-&lt;h3 id=&quot;受控组件-受React控制
     
     </summary>
     
