@@ -4,7 +4,7 @@
   <url>
     <loc>http://yoursite.com/2017/08/04/2017-08-04-write-your-promise/</loc>
     
-    <lastmod>2017-09-04T07:53:46.000Z</lastmod>
+    <lastmod>2017-09-04T08:08:49.000Z</lastmod>
     
   </url>
   
@@ -30,28 +30,7 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2015/12/05/2015-12-05-react-dom/</loc>
-    
-    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2015/05/23/2015-05-23-js-object-prototype/</loc>
-    
-    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2015/06/03/2015-06-03-js-design-mode-bridge/</loc>
-    
-    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2015/05/31/2015-05-31-js-design-mode-factory/</loc>
+    <loc>http://yoursite.com/2015/03/10/2015-03-10-js-object-create-class-mode/</loc>
     
     <lastmod>2017-03-30T12:19:21.000Z</lastmod>
     
@@ -65,7 +44,42 @@
   </url>
   
   <url>
+    <loc>http://yoursite.com/2015/05/26/2015-05-26-js-object-extend/</loc>
+    
+    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/2015/05/31/2015-05-31-js-design-mode-factory/</loc>
+    
+    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/2015/06/21/2015-06-21-js-design-mode-facade/</loc>
+    
+    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/2015/06/03/2015-06-03-js-design-mode-bridge/</loc>
+    
+    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://yoursite.com/2015/06/13/2015-06-13-js-design-mode-adoptor/</loc>
+    
+    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/2015/07/15/2015-07-15-js-design-mode-decorator/</loc>
     
     <lastmod>2017-03-30T12:19:21.000Z</lastmod>
     
@@ -86,7 +100,7 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2015/06/21/2015-06-21-js-design-mode-facade/</loc>
+    <loc>http://yoursite.com/2015/07/20/2015-07-20-javascript-variable-promotion/</loc>
     
     <lastmod>2017-03-30T12:19:21.000Z</lastmod>
     
@@ -94,20 +108,6 @@
   
   <url>
     <loc>http://yoursite.com/2015/08/20/2015-08-20-Node-redis-across-database-insert/</loc>
-    
-    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2015/07/15/2015-07-15-js-design-mode-decorator/</loc>
-    
-    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2015/07/20/2015-07-20-javascript-variable-promotion/</loc>
     
     <lastmod>2017-03-30T12:19:21.000Z</lastmod>
     
@@ -128,6 +128,13 @@
   </url>
   
   <url>
+    <loc>http://yoursite.com/2015/12/01/2015-12-01-react-component-life-time/</loc>
+    
+    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://yoursite.com/2015/12/02/2015-12-02-react-data-flow/</loc>
     
     <lastmod>2017-03-30T12:19:21.000Z</lastmod>
@@ -135,7 +142,7 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2015/12/01/2015-12-01-react-component-life-time/</loc>
+    <loc>http://yoursite.com/2015/12/05/2015-12-05-react-dom/</loc>
     
     <lastmod>2017-03-30T12:19:21.000Z</lastmod>
     
@@ -156,14 +163,7 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2015/12/04/2015-12-04-react-component-mixin/</loc>
-    
-    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2015/03/07/2015-03-07-arguments/</loc>
+    <loc>http://yoursite.com/2015/02/24/2015-02-24-apply-call/</loc>
     
     <lastmod>2017-03-30T12:19:21.000Z</lastmod>
     
@@ -184,13 +184,6 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2015/02/24/2015-02-24-apply-call/</loc>
-    
-    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://yoursite.com/2016/03/10/2016-03-10-js-object-extend2/</loc>
     
     <lastmod>2017-03-30T12:19:21.000Z</lastmod>
@@ -198,7 +191,7 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2016/05/04/2016-05-04-es6-promise/</loc>
+    <loc>http://yoursite.com/2015/02/26/2015-02-24-short-circuit-gramar/</loc>
     
     <lastmod>2017-03-30T12:19:21.000Z</lastmod>
     
@@ -219,35 +212,14 @@
   </url>
   
   <url>
+    <loc>http://yoursite.com/2016/05/04/2016-05-04-es6-promise/</loc>
+    
+    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://yoursite.com/2016/07/10/2016-07-10-fetch-timeout/</loc>
-    
-    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2016/09/17/2016-09-17-javascript-serialize/</loc>
-    
-    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2016/11/02/2016-11-02-ie-ajax-cache/</loc>
-    
-    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2016/11/09/2016-11-09-async:await-tourial/</loc>
-    
-    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2016/11/29/2016-11-23-js-sync-module-mode/</loc>
     
     <lastmod>2017-03-30T12:19:21.000Z</lastmod>
     
@@ -261,14 +233,42 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2016/11/29/2016-11-29-gulp-plugin-tourial/</loc>
+    <loc>http://yoursite.com/2016/09/17/2016-09-17-javascript-serialize/</loc>
     
     <lastmod>2017-03-30T12:19:21.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2015/02/26/2015-02-24-short-circuit-gramar/</loc>
+    <loc>http://yoursite.com/2016/11/29/2016-11-23-js-sync-module-mode/</loc>
+    
+    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/2016/11/09/2016-11-09-async:await-tourial/</loc>
+    
+    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/2016/07/20/2016-07-20-javascript-function-throttle/</loc>
+    
+    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/2016/11/02/2016-11-02-ie-ajax-cache/</loc>
+    
+    <lastmod>2017-03-30T12:19:21.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/2016/11/29/2016-11-29-gulp-plugin-tourial/</loc>
     
     <lastmod>2017-03-30T12:19:21.000Z</lastmod>
     
@@ -289,21 +289,21 @@
   </url>
   
   <url>
-    <loc>http://yoursite.com/2015/05/26/2015-05-26-js-object-extend/</loc>
+    <loc>http://yoursite.com/2015/03/07/2015-03-07-arguments/</loc>
     
     <lastmod>2017-03-30T12:19:21.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2015/03/10/2015-03-10-js-object-create-class-mode/</loc>
+    <loc>http://yoursite.com/2015/05/23/2015-05-23-js-object-prototype/</loc>
     
     <lastmod>2017-03-30T12:19:21.000Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://yoursite.com/2016/07/20/2016-07-20-javascript-function-throttle/</loc>
+    <loc>http://yoursite.com/2015/12/04/2015-12-04-react-component-mixin/</loc>
     
     <lastmod>2017-03-30T12:19:21.000Z</lastmod>
     
