@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2017-06-14T08:43:06.000Z</updated>
+  <updated>2017-09-04T07:53:46.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -14,6 +14,43 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>实现你自己的Promise</title>
+    <link href="http://yoursite.com/2017/08/04/2017-08-04-write-your-promise/"/>
+    <id>http://yoursite.com/2017/08/04/2017-08-04-write-your-promise/</id>
+    <published>2017-08-03T16:00:00.000Z</published>
+    <updated>2017-09-04T07:53:46.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在现代化前端开发中，经常会用到<code>Promise</code>模式，<code>Promise</code>最大的好处就是可以使异步代码看起来如同步般清新易读，从而从回调地狱中解脱出来，<code>ES6</code>已经原生支持<code>Promise</code>对象，但在未支持的浏览器中还需要通过 polyfill 模拟实现。下面一起实现一个<code>Promise</code>。</p>
+<p>一般我们用<code>Promise</code>会写成类似下面的样子：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> ins = <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function">(<span class="params">resolve, reject</span>) =&gt;</span> &#123;</div><div class="line">  	<span class="comment">//	...</span></div><div class="line">&#125;);</div><div class="line"></div><div class="line">ins.then(<span class="function">(<span class="params">res</span>) =&gt;</span> &#123;</div><div class="line">  <span class="comment">//   ...</span></div><div class="line">&#125;, (ex) =&gt; &#123;&#125;);</div></pre></td></tr></table></figure>
+<p>在<code>Promise</code>中一共存在三种状态，<code>PENDING</code>, <code>FULFILLED</code>,<code>REJECTED</code>，在实例化一个<code>Promise</code>后，它的状态会变成<code>PENDING</code>，执行<code>resolve</code>或者<code>reject</code>方法会把状态改成<code>FULFILLED</code>或者<code>REJECTED</code>，此过程不可逆，也就是说每个<code>Promise</code>只能调用一次<code>resolve</code>或者<code>reject</code>。</p>
+<p>先来搭个骨架:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> PENDING = <span class="string">"PENDING"</span>,</div><div class="line">    FULFILLED = <span class="string">"FULFILLED"</span>,</div><div class="line">    REJECTED = <span class="string">"REJECTED"</span>;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">Promise</span>(<span class="params">resolver</span>) </span>&#123;</div><div class="line">    <span class="keyword">if</span> (!isFunction(resolver)) &#123;</div><div class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">TypeError</span>(<span class="string">"TypeError: resolver must be a function"</span>);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="comment">//	实例的值</span></div><div class="line">    <span class="keyword">this</span>.value = <span class="literal">null</span>;</div><div class="line"></div><div class="line">    <span class="comment">//	实例的状态</span></div><div class="line">    <span class="keyword">this</span>.status = PENDING;</div><div class="line"></div><div class="line">    <span class="comment">//	缓存then和catch中传入的方法</span></div><div class="line">    <span class="keyword">this</span>._doneCallbacks = [];</div><div class="line">    <span class="keyword">this</span>._failCallbacks = [];</div><div class="line"></div><div class="line">    <span class="comment">//	在执行resolver内部抛出异常, try ... catch 包裹</span></div><div class="line">    <span class="keyword">try</span> &#123;</div><div class="line">        resolver(resolve.bind(<span class="keyword">this</span>), reject.bind(<span class="keyword">this</span>));</div><div class="line">    &#125; <span class="keyword">catch</span> (ex) &#123;</div><div class="line">        reject.bind(<span class="keyword">this</span>)(ex);</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="built_in">Promise</span>.prototype = &#123;</div><div class="line">  <span class="attr">constructor</span>: <span class="built_in">Promise</span>,</div><div class="line">  </div><div class="line">  <span class="attr">then</span>: <span class="function"><span class="keyword">function</span>(<span class="params">onFulfilled, onRejected</span>) </span>&#123;&#125;,</div><div class="line">  </div><div class="line">  <span class="attr">catch</span>: <span class="function"><span class="keyword">function</span>(<span class="params">onRejected</span>) </span>&#123;&#125;</div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">isFunction</span>(<span class="params">obj</span>) </span>&#123;</div><div class="line">  <span class="keyword">return</span> <span class="keyword">typeof</span> obj === <span class="string">"function"</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>上面实现了一个<code>Promise</code>构造器并且在它原型上声明了<code>then</code>和<code>catch</code>两个空方法，下面我们一起来实现一下<code>then</code>和<code>catch</code>两个方法, <code>Promise</code>中的<code>then</code>支持调用，所以<code>then</code>方法需要返回一个<code>Promise</code>实例。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">Promise</span>.prototype = &#123;</div><div class="line">  <span class="attr">constructor</span>: <span class="built_in">Promise</span>,</div><div class="line">  </div><div class="line">  <span class="comment">//	then方法接受onFulfilled, onRejected两个回调, 并且返回一个新的Promise实例</span></div><div class="line">  then: <span class="function"><span class="keyword">function</span>(<span class="params">onFulfilled, onRejected</span>) </span>&#123;</div><div class="line">    <span class="comment">//	要返回的新Promise</span></div><div class="line">    <span class="keyword">let</span> ins = <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function"><span class="params">()</span> =&gt;</span> &#123;&#125;);</div><div class="line">	<span class="keyword">if</span> (isFunction(onFulfilled)) &#123;</div><div class="line">      <span class="comment">//	将onFulfilled缓存到_doneCallbacks中</span></div><div class="line">      <span class="keyword">this</span>._doneCallbacks.push(makeCallback(ins, onFulfilled, <span class="string">"resolve"</span>));</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">if</span> (isFunction(onRejected)) &#123;</div><div class="line">      <span class="keyword">this</span>._failCallbacks.push(makeCallback(ins, onFulfilled, <span class="string">"reject"</span>));</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> ins;</div><div class="line">  &#125;,</div><div class="line">  </div><div class="line">  <span class="attr">catch</span>: <span class="function"><span class="keyword">function</span>(<span class="params">onRejected</span>) </span>&#123;</div><div class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.then(<span class="literal">null</span>, onRejected);</div><div class="line">  &#125;</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<p>在实例化一个<code>Promise</code>时，我们的<code>resolver</code>有<code>resolve</code>和<code>reject</code>两个参数(也就是上面构造器中的最后)，在实例化完成后其中有一个将被立即调用，用于结束当前<code>Promise</code>。下面一起实现下<code>resolve</code>和<code>reject</code>，这两个函数完成的功能就是接受<code>resolver</code>中异步处理返回的值并且传递给<code>then</code>或者<code>catch</code>，并且将当前<code>PENDING</code>的状态改掉，刚才上面说到<code>Promise</code>的状态从<code>PENDING</code>到<code>FULFILLED</code>或者<code>REJECTED</code>是一个不可逆的过程，所以为了确保<code>resolve</code>或者<code>reject</code>不被多次调用，需要在方法开头提前判断下<code>status</code>是不是<code>PENDING</code>状态。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">resolve</span>(<span class="params">data</span>) </span>&#123;</div><div class="line">  <span class="keyword">if</span> (<span class="keyword">this</span>.status !== PENDING) &#123;</div><div class="line">    <span class="keyword">return</span>;</div><div class="line">  &#125;</div><div class="line">  </div><div class="line">  <span class="keyword">this</span>.value = data;</div><div class="line">  <span class="keyword">this</span>.status = FULFILLED;</div><div class="line">  run.call(<span class="keyword">this</span>);</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">reject</span>(<span class="params">ex</span>) </span>&#123;</div><div class="line">  <span class="keyword">if</span> (<span class="keyword">this</span>.status !== PENDING) &#123;</div><div class="line">    <span class="keyword">return</span>;</div><div class="line">  &#125;</div><div class="line">  </div><div class="line">  <span class="keyword">this</span>.value = ex;</div><div class="line">  <span class="keyword">this</span>.status = REJECTED;</div><div class="line">  run.call(<span class="keyword">this</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在<code>resolve</code>和<code>reject</code>中，我们都调用了<code>run</code>方法，该方法的作用是用于触发接下来的<code>Promise</code>的执行。<code>run</code>函数中需要注意的一点是，需要异步执行相关的回调函数，下面一起来实现一个<code>run</code>方法，需要注意的是每个<code>Promise</code>只能被执行一次，所以在<code>run</code>方法最后，把<code>_doneCallbacks</code>和<code>_failCallbacks</code>置空。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">run</span>(<span class="params"></span>) </span>&#123;</div><div class="line">  <span class="keyword">if</span> (<span class="keyword">this</span>.status === PENDING) &#123;</div><div class="line">    <span class="keyword">return</span>;</div><div class="line">  &#125;</div><div class="line">  </div><div class="line">  <span class="comment">//	获取到异步处理后的值, 根据当前状态获取要执行的回调</span></div><div class="line">  <span class="keyword">const</span> &#123; value &#125; = <span class="keyword">this</span>,</div><div class="line">		callbacks = <span class="keyword">this</span>.status === FULFILLED ? <span class="keyword">this</span>._doneCallbacks : <span class="keyword">this</span>._failCallbacks；</div><div class="line">  </div><div class="line">  <span class="comment">//	Promise异步执行</span></div><div class="line">  <span class="keyword">let</span> timeout = setTimeout(<span class="function"><span class="params">()</span> =&gt;</span> &#123;</div><div class="line">    <span class="keyword">for</span> (<span class="keyword">let</span> fn <span class="keyword">of</span> callbacks) &#123;</div><div class="line">	  <span class="comment">//	值穿透到每个then或者catch</span></div><div class="line">      fn(value);</div><div class="line">    &#125;</div><div class="line">    clearTimeout(timeout);</div><div class="line">  &#125;);</div><div class="line">  </div><div class="line">  <span class="keyword">this</span>._doneCallbacks = [];</div><div class="line">  <span class="keyword">this</span>._failCallbacks = [];</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>上面<code>run</code>里执行的每个<code>fn</code>都是<code>then</code>方法中<code>push</code>进<code>_doneCallbacks</code>或<code>_failCallbacks的</code>makeCallback<code>返回值，</code>makeCallback`是整个代码中比较复杂的一部分，下面一起看下具体实现。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">makeCallback</span>(<span class="params">promise, callback, action</span>) </span>&#123;</div><div class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> <span class="title">promiseCallback</span>(<span class="params">value</span>) </span>&#123;</div><div class="line">    	<span class="comment">//	callback是个函数</span></div><div class="line">        <span class="keyword">if</span> (isFunction(callback)) &#123;</div><div class="line">        	<span class="comment">//	定义个变量去接受返回值</span></div><div class="line">        	<span class="comment">//	防止抛出异常, try ... catch 包裹, catch 时直接调用reject</span></div><div class="line">            <span class="keyword">let</span> x;</div><div class="line">            <span class="keyword">try</span> &#123;</div><div class="line">                x = callback(value);</div><div class="line">            &#125; <span class="keyword">catch</span> (ex) &#123;</div><div class="line">                reject.bind(promise)(ex);</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="comment">//	callback中返回的是this, 会引发死循环</span></div><div class="line">            <span class="comment">//	抛出类型异常到reject</span></div><div class="line">            <span class="comment">/**</span></div><div class="line">             * const ins = new Promise((resolve, reject) =&gt; &#123;&#125;);</div><div class="line">             * ins.then(() =&gt; &#123;</div><div class="line">             * 		return ins;</div><div class="line">             * &#125;);</div><div class="line">             */</div><div class="line">            <span class="keyword">if</span> (x === promise) &#123;</div><div class="line">                <span class="keyword">let</span> reason = <span class="keyword">new</span> <span class="built_in">TypeError</span>(<span class="string">"TypeError: The return value could not be same with the promise"</span>);</div><div class="line">                reject.bind(promise)(reason);</div><div class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (x <span class="keyword">instanceof</span> <span class="built_in">Promise</span>) &#123;</div><div class="line"></div><div class="line">            	<span class="comment">//	callback中返回一个新的Promise</span></div><div class="line">            	<span class="comment">//	执行该Promise的then和catch</span></div><div class="line">            	<span class="comment">/**</span></div><div class="line">            	 * const ins = new Promise((resolve, reject) =&gt; &#123;&#125;);</div><div class="line">            	 * ins.then(() =&gt; &#123;</div><div class="line">            	 * 		return new Promise((resolve, reject) =&gt; &#123;&#125;);</div><div class="line">            	 * &#125;);</div><div class="line">            	 */</div><div class="line">                x.then(<span class="function">(<span class="params">data</span>) =&gt;</span> &#123;</div><div class="line">                    resolve.bind(promise)(data);</div><div class="line">                &#125;, (ex) =&gt; &#123;</div><div class="line">                    reject.bind(promise)(ex);</div><div class="line">                &#125;);</div><div class="line">            &#125; <span class="keyword">else</span> &#123;</div><div class="line">                <span class="keyword">let</span> then;</div><div class="line">                (<span class="function"><span class="keyword">function</span> <span class="title">resolveThenable</span>(<span class="params">x</span>) </span>&#123;</div><div class="line">                    <span class="comment">// 如果返回的是一个Thenable对象(Promise)</span></div><div class="line">                    <span class="keyword">if</span> (x &amp;&amp; (<span class="keyword">typeof</span> x === <span class="string">"object"</span> || isFunction(x))) &#123;</div><div class="line">                        <span class="keyword">try</span> &#123;</div><div class="line">                            then = x.then;</div><div class="line">                        &#125; <span class="keyword">catch</span> (ex) &#123;</div><div class="line">                            reject.bind(promise)(ex);</div><div class="line">                            <span class="keyword">return</span>;</div><div class="line">                        &#125;</div><div class="line"></div><div class="line">                        <span class="keyword">if</span> (isFunction(then)) &#123;</div><div class="line">                            <span class="comment">// 调用Thenable对象的then方法时,传递进去的resolvePromise和rejectPromise方法（及下面的两个匿名方法）</span></div><div class="line">                            <span class="comment">// 可能会被重复调用。 但Promise+规范规定这两个方法有且只能有其中的一个被调用一次,多次调用将被忽略</span></div><div class="line">                            <span class="comment">// 此处通过invoked来处理重复调用</span></div><div class="line">                            <span class="keyword">let</span> invoked = <span class="literal">false</span>;</div><div class="line">                            <span class="keyword">try</span> &#123;</div><div class="line">                                then.call( x, (y) =&gt; &#123;</div><div class="line">                                		<span class="comment">//	如果已经被调用了，直接return掉</span></div><div class="line">                                        <span class="keyword">if</span> (invoked) &#123;</div><div class="line">                                            <span class="keyword">return</span>;</div><div class="line">                                        &#125;</div><div class="line">                                        invoked = <span class="literal">true</span>;</div><div class="line"></div><div class="line">                                        <span class="comment">// 避免死循环</span></div><div class="line">                                        <span class="keyword">if</span> (y === x) &#123;</div><div class="line">                                            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">TypeError</span>(<span class="string">"TypeError: The return value could not be same with the previous thenable object"</span>);</div><div class="line">                                        &#125;</div><div class="line"></div><div class="line">                                        <span class="comment">// y仍有可能是thenable对象，递归调用</span></div><div class="line">                                        resolveThenable(y);</div><div class="line">                                    &#125;, (e) =&gt; &#123;</div><div class="line">                                        <span class="keyword">if</span> (invoked) &#123;</div><div class="line">                                            <span class="keyword">return</span>;</div><div class="line">                                        &#125;</div><div class="line">                                        invoked = <span class="literal">true</span>;</div><div class="line">                                        reject.bind(promise)(e);</div><div class="line">                                    &#125;</div><div class="line">                                );</div><div class="line">                            &#125; <span class="keyword">catch</span> (e) &#123;</div><div class="line">                                <span class="comment">// 如果resolvePromise和rejectPromise方法被调用后,再抛出异常,则忽略异常</span></div><div class="line">                                <span class="comment">// 否则用异常对象reject此Promise对象</span></div><div class="line">                                <span class="keyword">if</span> (!invoked) &#123;</div><div class="line">                                    reject.bind(promise)(e);</div><div class="line">                                &#125;</div><div class="line">                            &#125;</div><div class="line">                        &#125; <span class="keyword">else</span> &#123;</div><div class="line">                            resolve.bind(promise)(x);</div><div class="line">                        &#125;</div><div class="line">                    &#125; <span class="keyword">else</span> &#123;</div><div class="line">                        resolve.bind(promise)(x);</div><div class="line">                    &#125;</div><div class="line">                &#125;(x));</div><div class="line">            &#125;</div><div class="line">        &#125; <span class="keyword">else</span> &#123;</div><div class="line">        	<span class="comment">//	根据action判断执行resolve或者reject</span></div><div class="line">        	action === <span class="string">"resolve"</span> ? resolve.bind(promise)(value) : reject.bind(promise)(value);</div><div class="line">        &#125;</div><div class="line">    &#125;;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>上面就是我对于一个<code>Promise</code>的实现，具体代码请移步我的<a href="">GitHub</a></p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在现代化前端开发中，经常会用到&lt;code&gt;Promise&lt;/code&gt;模式，&lt;code&gt;Promise&lt;/code&gt;最大的好处就是可以使异步代码看起来如同步般清新易读，从而从回调地狱中解脱出来，&lt;code&gt;ES6&lt;/code&gt;已经原生支持&lt;code&gt;Promise&lt;/cod
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+      <category term="Promise" scheme="http://yoursite.com/categories/javascript/Promise/"/>
+    
+    
+  </entry>
   
   <entry>
     <title>编写你自己的async.waterfall</title>
@@ -806,6 +843,116 @@ window.onload = () =&gt; {
   </entry>
   
   <entry>
+    <title>Gulp插件的研究</title>
+    <link href="http://yoursite.com/2016/11/29/2016-11-29-gulp-plugin-tourial/"/>
+    <id>http://yoursite.com/2016/11/29/2016-11-29-gulp-plugin-tourial/</id>
+    <published>2016-11-28T16:00:00.000Z</published>
+    <updated>2017-03-30T12:19:21.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。</p>
+<p>今天研究了下gulp插件,写点心得体会吧。看了两个gulp插件源码,发现里面都引入了<a href="https://github.com/rvagg/through2" target="_blank" rel="external">through2</a>这个包,官方的说法就是”Node Stream的简单封装，目的是让链式流操作更加简单;”,就也照葫芦画瓢,引用了这个包,简单实现一个gulp插件,功能就是压缩css,并且把css中的”background: url(xxxx.png)”中的”xxxx.png”转换成base64编码的形式,减少http请求数。</p>
+<pre><code>&quot;use strict&quot;;
+
+const through = require(&quot;through2&quot;),
+    path = require(&quot;path&quot;),
+    fs = require(&quot;fs&quot;),
+
+    //  引用async/await,方便处理文件读写的异步操作
+    async = require(&quot;asyncawait&quot;).async,
+    await = require(&quot;asyncawait&quot;).await,
+
+    //  匹配url(../xxx.yyy)这种表达式
+    imgReg = /url\s*\((\s*[A-Za-z0-9\-\_\.\/\:]+\s*)\);?/gi,
+
+    //  将fs.readFile封装成Promise
+    readFile = (path) =&gt; {
+        return new Promise((resolve, reject) =&gt; {
+            fs.readFile(path, (ex, file) =&gt; {
+                if (ex) {
+                    reject(ex);
+                }
+                resolve(file);
+            });
+        });
+    };
+
+let base, contents, match, tmp, url;
+
+//  暴露出去的函数
+module.exports = (opt) =&gt; {
+
+    return through.obj(function(file, enc, cb) {
+
+        //  文件为空直接执行回调函数
+        if (file.isNull()) {
+            cb(null, file);
+        }
+
+        //  取得当前css的绝对路径
+        base = file.base;
+
+        //  匹配css中的无效字符,并且转换成buffer
+        file.contents = new Buffer(file._contents.toString()
+            //  去换行符
+            .replace(/\n/gm, &quot;&quot;)
+
+            //  去&quot;{&quot;之后到第一条样式间的空白字符
+            .replace(/\{\s+/g, &quot;{&quot;)
+
+            //  去&quot;;&quot;之后的空白字符
+            .replace(/\;\s+/g, &quot;;&quot;));
+
+        //  将文件内容转换成普通字符串并缓存
+        contents = file.contents.toString();
+
+        //  取得url(../../xxx.yyy),并且缓存
+        match = contents.match(imgReg);
+
+        //  async-await读取图片文件成base64编码
+        async(() =&gt; {
+
+            //  遍历之前的缓存项
+            match.forEach((item) =&gt; {
+
+                //  拼凑文件绝对路径
+                url = item.replace(&quot;url(&quot;, &quot;&quot;).replace(&quot;)&quot;, &quot;&quot;).trim();
+
+                //  用await读取文件,避免嵌套
+                tmp = await (readFile(path.resolve(base, url)));
+
+                //  替换之前匹配的字符串
+                contents = contents.replace(item, `url(data:image/png;base64,${tmp.toString(&quot;base64&quot;)})`);
+            });
+
+            //  把文件内容转成buffer
+            file.contents = new Buffer(contents);
+
+            //  回调函数
+            cb(null, file);
+
+        })();
+    });
+
+};
+</code></pre><p>至此,一个简单的插件就实现了,当然,还有很多不足,比如对图片进行压缩,减少base64字符串的长度,用request模块处理对网络图片的引用等等。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。&lt;/
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+      <category term="Gulp" scheme="http://yoursite.com/categories/javascript/Gulp/"/>
+    
+      <category term="构建工具" scheme="http://yoursite.com/categories/javascript/Gulp/%E6%9E%84%E5%BB%BA%E5%B7%A5%E5%85%B7/"/>
+    
+    
+  </entry>
+  
+  <entry>
     <title>javascript模块化编程-同步模式</title>
     <link href="http://yoursite.com/2016/11/29/2016-11-23-js-sync-module-mode/"/>
     <id>http://yoursite.com/2016/11/29/2016-11-23-js-sync-module-mode/</id>
@@ -959,116 +1106,6 @@ module.define(&quot;PersonClass&quot;, [], () =&gt; {
       <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
     
       <category term="模块化" scheme="http://yoursite.com/categories/javascript/%E6%A8%A1%E5%9D%97%E5%8C%96/"/>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>Gulp插件的研究</title>
-    <link href="http://yoursite.com/2016/11/29/2016-11-29-gulp-plugin-tourial/"/>
-    <id>http://yoursite.com/2016/11/29/2016-11-29-gulp-plugin-tourial/</id>
-    <published>2016-11-28T16:00:00.000Z</published>
-    <updated>2017-03-30T12:19:21.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。</p>
-<p>今天研究了下gulp插件,写点心得体会吧。看了两个gulp插件源码,发现里面都引入了<a href="https://github.com/rvagg/through2" target="_blank" rel="external">through2</a>这个包,官方的说法就是”Node Stream的简单封装，目的是让链式流操作更加简单;”,就也照葫芦画瓢,引用了这个包,简单实现一个gulp插件,功能就是压缩css,并且把css中的”background: url(xxxx.png)”中的”xxxx.png”转换成base64编码的形式,减少http请求数。</p>
-<pre><code>&quot;use strict&quot;;
-
-const through = require(&quot;through2&quot;),
-    path = require(&quot;path&quot;),
-    fs = require(&quot;fs&quot;),
-
-    //  引用async/await,方便处理文件读写的异步操作
-    async = require(&quot;asyncawait&quot;).async,
-    await = require(&quot;asyncawait&quot;).await,
-
-    //  匹配url(../xxx.yyy)这种表达式
-    imgReg = /url\s*\((\s*[A-Za-z0-9\-\_\.\/\:]+\s*)\);?/gi,
-
-    //  将fs.readFile封装成Promise
-    readFile = (path) =&gt; {
-        return new Promise((resolve, reject) =&gt; {
-            fs.readFile(path, (ex, file) =&gt; {
-                if (ex) {
-                    reject(ex);
-                }
-                resolve(file);
-            });
-        });
-    };
-
-let base, contents, match, tmp, url;
-
-//  暴露出去的函数
-module.exports = (opt) =&gt; {
-
-    return through.obj(function(file, enc, cb) {
-
-        //  文件为空直接执行回调函数
-        if (file.isNull()) {
-            cb(null, file);
-        }
-
-        //  取得当前css的绝对路径
-        base = file.base;
-
-        //  匹配css中的无效字符,并且转换成buffer
-        file.contents = new Buffer(file._contents.toString()
-            //  去换行符
-            .replace(/\n/gm, &quot;&quot;)
-
-            //  去&quot;{&quot;之后到第一条样式间的空白字符
-            .replace(/\{\s+/g, &quot;{&quot;)
-
-            //  去&quot;;&quot;之后的空白字符
-            .replace(/\;\s+/g, &quot;;&quot;));
-
-        //  将文件内容转换成普通字符串并缓存
-        contents = file.contents.toString();
-
-        //  取得url(../../xxx.yyy),并且缓存
-        match = contents.match(imgReg);
-
-        //  async-await读取图片文件成base64编码
-        async(() =&gt; {
-
-            //  遍历之前的缓存项
-            match.forEach((item) =&gt; {
-
-                //  拼凑文件绝对路径
-                url = item.replace(&quot;url(&quot;, &quot;&quot;).replace(&quot;)&quot;, &quot;&quot;).trim();
-
-                //  用await读取文件,避免嵌套
-                tmp = await (readFile(path.resolve(base, url)));
-
-                //  替换之前匹配的字符串
-                contents = contents.replace(item, `url(data:image/png;base64,${tmp.toString(&quot;base64&quot;)})`);
-            });
-
-            //  把文件内容转成buffer
-            file.contents = new Buffer(contents);
-
-            //  回调函数
-            cb(null, file);
-
-        })();
-    });
-
-};
-</code></pre><p>至此,一个简单的插件就实现了,当然,还有很多不足,比如对图片进行压缩,减少base64字符串的长度,用request模块处理对网络图片的引用等等。</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。&lt;/
-    
-    </summary>
-    
-      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
-    
-      <category term="Gulp" scheme="http://yoursite.com/categories/javascript/Gulp/"/>
-    
-      <category term="构建工具" scheme="http://yoursite.com/categories/javascript/Gulp/%E6%9E%84%E5%BB%BA%E5%B7%A5%E5%85%B7/"/>
     
     
   </entry>
@@ -2703,114 +2740,6 @@ console.log(applyAdd(addArray,[1,2,3,4,5,6,7,8,9]));
       <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
     
       <category term="高阶函数" scheme="http://yoursite.com/categories/javascript/%E9%AB%98%E9%98%B6%E5%87%BD%E6%95%B0/"/>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>React Native自定义原生模块</title>
-    <link href="http://yoursite.com/2016/01/12/2016-01-12-expend-objectc/"/>
-    <id>http://yoursite.com/2016/01/12/2016-01-12-expend-objectc/</id>
-    <published>2016-01-11T16:00:00.000Z</published>
-    <updated>2017-03-30T12:19:21.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>现如今，越来越多的移动开发者选择用React Native来开发他们的app。虽然React Native提供了强大的API供我们调用，但是对于一些功能(比如第三方支付、文件上传之类的)，原生模块中并没有提供给我们相关的API，这时候就需要我们来自己封装一些东西来给js端调用。这边以ios端的为例来介绍。</p>
-<hr>
-<h6 id="模块配置表"><a href="#模块配置表" class="headerlink" title="模块配置表"></a>模块配置表</h6><p>在RN加载的时候，所有注册并且符合规范的模块都会被导出并且生成相应的模块数据类RCTModuleData，而模块数据中缓存了模块的对象实例，以及模块索引id。</p>
-<p>最后大概生成一个如下的模块配置表:</p>
-<pre><code>{
-    &quot;remoteModuleConfig&quot;: {
-        &quot;className&quot;: {
-            &quot;methods&quot;: {
-                &quot;method&quot;: {
-                    &quot;type&quot;: &quot;remote&quot;,
-                    &quot;methodID&quot;: 0
-                },
-                ...
-            },
-            &quot;moduleID&quot;: 4
-        },
-        ...
-     },
-}
-</code></pre><h6 id="通信流程"><a href="#通信流程" class="headerlink" title="通信流程"></a>通信流程</h6><p>先看一个js调用OC的下的方法走了哪些步骤:</p>
-<p><img src="/imgs/progress.jpg" alt=""></p>
-<p>1.JS端调用某个OC模块暴露出来的方法。</p>
-<p>2.把上一步的调用分解为ModuleName,MethodName,arguments，再扔给MessageQueue处理。</p>
-<p>3.在这一步把JS的callback函数缓存在MessageQueue的一个成员变量里，用CallbackID代表callback。在通过保存在MessageQueue的模块配置表把上一步传进来的ModuleName和MethodName转为ModuleID和MethodID。</p>
-<p>4.把上述步骤得到的ModuleID,MethodId,CallbackID和其他参数argus传给OC。至于具体是怎么传的，后面再说。</p>
-<p>5.OC接收到消息，通过模块配置表拿到对应的模块和方法。</p>
-<p>6.RCTModuleMethod对JS传过来的每一个参数进行处理。</p>
-<p>7.OC模块方法调用完，执行block回调。</p>
-<p>8.调用到第6步说明的RCTModuleMethod生成的block。</p>
-<p>9.block里带着CallbackID和block传过来的参数去调JS里MessageQueue的方法invokeCallbackAndReturnFlushedQueue。</p>
-<p>10.MessageQueue通过CallbackID找到相应的JS callback方法。</p>
-<p>11.调用callback方法，并把OC带过来的参数一起传过去，完成回调。</p>
-<p>整个流程就是这样，简单概括下，差不多就是：JS函数调用转ModuleID/MethodID -&gt; callback转CallbackID -&gt; OC根据ID拿到方法 -&gt; 处理参数 -&gt; 调用OC方法 -&gt; 回调CallbackID -&gt; JS通过CallbackID拿到callback执行</p>
-<p>下面就简单分享一个从OC暴露方法到JS端调用的例子：</p>
-<pre><code>// OC(RCTDeviceExtension.m)
-
-#import &quot;RCTBridgeModule.h&quot;
-#import &quot;RCTUtils.h&quot;
-//  RCTScreenSize用到
-
-@interface RCTDeviceExtension : NSObject &lt;RCTBridgeModule&gt;
-
-@end
-
-@implementation RCTDeviceExtension
-
-RCT_EXPORT_MODULE();
-//  暴露一个模块
-
-/**
-  获取设备的相关信息
- **/
-static NSDictionary *DynamicDimesions(){
-  CGFloat width = MIN(RCTScreenSize().width,RCTScreenSize().height);
-  //  宽
-  CGFloat height = MAX(RCTScreenSize().width,RCTScreenSize().height);
-  //  高
-  CGFloat scale = RCTScreenScale();
-  //  像素密度
-
-  if(UIDeviceOrientationIsLandscape([UIDevice currentDevice].orientation)){
-    width = MAX(RCTScreenSize().width,RCTScreenSize().height);
-    height = MIN(RCTScreenSize().width,RCTScreenSize().height);
-  }
-
-  return @{
-            @&quot;width&quot;:@(width),
-            @&quot;height&quot;:@(height),
-            @&quot;scale&quot;:@(scale)
-           };
-  //  在回调方法中作为一个对象,有width,height,scale属性
-
-}
-
-RCT_EXPORT_METHOD(getDeviceInfo:(RCTResponseSenderBlock)callback){
-  callback(@[[NSNull null],DynamicDimesions()]);
-};
-//  暴露方法
-
-@end
-</code></pre><p>这里OC暴露一个类,DeviceExtension(RCTDeviceExtension被编译成DeviceExtension)，在JS端，我们就可以通过如下方式来调用相关方法。</p>
-<pre><code>var DeviceExtension = require(&quot;NativeModules&quot;).DeviceExtension;
-//  require(&quot;NativeModules&quot;)用来加载原生模块(包括自定义模块)
-
-DeviceExtension.getDeviceInfo(function(err,info){
-  console.log(info);
-});
-</code></pre><p>这样我们的自定义API就实现了，后面如果再有更复杂的功能的时候，思路都是一样的，只不过步骤会更繁杂一些。</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;现如今，越来越多的移动开发者选择用React Native来开发他们的app。虽然React Native提供了强大的API供我们调用，但是对于一些功能(比如第三方支付、文件上传之类的)，原生模块中并没有提供给我们相关的API，这时候就需要我们来自己封装一些东西来给js端调
-    
-    </summary>
-    
-      <category term="React" scheme="http://yoursite.com/categories/React/"/>
     
     
   </entry>
