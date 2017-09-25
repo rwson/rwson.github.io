@@ -204,6 +204,50 @@
   </entry>
   
   <entry>
+    <title>实现一个new函数</title>
+    <link href="http://yoursite.com/2017/04/20/2017-04-20-write-a-new-operator/"/>
+    <id>http://yoursite.com/2017/04/20/2017-04-20-write-a-new-operator/</id>
+    <published>2017-04-19T16:00:00.000Z</published>
+    <updated>2017-09-25T02:50:28.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在日常javaScript开发中，我们多多少少都会用到<code>new</code>，最常见的比如<code>new Date</code>等等，在一些<code>js</code>面向对象中，用到<code>new</code>的地方更多了，比如我们通过<code>function</code>来模拟声明一个类，需要实例化的时候就需要用<code>new xxx()</code>:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">Class</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    <span class="comment">//	...</span></div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="keyword">var</span> inst = <span class="keyword">new</span> Class();</div></pre></td></tr></table></figure>
+<p>在<a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Operators/new" target="_blank" rel="external">MDN</a>上对在执行了<code>new</code>之后的介绍如下:</p>
+<ul>
+<li>一个新对象被创建。它继承自<code>*foo*.prototype</code></li>
+<li>构造函数 <code>*foo*</code> 被执行。执行的时候，相应的传参会被传入，同时上下文(<code>this)会被指定为这个新实例。``new *foo*</code> 等同于 <code>new *foo*()</code>, 只能用在不传递任何参数的情况。</li>
+<li>如果构造函数返回了一个“对象”，那么这个对象会取代整个<code>new</code>出来的结果。如果构造函数没有返回对象，那么<code>new</code>出来的结果为步骤1创建的对象。(一般情况下构造函数不返回任何值，不过用户如果想覆盖这个返回值，可以自己选择返回一个普通对象来覆盖。当然，返回数组也会覆盖，因为数组也是对象。)</li>
+</ul>
+<p>在知道了<code>new</code>之后发生的事情，我们的<code>_new</code>函数就可以按照上面的几个步骤来：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">_new</span>(<span class="params"></span>) </span>&#123;</div><div class="line">  		<span class="comment">//	获取到所有参数</span></div><div class="line">	<span class="keyword">var</span> args = [].slice.call(<span class="built_in">arguments</span>),</div><div class="line">        <span class="comment">//	创建一个空对象</span></div><div class="line">		obj = <span class="built_in">Object</span>.create(&#123;&#125;),</div><div class="line">        <span class="comment">//	把第一个参数作为构造器</span></div><div class="line">		Constructor = args[<span class="number">0</span>],</div><div class="line">		res;</div><div class="line">  	<span class="comment">//	继承构造器下的原型</span></div><div class="line">	obj.__proto__ = args[<span class="number">0</span>].prototype;</div><div class="line">  	<span class="comment">//	执行构造器，并传入相关参数</span></div><div class="line">	res = Constructor.apply(obj, args.slice(<span class="number">1</span>));</div><div class="line">    <span class="keyword">return</span> obj;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>上面是第一版，我们把构造器的执行结果作为返回值返回出去，下面我们一起写个模拟类测试下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">Class</span>(<span class="params">name, age</span>) </span>&#123;</div><div class="line">	<span class="keyword">this</span>.name = name;</div><div class="line">	<span class="keyword">this</span>.age = age;</div><div class="line">&#125;</div><div class="line"></div><div class="line">Class.prototype = &#123;</div><div class="line">	<span class="attr">constructor</span>: Class,</div><div class="line">	<span class="attr">method</span>: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</div><div class="line">		<span class="built_in">console</span>.log(<span class="string">"I'm method under Class.prototype"</span>);</div><div class="line">	&#125;</div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="keyword">var</span> inst = _new(Class, <span class="string">"rwson"</span>, <span class="number">24</span>);</div><div class="line">inst.method();</div><div class="line"><span class="built_in">console</span>.log(inst);</div></pre></td></tr></table></figure>
+<p>可以看到在控制台打出的类似下图的东西</p>
+<p><img src="/imgs/new-1.png" alt="new-1"></p>
+<p>我们现在实现了一个版本，只是把在<code>_new</code>方法中的<code>obj</code>对象返回出来了，刚才上面第三步骤说到，<code>如果构造函数返回了一个“对象”，那么这个对象会取代整个</code>new<code>出来的结果。如果构造函数没有返回对象，那么</code>new<code>出来的结果为步骤1创建的对象。(一般情况下构造函数不返回任何值，不过用户如果想覆盖这个返回值，可以自己选择返回一个普通对象来覆盖。当然，返回数组也会覆盖，因为数组也是对象。)</code>，针对构造函数有返回值的情况，我们需要把该返回值返回，下面我们把之前的代码改改，以适配有返回值的情况：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">_new</span>(<span class="params"></span>) </span>&#123;</div><div class="line">	<span class="keyword">var</span> args = [].slice.call(<span class="built_in">arguments</span>),</div><div class="line">		obj = <span class="built_in">Object</span>.create(&#123;&#125;),</div><div class="line">		Constructor = args[<span class="number">0</span>],</div><div class="line">		res;</div><div class="line">	obj.__proto__ = args[<span class="number">0</span>].prototype;</div><div class="line">	res = Constructor.apply(obj, args.slice(<span class="number">1</span>));</div><div class="line">  </div><div class="line">  	<span class="comment">//	判断Constructor的返回值类型</span></div><div class="line">    <span class="keyword">return</span> <span class="keyword">typeof</span> res === <span class="string">"object"</span> ? res : obj;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>同样我们写个类做测试</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">Class</span>(<span class="params">name, age</span>) </span>&#123;</div><div class="line">	<span class="keyword">this</span>.name = name;</div><div class="line">	<span class="keyword">this</span>.age = age;</div><div class="line">    <span class="keyword">return</span> &#123;</div><div class="line">       <span class="attr">name</span>: name,</div><div class="line">       <span class="attr">age</span>: age</div><div class="line">	&#125;;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="keyword">var</span> inst = _new(Class, <span class="string">"rwson"</span>, <span class="number">24</span>);</div><div class="line"><span class="built_in">console</span>.log(inst);</div></pre></td></tr></table></figure>
+<p>观察在控制台的输出应该和下面的类似：</p>
+<p><img src="/imgs/new-2.png" alt="new-2"></p>
+<p>到这里我们的<code>_new</code>方法就实现了，但是由于<code>Object.create</code>的原因，在<code>IE9-</code>的版本中可能不太支持，所以我们需要把<code>Object.create</code>改成<code>new Object</code></p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">_new</span>(<span class="params"></span>) </span>&#123;</div><div class="line">	<span class="keyword">var</span> args = [].slice.call(<span class="built_in">arguments</span>),</div><div class="line">		obj = <span class="keyword">new</span> <span class="built_in">Object</span>(&#123;&#125;),</div><div class="line">		Constructor = args[<span class="number">0</span>],</div><div class="line">		res;</div><div class="line">	obj.__proto__ = args[<span class="number">0</span>].prototype;</div><div class="line">	res = Constructor.apply(obj, args.slice(<span class="number">1</span>));</div><div class="line">  </div><div class="line">  	<span class="comment">//	判断Constructor的返回值类型</span></div><div class="line">    <span class="keyword">return</span> <span class="keyword">typeof</span> res === <span class="string">"object"</span> ? res : obj;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在日常javaScript开发中，我们多多少少都会用到&lt;code&gt;new&lt;/code&gt;，最常见的比如&lt;code&gt;new Date&lt;/code&gt;等等，在一些&lt;code&gt;js&lt;/code&gt;面向对象中，用到&lt;code&gt;new&lt;/code&gt;的地方更多了，比如我们通过&lt;code&gt;fu
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+      <category term="new操作符" scheme="http://yoursite.com/categories/javascript/new%E6%93%8D%E4%BD%9C%E7%AC%A6/"/>
+    
+    
+  </entry>
+  
+  <entry>
     <title>NodeJs读取windows注册表来对软件进行卸载</title>
     <link href="http://yoursite.com/2017/03/29/2017-03-29-node-read-regedit-uninstall-software/"/>
     <id>http://yoursite.com/2017/03/29/2017-03-29-node-read-regedit-uninstall-software/</id>
@@ -966,6 +1010,116 @@ window.onload = () =&gt; {
   </entry>
   
   <entry>
+    <title>Gulp插件的研究</title>
+    <link href="http://yoursite.com/2016/11/29/2016-11-29-gulp-plugin-tourial/"/>
+    <id>http://yoursite.com/2016/11/29/2016-11-29-gulp-plugin-tourial/</id>
+    <published>2016-11-28T16:00:00.000Z</published>
+    <updated>2017-03-30T12:19:21.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。</p>
+<p>今天研究了下gulp插件,写点心得体会吧。看了两个gulp插件源码,发现里面都引入了<a href="https://github.com/rvagg/through2" target="_blank" rel="external">through2</a>这个包,官方的说法就是”Node Stream的简单封装，目的是让链式流操作更加简单;”,就也照葫芦画瓢,引用了这个包,简单实现一个gulp插件,功能就是压缩css,并且把css中的”background: url(xxxx.png)”中的”xxxx.png”转换成base64编码的形式,减少http请求数。</p>
+<pre><code>&quot;use strict&quot;;
+
+const through = require(&quot;through2&quot;),
+    path = require(&quot;path&quot;),
+    fs = require(&quot;fs&quot;),
+
+    //  引用async/await,方便处理文件读写的异步操作
+    async = require(&quot;asyncawait&quot;).async,
+    await = require(&quot;asyncawait&quot;).await,
+
+    //  匹配url(../xxx.yyy)这种表达式
+    imgReg = /url\s*\((\s*[A-Za-z0-9\-\_\.\/\:]+\s*)\);?/gi,
+
+    //  将fs.readFile封装成Promise
+    readFile = (path) =&gt; {
+        return new Promise((resolve, reject) =&gt; {
+            fs.readFile(path, (ex, file) =&gt; {
+                if (ex) {
+                    reject(ex);
+                }
+                resolve(file);
+            });
+        });
+    };
+
+let base, contents, match, tmp, url;
+
+//  暴露出去的函数
+module.exports = (opt) =&gt; {
+
+    return through.obj(function(file, enc, cb) {
+
+        //  文件为空直接执行回调函数
+        if (file.isNull()) {
+            cb(null, file);
+        }
+
+        //  取得当前css的绝对路径
+        base = file.base;
+
+        //  匹配css中的无效字符,并且转换成buffer
+        file.contents = new Buffer(file._contents.toString()
+            //  去换行符
+            .replace(/\n/gm, &quot;&quot;)
+
+            //  去&quot;{&quot;之后到第一条样式间的空白字符
+            .replace(/\{\s+/g, &quot;{&quot;)
+
+            //  去&quot;;&quot;之后的空白字符
+            .replace(/\;\s+/g, &quot;;&quot;));
+
+        //  将文件内容转换成普通字符串并缓存
+        contents = file.contents.toString();
+
+        //  取得url(../../xxx.yyy),并且缓存
+        match = contents.match(imgReg);
+
+        //  async-await读取图片文件成base64编码
+        async(() =&gt; {
+
+            //  遍历之前的缓存项
+            match.forEach((item) =&gt; {
+
+                //  拼凑文件绝对路径
+                url = item.replace(&quot;url(&quot;, &quot;&quot;).replace(&quot;)&quot;, &quot;&quot;).trim();
+
+                //  用await读取文件,避免嵌套
+                tmp = await (readFile(path.resolve(base, url)));
+
+                //  替换之前匹配的字符串
+                contents = contents.replace(item, `url(data:image/png;base64,${tmp.toString(&quot;base64&quot;)})`);
+            });
+
+            //  把文件内容转成buffer
+            file.contents = new Buffer(contents);
+
+            //  回调函数
+            cb(null, file);
+
+        })();
+    });
+
+};
+</code></pre><p>至此,一个简单的插件就实现了,当然,还有很多不足,比如对图片进行压缩,减少base64字符串的长度,用request模块处理对网络图片的引用等等。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。&lt;/
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+      <category term="Gulp" scheme="http://yoursite.com/categories/javascript/Gulp/"/>
+    
+      <category term="构建工具" scheme="http://yoursite.com/categories/javascript/Gulp/%E6%9E%84%E5%BB%BA%E5%B7%A5%E5%85%B7/"/>
+    
+    
+  </entry>
+  
+  <entry>
     <title>javascript模块化编程-同步模式</title>
     <link href="http://yoursite.com/2016/11/29/2016-11-23-js-sync-module-mode/"/>
     <id>http://yoursite.com/2016/11/29/2016-11-23-js-sync-module-mode/</id>
@@ -1124,121 +1278,11 @@ module.define(&quot;PersonClass&quot;, [], () =&gt; {
   </entry>
   
   <entry>
-    <title>Gulp插件的研究</title>
-    <link href="http://yoursite.com/2016/11/29/2016-11-29-gulp-plugin-tourial/"/>
-    <id>http://yoursite.com/2016/11/29/2016-11-29-gulp-plugin-tourial/</id>
-    <published>2016-11-28T16:00:00.000Z</published>
-    <updated>2017-03-30T12:19:21.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。</p>
-<p>今天研究了下gulp插件,写点心得体会吧。看了两个gulp插件源码,发现里面都引入了<a href="https://github.com/rvagg/through2" target="_blank" rel="external">through2</a>这个包,官方的说法就是”Node Stream的简单封装，目的是让链式流操作更加简单;”,就也照葫芦画瓢,引用了这个包,简单实现一个gulp插件,功能就是压缩css,并且把css中的”background: url(xxxx.png)”中的”xxxx.png”转换成base64编码的形式,减少http请求数。</p>
-<pre><code>&quot;use strict&quot;;
-
-const through = require(&quot;through2&quot;),
-    path = require(&quot;path&quot;),
-    fs = require(&quot;fs&quot;),
-
-    //  引用async/await,方便处理文件读写的异步操作
-    async = require(&quot;asyncawait&quot;).async,
-    await = require(&quot;asyncawait&quot;).await,
-
-    //  匹配url(../xxx.yyy)这种表达式
-    imgReg = /url\s*\((\s*[A-Za-z0-9\-\_\.\/\:]+\s*)\);?/gi,
-
-    //  将fs.readFile封装成Promise
-    readFile = (path) =&gt; {
-        return new Promise((resolve, reject) =&gt; {
-            fs.readFile(path, (ex, file) =&gt; {
-                if (ex) {
-                    reject(ex);
-                }
-                resolve(file);
-            });
-        });
-    };
-
-let base, contents, match, tmp, url;
-
-//  暴露出去的函数
-module.exports = (opt) =&gt; {
-
-    return through.obj(function(file, enc, cb) {
-
-        //  文件为空直接执行回调函数
-        if (file.isNull()) {
-            cb(null, file);
-        }
-
-        //  取得当前css的绝对路径
-        base = file.base;
-
-        //  匹配css中的无效字符,并且转换成buffer
-        file.contents = new Buffer(file._contents.toString()
-            //  去换行符
-            .replace(/\n/gm, &quot;&quot;)
-
-            //  去&quot;{&quot;之后到第一条样式间的空白字符
-            .replace(/\{\s+/g, &quot;{&quot;)
-
-            //  去&quot;;&quot;之后的空白字符
-            .replace(/\;\s+/g, &quot;;&quot;));
-
-        //  将文件内容转换成普通字符串并缓存
-        contents = file.contents.toString();
-
-        //  取得url(../../xxx.yyy),并且缓存
-        match = contents.match(imgReg);
-
-        //  async-await读取图片文件成base64编码
-        async(() =&gt; {
-
-            //  遍历之前的缓存项
-            match.forEach((item) =&gt; {
-
-                //  拼凑文件绝对路径
-                url = item.replace(&quot;url(&quot;, &quot;&quot;).replace(&quot;)&quot;, &quot;&quot;).trim();
-
-                //  用await读取文件,避免嵌套
-                tmp = await (readFile(path.resolve(base, url)));
-
-                //  替换之前匹配的字符串
-                contents = contents.replace(item, `url(data:image/png;base64,${tmp.toString(&quot;base64&quot;)})`);
-            });
-
-            //  把文件内容转成buffer
-            file.contents = new Buffer(contents);
-
-            //  回调函数
-            cb(null, file);
-
-        })();
-    });
-
-};
-</code></pre><p>至此,一个简单的插件就实现了,当然,还有很多不足,比如对图片进行压缩,减少base64字符串的长度,用request模块处理对网络图片的引用等等。</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。&lt;/
-    
-    </summary>
-    
-      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
-    
-      <category term="Gulp" scheme="http://yoursite.com/categories/javascript/Gulp/"/>
-    
-      <category term="构建工具" scheme="http://yoursite.com/categories/javascript/Gulp/%E6%9E%84%E5%BB%BA%E5%B7%A5%E5%85%B7/"/>
-    
-    
-  </entry>
-  
-  <entry>
     <title>一起写一个npm命令行工具</title>
     <link href="http://yoursite.com/2016/11/20/2016-11-20-write-a-client/"/>
     <id>http://yoursite.com/2016/11/20/2016-11-20-write-a-client/</id>
     <published>2016-11-19T16:00:00.000Z</published>
-    <updated>2017-09-22T02:47:20.000Z</updated>
+    <updated>2017-09-22T03:17:53.000Z</updated>
     
     <content type="html"><![CDATA[<p>自从nodejs问世之后，随着前端不断的发展，出现过很多的命令行工具，就比如前端构建工具，从最开始的<code>grunt</code>，再到<code>gulp</code>，然后到现在的<code>webpack</code>等等，它们都有自己的命令行，接下来我们一起分析并实现一个简单的命令行工具</p>
 <p>首先需要建一个目录，在这里我们暂且叫<code>cli-starter</code></p>
@@ -2426,184 +2470,6 @@ root.MVVM = MVVM;
       <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
     
       <category term="MVVM" scheme="http://yoursite.com/categories/javascript/MVVM/"/>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>ES6中的Promise</title>
-    <link href="http://yoursite.com/2016/05/04/2016-05-04-es6-promise/"/>
-    <id>http://yoursite.com/2016/05/04/2016-05-04-es6-promise/</id>
-    <published>2016-05-03T16:00:00.000Z</published>
-    <updated>2017-03-30T12:19:21.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>在执行一些异步操作(典型的有JavaScript中的ajax/NodeJs中读取文件等等)的时候,我们不知道该操作什么时候完成,所以就需要在不同的时候写上回调,等到有返回的时候,再执行下一步操作,下面就用jQuery中的一个ajax来做示例:</p>
-<pre><code>$.ajax({
-    &quot;url&quot;: &quot;xxx&quot;,
-    &quot;type&quot;: &quot;GET&quot;,
-    &quot;dataType&quot;: &quot;&quot;JSON,
-    &quot;success&quot;: function(res){},
-    &quot;error&quot;: function(ex){
-        //  do some thing
-    }
-});
-</code></pre><p>最基础的一个ajax示例,当我们有多个ajax嵌套请求的时候,就中了所谓的”回调地狱”,类似于下面的写法:</p>
-<pre><code>$.ajax({
-    //  some configs
-    &quot;success&quot;: function(res){
-        $.ajax({
-            //  ...
-            &quot;success&quot;: function(res){
-                $.ajax({
-                    //  ...
-                    &quot;success&quot;:function(res){
-                        .
-                        .
-                        .
-                    }
-                });
-            }
-        });
-    }
-});
-</code></pre><p>一层套着一层,代码可读性很差,且不容易后期的维护</p>
-<p>这时候就需要一个比前者好的解决方案来解决该问题,ES6中的Promise一定程度上解决了该问题:</p>
-<p>我们可以利用Promise对ajax进行一层封装</p>
-<pre><code>function _ajax(url, method, args) {
-    let promise = new Promise((resolve, reject) =&gt; {
-
-        let client = new XMLHttpRequest();
-        let uri = url;
-
-        if (args &amp;&amp; (method == &quot;POST&quot; || method == &quot;PUT&quot;)) {
-            let argcount = 0;
-            uri += &quot;?&quot;;
-            for (var key in args) {
-                if (args.hasOwnProperty(key)) {
-                    if (argcount++) {
-                        uri += &apos;&amp;&apos;;
-                    }
-                    uri += encodeURIComponent(key) + &apos;=&apos; + encodeURIComponent(args[key]);
-                }
-            }
-        }
-
-        client.open(method, uri);
-        client.send();
-
-        client.onload = function() {
-            if (this.status &gt;= 200 &amp;&amp; this.status &lt; 300) {
-                resolve(this.response);
-            } else {
-                reject(this.statusText);
-            }
-        };
-        client.onerror = function() {
-            reject(this.statusText);
-        };
-
-    });
-
-    return promise;
-}
-
-let core = {
-
-    &quot;GET&quot;: function(args) {
-        return _ajax(url, &quot;GET&quot;, args);
-    },
-
-    &quot;POST&quot;: function(args) {
-        return _ajax(url, &quot;POST&quot;, args);
-    },
-
-    &quot;PUT&quot;: function(args) {
-        return _ajax(url, &quot;PUT&quot;, args);
-    },
-
-    &quot;DELETE&quot;: function(args) {
-        return _ajax(url, &quot;DELETE&quot;, args);
-    }
-
-};
-</code></pre><p>上面这段代码是JavaScript MDN上的代码(可能稍微有点改动),它对ajax进行了一层封装,经过这层封装,我们可以像下面这样写一些异步代码:</p>
-<pre><code>$http(&quot;xxx&quot;)
-.GET()
-.then((data) =&gt; {
-
-    //  do something
-
-    $http(&quot;xxx2&quot;)
-    .GET()
-    .then((data) =&gt; {
-
-        //  do something
-
-        $http(&quot;xxx3&quot;)
-        .GET({&quot;key&quot;,&quot;value&quot;})
-        .then((data) =&gt; {
-            //  do something...
-        })
-
-
-    },(ex) =&gt; {});
-
-})
-.catch((ex) =&gt; {});
-</code></pre><p>虽然还有嵌套,但是代码看起来已经舒服了很多。</p>
-<p>Promise是一个异步编程的抽象,它是一个返回值或抛出exception的代理对象,一般promise对象都有一个then方法,这个then方法是我们如何获得返回值(成功实现承诺的结果值,称为fulfillment)或抛出exception(拒绝承诺的理由,称为rejection)，then是用两个可选的回调作为参数,我们可以称为onFulfilled和OnRejected,也可以把OnRejected写在catch里面</p>
-<p>所以一个Promise一共有下面几个状态</p>
-<ol>
-<li>pending待承诺 - promise初始状态</li>
-<li>fulfilled实现承诺 - 一个承诺成功实现状态</li>
-<li>rejected拒绝承诺 - 一个承诺失败的状态</li>
-</ol>
-<p>再来个NodeJs中读取文件的例子:</p>
-<pre><code>function readFile(path) {
-    var fs = require(&quot;fs&quot;);
-    var prromise = new Promise((resolve, reject) =&gt; {
-        fs.readdir(path, (ex, files) =&gt; {
-            if (ex) {
-                return reject(ex);
-            }
-            return resolve(files);
-        });
-    });
-
-    return prromise;
-}
-
-readFile(config.avatarPath + &quot;1&quot;).then((files) =&gt; {
-    //  do some thing
-    console.log(files);
-}).catch((ex) =&gt; {
-    //  do something...
-    console.log(ex);
-});
-</code></pre><p>如果不用Promise和一些ES6的特性,上面的代码应该看起来是下面的这样子:</p>
-<pre><code>var fs = require(&quot;fs&quot;);
-fs.readdir(path, function (ex, files) {
-    if (ex) {
-        //  do something
-        return console.log();
-    }
-
-    //  do some thing
-    console.log(files);
-});
-</code></pre><p>代码量可能更少,但是陷入”回调地狱”的可能就更大了,在ES7中,又新增了async/await特性来针对异步操作的,后面介绍😄</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;在执行一些异步操作(典型的有JavaScript中的ajax/NodeJs中读取文件等等)的时候,我们不知道该操作什么时候完成,所以就需要在不同的时候写上回调,等到有返回的时候,再执行下一步操作,下面就用jQuery中的一个ajax来做示例:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;
-    
-    </summary>
-    
-      <category term="ES6" scheme="http://yoursite.com/categories/ES6/"/>
-    
-      <category term="Promise" scheme="http://yoursite.com/categories/ES6/Promise/"/>
     
     
   </entry>
