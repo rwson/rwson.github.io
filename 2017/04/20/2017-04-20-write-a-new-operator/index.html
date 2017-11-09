@@ -3,7 +3,7 @@
 <p>在<a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Operators/new" target="_blank" rel="external">MDN</a>上对在执行了<code>new</code>之后的介绍如下:</p>
 <ul>
 <li>一个新对象被创建。它继承自<code>*foo*.prototype</code></li>
-<li>构造函数 <code>*foo*</code> 被执行。执行的时候，相应的传参会被传入，同时上下文(<code>this)会被指定为这个新实例。``new *foo*</code> 等同于 <code>new *foo*()</code>, 只能用在不传递任何参数的情况。</li>
+<li>构造函数 <code>*foo*</code> 被执行。执行的时候，相应的传参会被传入，同时上下文会被指定为这个新实例。<code>new *foo*</code> 等同于 <code>new *foo*()</code>, 只能用在不传递任何参数的情况。</li>
 <li>如果构造函数返回了一个“对象”，那么这个对象会取代整个<code>new</code>出来的结果。如果构造函数没有返回对象，那么<code>new</code>出来的结果为步骤1创建的对象。(一般情况下构造函数不返回任何值，不过用户如果想覆盖这个返回值，可以自己选择返回一个普通对象来覆盖。当然，返回数组也会覆盖，因为数组也是对象。)</li>
 </ul>
 <p>在知道了<code>new</code>之后发生的事情，我们的<code>_new</code>函数就可以按照上面的几个步骤来：</p>
