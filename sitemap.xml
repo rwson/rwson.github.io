@@ -2,6 +2,20 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://yoursite.com/2020/03/26/2020-03-26-read-npm/</loc>
+    
+    <lastmod>2020-03-27T03:03:25.872Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/2019/09/28/2020-03-26-read-npm-1/</loc>
+    
+    <lastmod>2020-03-26T01:33:03.939Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://yoursite.com/2019/09/28/2019-09-28-react-binding-events-with-arguments/</loc>
     
     <lastmod>2019-09-28T12:34:56.000Z</lastmod>
