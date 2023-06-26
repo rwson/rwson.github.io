@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>ES6 on rwson</title>
+    <link>/categories/es6/</link>
+    <description>Recent content in ES6 on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Sun, 10 Jul 2016 00:00:00 +0000</lastBuildDate><atom:link href="/categories/es6/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>fetch中的Timeout</title>
+      <link>/post/2016-07-10-fetch-timeout/</link>
+      <pubDate>Sun, 10 Jul 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-07-10-fetch-timeout/</guid>
+      <description>随着ES6的普及,fetch已经渐渐取代了普通ajax在异步请求中的位置,以前在用jQuery中的ajax时,可以指定一个timeout属性,设置该请求的超时时间,但是原生的fetch并不支持该属性,如果遇到遇到一个请求一直pedding状态,就只能干等着,什么也干不了。由于fetch本身在被初始化后返回一个Promise对象,我们就可以对其再包一层Promise来实现在fetch请求中加入timeout的功能。
+先来看下fetch的基本用法:
+fetch(&amp;quot;some url&amp;quot;, { &amp;quot;method&amp;quot;: &amp;quot;POST&amp;quot;, &amp;quot;body&amp;quot;: JSON.stringify({ &amp;quot;key&amp;quot;: &amp;quot;value&amp;quot;, &amp;quot;arr&amp;quot;: [1,2,3] }), ... }) // parse response to JSON object .then((res) =&amp;gt; res.json()) .then((res) =&amp;gt; { // success dome something }) .catch((ex) =&amp;gt; { // exception occurded });  在Promise中有个静态方法,叫Promise.race(),该方法接受一个数组作为参数,数组中的每个元素都是一个Promise的实例,大致用法如下:
+let promise1 = new Promise((resoleve, reject) =&amp;gt; { // do something }); let promise2 = new Promise((resoleve, reject) =&amp;gt; { // do something }); // ... let race = Promise.</description>
+    </item>
+    
+    <item>
+      <title>ES6中的Promise</title>
+      <link>/post/2016-05-04-es6-promise/</link>
+      <pubDate>Wed, 04 May 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-05-04-es6-promise/</guid>
+      <description>在执行一些异步操作(典型的有JavaScript中的ajax/NodeJs中读取文件等等)的时候,我们不知道该操作什么时候完成,所以就需要在不同的时候写上回调,等到有返回的时候,再执行下一步操作,下面就用jQuery中的一个ajax来做示例:
+$.ajax({ &amp;quot;url&amp;quot;: &amp;quot;xxx&amp;quot;, &amp;quot;type&amp;quot;: &amp;quot;GET&amp;quot;, &amp;quot;dataType&amp;quot;: &amp;quot;&amp;quot;JSON, &amp;quot;success&amp;quot;: function(res){}, &amp;quot;error&amp;quot;: function(ex){ // do some thing } });  最基础的一个ajax示例,当我们有多个ajax嵌套请求的时候,就中了所谓的&amp;quot;回调地狱&amp;quot;,类似于下面的写法:
+$.ajax({ // some configs &amp;quot;success&amp;quot;: function(res){ $.ajax({ // ... &amp;quot;success&amp;quot;: function(res){ $.ajax({ // ... &amp;quot;success&amp;quot;:function(res){ . . . } }); } }); } });  一层套着一层,代码可读性很差,且不容易后期的维护
+这时候就需要一个比前者好的解决方案来解决该问题,ES6中的Promise一定程度上解决了该问题:
+我们可以利用Promise对ajax进行一层封装
+function _ajax(url, method, args) { let promise = new Promise((resolve, reject) =&amp;gt; { let client = new XMLHttpRequest(); let uri = url; if (args &amp;amp;&amp;amp; (method == &amp;quot;POST&amp;quot; || method == &amp;quot;PUT&amp;quot;)) { let argcount = 0; uri += &amp;quot;?</description>
+    </item>
+    
+  </channel>
+</rss>

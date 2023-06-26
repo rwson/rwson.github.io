@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>javascript适配器模式 - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="适配器模式:
+适配器,顾名思义,我们生活中能见到很多这样的例子,举个最简单的例子吧: 我现在有一台老台式机电脑和刚买的新式电脑,我们都知道,老台式机上的插口都是圆口(F32型插口),而新式电脑上的都是USB插口,假如我现在想在新式电脑上用老式电脑上的那个鼠标,但是插口又不一样,那怎么办呢？我们现在就需要一个转换器来中转,这个转换器就完成了完成由老到新的转换功能。
+再举个实际开发中可能会遇到情况:比如公司新进一批前端,然后公司急于做一个项目,需要这几个前端一起参与才能按时交工,但是这几个前端里面有的会prototype.js不会YUI,然后有的会YUI不会prototype.js,而产品经理最后说采取YUI,由于项目时间比较紧,所以没那么大的成本来给他们把这两个库都培训一遍,这时候问题来了,怎么样让这些人都参与到开发中来呢？且看下面的模拟:
+我们来模拟一个最简单的选择器
+// 模拟prototype $ function(不需要传递任何的形参,直接通过arguments对象取得传入的实参) function $(){ var ele = []; for(var i = 0;i &lt; arguments.length;i &#43;&#43;){ var el = arguments[i]; if(typeof el === &quot;string&quot;){ el = document.getElementById(el); } if(el.length == 1){ return el; } ele.push(el); } return ele; } // 模拟YUI中的get (必须传递一个参数,不是字符串就是数组) var YAHOO = {}; YAHOO.get = function(el){ if(typeof el === &quot;string&quot;){ return document.getElementById(el); }else if(el instanceof Array){ var ele = []; for(var i = 0;i &lt; el." />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">javascript适配器模式</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Jun 13, 2015</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p>适配器模式:</p>
+<p>适配器,顾名思义,我们生活中能见到很多这样的例子,举个最简单的例子吧:
+我现在有一台老台式机电脑和刚买的新式电脑,我们都知道,老台式机上的插口都是圆口(F32型插口),而新式电脑上的都是USB插口,假如我现在想在新式电脑上用老式电脑上的那个鼠标,但是插口又不一样,那怎么办呢？我们现在就需要一个转换器来中转,这个转换器就完成了完成由老到新的转换功能。</p>
+<p>再举个实际开发中可能会遇到情况:比如公司新进一批前端,然后公司急于做一个项目,需要这几个前端一起参与才能按时交工,但是这几个前端里面有的会prototype.js不会YUI,然后有的会YUI不会prototype.js,而产品经理最后说采取YUI,由于项目时间比较紧,所以没那么大的成本来给他们把这两个库都培训一遍,这时候问题来了,怎么样让这些人都参与到开发中来呢？且看下面的模拟:</p>
+<p>我们来模拟一个最简单的选择器</p>
+<pre><code>//  模拟prototype $ function(不需要传递任何的形参,直接通过arguments对象取得传入的实参)
+function $(){
+    var ele = [];
+    for(var i = 0;i &lt; arguments.length;i ++){
+        var el = arguments[i];
+        if(typeof el === &quot;string&quot;){
+            el = document.getElementById(el);
+        }
+        if(el.length == 1){
+            return el;
+        }
+        ele.push(el);
+    }
+    return ele;
+}
+
+//  模拟YUI中的get (必须传递一个参数,不是字符串就是数组)
+var YAHOO = {};
+YAHOO.get = function(el){
+    if(typeof el === &quot;string&quot;){
+        return document.getElementById(el);
+    }else if(el instanceof Array){
+        var ele = [];
+        for(var i = 0;i &lt; el.length;i ++){
+              ele[ele.length] = YAHOO.get(el[i]);
+        }
+        return ele;
+    }else if(el){
+        return el;
+    }else{
+        return null;
+    }
+};
+
+//  适配器方法
+    function YUIToPrototypeAdapter(){
+        //  YUI开发永远传递一个参数
+        if(arguments.length == 1){
+            //  YUI方案
+            var e = arguments[0];
+            return $.apply(window,e instanceof  Array ? e : new Array(e));
+        }else{
+            //  prototype处理方案
+            return $.apply(window,arguments);
+        }
+    }
+
+    YAHOO.get = YUIToPrototypeAdapter;
+
+    window.onload = function(){
+        //  $(&quot;div1&quot;,&quot;div2&quot;)            prototype风格
+        //  YAHOO.get([&quot;div1&quot;,&quot;div2&quot;])  YUI风格
+        console.log($(&quot;div1&quot;,&quot;div2&quot;));
+        console.log(YAHOO.get([&quot;div1&quot;,&quot;div2&quot;]));
+    };
+</code></pre>
+<p>这边的YUIToPrototypeAdapter就是一个适配器方法,根据传入参数类型的不同采取不同的方案处理,相对完美的解决了框架间的适配问题。</p>
+</section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    <a
+      class="flex w-1/2 items-center rounded-l-md p-6 pr-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2015-06-21-js-design-mode-facade/"
+      ><span class="mr-1.5">←</span><span>javascript门面模式</span></a
+    >
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2015-06-09-js-design-mode-composite/"
+      ><span>javascript组合模式</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

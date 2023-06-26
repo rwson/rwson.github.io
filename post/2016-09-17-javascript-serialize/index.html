@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>javascript中的序列化 - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="在用jQuery发送ajax(POST)请求的时候,最常见的提交方式就是&quot;application/x-www-form-urlencoded&quot;,通常都会传入一个data属性作为传输给后端的数据,在ajax发送之前,那么我们直接如果直接传入把这个对象传递给后端,后端就不能对该对象进行解析,因为对象会被转成字符串&quot;[object Object]&quot;,所以就需要我们对该对象进行url编码,并且转换成字符串,再传给后端。
+假设我们先传递一个简单的对象(所有的key对应的value都不是引用类型[Array、Object]),就像下面这样:
+{ string: &quot;string&quot;, number: 1 }  用jQuery中的$.ajax方法,POST提交,打开请求面板,在form data那边,点击view source,可以看到下面这一串字符串,就像下面的样子:
+string=string&amp;number=1  在jQuery中,$.param这个方法可以实现进行url编码的作用。
+现在可以自己实现一个:
+// 获取对象上的类名 function _typeOf(obj) { return {}.toString.call(obj).slice(8, -1); } // encodeURIComponent简写 function _encode(data) { data = data || &quot;&quot;; return encodeURIComponent(data); } // 序列化主函数 function _serializenData(data) { var res = data, typeIn; // 判断传入的是否是一个Object类型的数据 if (_typeOf(data) === &quot;Object&quot;) { res = []; for (var i in data) { typeIn = _typeOf(data[i]); switch (typeIn) { // 遇到Object、Array时需要进行遍历或者枚举,对其内部元素、属性做处理后再放到结果集数组中 case &quot;Object&quot;: res." />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">javascript中的序列化</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Sep 17, 2016</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p>在用jQuery发送ajax(POST)请求的时候,最常见的提交方式就是&quot;application/x-www-form-urlencoded&quot;,通常都会传入一个data属性作为传输给后端的数据,在ajax发送之前,那么我们直接如果直接传入把这个对象传递给后端,后端就不能对该对象进行解析,因为对象会被转成字符串&quot;[object Object]&quot;,所以就需要我们对该对象进行url编码,并且转换成字符串,再传给后端。</p>
+<p>假设我们先传递一个简单的对象(所有的key对应的value都不是引用类型[Array、Object]),就像下面这样:</p>
+<pre><code>{
+    string: &quot;string&quot;,
+    number: 1
+}
+</code></pre>
+<p>用jQuery中的$.ajax方法,POST提交,打开请求面板,在form data那边,点击view source,可以看到下面这一串字符串,就像下面的样子:</p>
+<pre><code>string=string&amp;number=1
+</code></pre>
+<p>在jQuery中,$.param这个方法可以实现进行url编码的作用。</p>
+<p>现在可以自己实现一个:</p>
+<pre><code>//  获取对象上的类名
+function _typeOf(obj) {
+    return {}.toString.call(obj).slice(8, -1);
+}
+
+//  encodeURIComponent简写
+function _encode(data) {
+    data = data || &quot;&quot;;
+    return encodeURIComponent(data);
+}
+
+//  序列化主函数
+function _serializenData(data) {
+    var res = data,
+        typeIn;
+        
+    //  判断传入的是否是一个Object类型的数据
+    if (_typeOf(data) === &quot;Object&quot;) {
+        res = [];
+        for (var i in data) {
+            typeIn = _typeOf(data[i]);
+            switch (typeIn) {
+
+                //  遇到Object、Array时需要进行遍历或者枚举,对其内部元素、属性做处理后再放到结果集数组中
+                case &quot;Object&quot;:
+                    res.push(_loopObject(data[i], i));
+                    break;
+
+                case &quot;Array&quot;:
+                    res.push(_loopArray(data[i], i));
+                    break;
+
+                //  其他类型直接推到结果集数组
+                default:
+                    res.push(_encode(i) + &quot;=&quot; + _encode(data[i]));
+                    break;
+
+            }
+        }
+        //  把结果集数组转换成&quot;xxx=111&amp;yyy=333&amp;zzz=444&quot;的形式
+        res = res.join(&quot;&amp;&quot;).replace(&quot;%20&quot;, &quot;+&quot;)
+    }
+    return (&quot;&quot; + res);
+}
+
+/**
+ * 深层遍历一个数组
+ * @param  {[type]} array [description]
+ * @param  {[type]} key   [description]
+ * @return {[type]}       [description]
+ */
+function _loopArray(array, key) {
+    var res = [],
+        typeIn;
+    for (var i = 0, len = array.length; i &lt; len; i++) {
+    
+        //  获取每一项的类名,如果是Object/则递归调用_loopArray/_loopObject,传入当前项和属性名,处理子项,再放到结果集中
+        typeIn = _typeOf(array[i]);
+        switch (typeIn) {
+
+            case &quot;Array&quot;:
+                res.push(_loopArray(array[i], (key + &quot;[&quot; + i + &quot;]&quot;)));
+                break;
+
+            case &quot;Object&quot;:
+                res.push(_loopObject(array[i], (key + &quot;[&quot; + i + &quot;]&quot;)));
+                break;
+
+            //	其他类型的直接推到结果集数组
+            default:
+                res.push(_encode(key + &quot;[]&quot;) + &quot;=&quot; + _encode((&quot;&quot; + array[i])));
+                break;
+
+        }
+    }
+    
+    //  把结果集转换成&quot;xxx=111&amp;yyy=333&amp;zzz=444&quot;的形式
+    return res.join(&quot;&amp;&quot;);
+}
+
+/**
+ * 深层遍历一个对象
+ * @param  {[type]} object [description]
+ * @param  {[type]} key    [description]
+ * @return {[type]}        [description]
+ */
+function _loopObject(object, key) {
+    var res = [],
+        typeIn;
+    for (var i in object) {
+        //  取得一个当前key对应value的类名,如果是Object/Array,则进行递归调用
+        typeIn = _typeOf(object[i]);
+        switch (typeIn) {
+            case &quot;Array&quot;:
+                res.push(_loopArray(object[i], key + &quot;[&quot; + i + &quot;]&quot;));
+                break;
+
+            case &quot;Object&quot;:
+                res.push(_loopObject(object[i], key + &quot;[&quot; + i + &quot;]&quot;));
+                break;
+
+            //	其他类型的直接推到结果集数组中
+            default:
+                res.push(_encode(key + &quot;[&quot; + i + &quot;]&quot;) + &quot;=&quot; + _encode((&quot;&quot; + object[i])));
+                break;
+        }
+    }
+    
+    //  把结果集转换成&quot;xxx=111&amp;yyy=333&amp;zzz=444&quot;的形式
+    return res.join(&quot;&amp;&quot;);
+}
+</code></pre>
+<p>下面我们模拟几个复杂点的对象,调用封装的序列化方法,和$.param进行对比:</p>
+<pre><code>var obj = {
+    string: &quot;string&quot;,
+    number: 1,
+    array: [1, 2, 3, 4, 5]
+};
+
+var obj2 = {
+    string: &quot;string&quot;,
+    number: 1,
+    array: [
+        1, 2, 3, 4, 5, {
+            key1: &quot;value1&quot;,
+            key2: &quot;value2&quot;,
+            key3: &quot;value3&quot;
+        }
+    ]
+};
+
+var obj3 = {
+    array: [1, 2, 3, 4, 5],
+    arrayobject: [{
+        key1: &quot;value1&quot;,
+        key2: &quot;value2&quot;,
+        key3: &quot;value3&quot;
+    }, {
+        key1: &quot;value1&quot;,
+        key2: &quot;value2&quot;,
+        key3: &quot;value3&quot;
+    }, {
+        key1: &quot;value1&quot;,
+        key2: &quot;value2&quot;,
+        key3: &quot;value3&quot;
+    }]
+};
+
+var deepObj1 = {
+    arr: [{
+        string: &quot;string&quot;,
+        number: 1,
+        arr: [1, 2, 3, 4],
+        mixArr: [{
+            key1: &quot;value1&quot;,
+            key2: &quot;value2&quot;
+        }, {
+            key1: &quot;value1&quot;,
+            key2: &quot;value2&quot;
+        }, {
+            key1: &quot;value1&quot;,
+            key2: &quot;value2&quot;
+        }]
+    }]
+};
+
+var deepObj2 = {
+    obj: {
+        key1: &quot;value1&quot;,
+        key2: &quot;value2&quot;,
+        key3: &quot;value3&quot;
+    },
+    array: [1, 2, 3, 4, 5],
+    objectArray: {
+        array: [1, 2, 3, 4, 5, {
+            key1: &quot;value1&quot;,
+            key2: &quot;value2&quot;,
+            key3: &quot;value3&quot;
+        }]
+    },
+    arrayObj: [{
+        key1: &quot;value1&quot;,
+        key2: &quot;value2&quot;,
+        key3: &quot;value3&quot;
+    }, {
+        key1: &quot;value1&quot;,
+        key2: &quot;value2&quot;,
+        key3: &quot;value3&quot;
+    }, {
+        key1: &quot;value1&quot;,
+        key2: &quot;value2&quot;,
+        key3: &quot;value3&quot;
+    }]
+};
+
+//  打开控制台的console面板,查看输出
+
+console.group(&quot;serialize obj&quot;);
+console.log(_serializenData(obj));  //  ...
+console.log($.param(obj));  //  ...
+console.log(_serializenData(obj) === $.param(obj)); //  true
+console.groupEnd();
+
+console.group(&quot;serialize obj2&quot;);
+console.log(_serializenData(obj2)); //  ...
+console.log($.param(obj2)); //  ...
+console.log(_serializenData(obj2) === $.param(obj2));   //  true
+console.groupEnd();    
+
+console.group(&quot;serialize obj3&quot;);
+console.log(_serializenData(obj3)); //  ...
+console.log($.param(obj3)); //  ...
+console.log(_serializenData(obj3) === $.param(obj3));   //  true
+console.groupEnd();
+
+console.group(&quot;serialize deepObj1&quot;);
+console.log(_serializenData(deepObj1)); //  ...
+console.log($.param(deepObj1)); //  ...
+console.log(_serializenData(deepObj1) === $.param(deepObj1));   //  true
+console.groupEnd();
+
+console.group(&quot;serialize deepObj2&quot;);
+console.log(_serializenData(deepObj2)); //  ...
+console.log($.param(deepObj2)); //  ...
+console.log(_serializenData(deepObj2) === $.param(deepObj2));   //  true
+console.groupEnd();
+</code></pre>
+</section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    <a
+      class="flex w-1/2 items-center rounded-l-md p-6 pr-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2016-11-02-ie-ajax-cache/"
+      ><span class="mr-1.5">←</span><span>IE下AngularJs中的ajax缓存</span></a
+    >
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2016-08-30-something-about-javascript-date/"
+      ><span>javascript中Date细节</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

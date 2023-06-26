@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>javascript组合模式 - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="组合模式:
+在组合模式中，对象有两种形式，一种是叶子对象，一种是组合对象，其中组合对象是叶子对象的组成，有时候我们需要通过简单的控制来完成工作，组合模式就派上了用场。
+下面我们模拟一个场景，模拟公司内部的一个，上级(组合对象)只要交代给部门领导(组合对象)，再由部门领导交付具体的指令给具体的员工(叶子对象)来完成具体的工作。
+先来看看传统的做法：
+/** * * 公司类 **/ function Org(name){ this.name = name; this.depts = []; } Org.prototype = { &quot;constructor&quot;:Org, &quot;addDepts&quot;:function(child){ this.depts.push(child); return this; // 添加部门,return this 提供链式调用 }, &quot;getDepts&quot;:function(){ return this.depts; // 获取部门 } }; /** * * 部门类 **/ function Dept(name){ this.name = name; this.persons = []; } Dept.prototype = { &quot;constructor&quot;:Dept, &quot;addPersons&quot;:function(child){ this.persons.push(child); return this; // 添加部门员工 }, &quot;getPersons&quot;:function(){ return this.persons; // 获取部门员工 } }; /** * * 员工类 **/ function Person(name){ this." />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">javascript组合模式</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Jun 9, 2015</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p>组合模式:</p>
+<p>在组合模式中，对象有两种形式，一种是叶子对象，一种是组合对象，其中组合对象是叶子对象的组成，有时候我们需要通过简单的控制来完成工作，组合模式就派上了用场。</p>
+<p>下面我们模拟一个场景，模拟公司内部的一个，上级(组合对象)只要交代给部门领导(组合对象)，再由部门领导交付具体的指令给具体的员工(叶子对象)来完成具体的工作。</p>
+<p>先来看看传统的做法：</p>
+<pre><code>/**
+  *
+  * 公司类
+  **/
+function Org(name){
+    this.name = name;
+    this.depts = [];
+}
+Org.prototype = {
+    &quot;constructor&quot;:Org,
+    &quot;addDepts&quot;:function(child){
+        this.depts.push(child);
+        return this;
+        //  添加部门,return this 提供链式调用
+    },
+    &quot;getDepts&quot;:function(){
+        return this.depts;
+        //  获取部门
+    }
+};
+
+/**
+  *
+  * 部门类
+  **/
+function Dept(name){
+    this.name = name;
+    this.persons = [];
+}
+Dept.prototype = {
+    &quot;constructor&quot;:Dept,
+    &quot;addPersons&quot;:function(child){
+        this.persons.push(child);
+        return this;
+        //  添加部门员工
+    },
+    &quot;getPersons&quot;:function(){
+        return this.persons;
+        //  获取部门员工
+    }
+};
+
+/**
+  *
+  * 员工类
+  **/
+function Person(name){
+    this.name = name;
+}
+commonUtil.wrap(Person.prototype,{
+    &quot;constructor&quot;:Person,
+    &quot;hardWorking&quot;:function(){
+        console.log(this.name + &quot; ... 努力工作！&quot;);
+        //  xxx ... 努力工作
+    },
+    &quot;sleeping&quot;:function(){
+        console.log(this.name + &quot;睡觉！&quot;);
+        //  xxx 睡觉！
+    }
+});
+
+var p1 = new Person(&quot;张1&quot;),
+    p2 = new Person(&quot;张2&quot;),
+    p3 = new Person(&quot;张3&quot;),
+    p4 = new Person(&quot;张4&quot;),
+    p5 = new Person(&quot;张5&quot;),
+    p6 = new Person(&quot;张6&quot;),
+    dept1 = new Dept(&quot;开发&quot;),
+    dept2 = new Dept(&quot;销售&quot;),
+    org = new Org(&quot;某某公司&quot;);
+//  实例化对象    
+
+dept1.addPersons(p1).addPersons(p2).addPersons(p3);
+dept2.addPersons(p4).addPersons(p5).addPersons(p6);
+org.addDepts(dept1).addDepts(dept2);
+//  添加部门和部门员工
+
+for(var i = 0,depts = org.getDepts();i &lt; depts.length;i ++){
+    for(j = 0,persons = depts[i].getPersons();j &lt; persons.length;j ++){
+        if(persons[j][&quot;name&quot;] === &quot;张3&quot;){
+            persons[j].hardWorking();
+        }
+    }
+}
+//  具体的让张3努力工作
+</code></pre>
+<p>在上面的例子我们可以看到,如果想要&quot;张三&quot;这个人执行hardWorking方法，需要写两层循环，现在只是两层结构，要是在多层的情况下，可能就需要递归神马了，甚是麻烦。</p>
+<p>再来看看组合模式吧！这边的commomUtil下的方法和工厂模式里面的用的一样的。</p>
+<pre><code>var CompositeInterface = new commonUtil.Interface(&quot;CompositeInterface&quot;,[&quot;addChild&quot;,&quot;getChild&quot;]),
+LeafInterface = new commonUtil.Interface(&quot;LeafInterface&quot;,[&quot;hardWorking&quot;,&quot;sleeping&quot;]);
+        //  定义组合对象和叶子对象需要实现的接口
+        
+/**
+ * 组合对象
+ * @param name
+ * @constructor
+ */
+function Composite(name){
+    this.name = name;
+    this.type = &quot;Composite&quot;;
+    //  说明当前对象类型
+    this.children = [];
+    //  承装孩子（叶子节点）的数组
+}
+commonUtil.wrap(Composite.prototype,{
+    &quot;constructor&quot;:Composite,
+    &quot;addChild&quot;:function(child){
+        this.children.push(child);
+        return this;
+    },
+    &quot;getChild&quot;:function(name){
+        var list = [],
+            pushLeaf = function(item){
+                if(this.name === name || item[&quot;type&quot;] === &quot;Composite&quot;){
+                      item[&quot;children&quot;].each(arguments.callee);
+                     // pushLeaf(item[&quot;children&quot;]);
+                }else if(item[&quot;type&quot;] === &quot;Leaf&quot;) {
+                    list.push(item);
+                }
+            };
+        if(name &amp;&amp; this.name !== name){
+            //  返回指定类型的叶子对象
+            this.children.each(function(item){
+                if(item[&quot;name&quot;] === name &amp;&amp; item[&quot;type&quot;] === &quot;Composite&quot;){
+                    item[&quot;children&quot;].each(pushLeaf);
+                }
+                //  二级节点
+                if(item[&quot;name&quot;] !== name &amp;&amp; item[&quot;type&quot;] === &quot;Composite&quot;){
+                    item[&quot;children&quot;].each(arguments.callee);
+                }
+                //  三级、四级...
+                if(item[&quot;name&quot;] === name &amp;&amp; item[&quot;type&quot;] === &quot;Leaf&quot;){
+                    list.push(item);
+                }
+            });
+        }else{
+            //  返回所有叶子对象
+            this.children.each(pushLeaf);
+        }
+        return list;
+    },
+    &quot;hardWorking&quot;:function(name){
+        var leafObjects = this.getChild(name);
+        //  得到所有的叶子类型对象
+        for(var i = 0,l = leafObjects.length;i &lt; l;i ++){
+            leafObjects[i] &amp;&amp; leafObjects[i].hardWorking(leafObjects[i][&quot;name&quot;]);
+        }
+    },
+    &quot;sleeping&quot;:function(name){
+        var leafObjects = this.getChild(name);
+        //  得到所有的叶子类型对象
+        for(var i = 0,l = leafObjects.length;i &lt; l;i ++){
+            leafObjects[i].sleeping(leafObjects[i][&quot;name&quot;]);
+        }
+    }
+});
+    
+/**
+ * 叶子对象
+ * @param name
+ * @constructor
+ */
+function Leaf(name){
+    this.name = name;
+    this.type = &quot;Leaf&quot;;
+    //  说明当前对象类型
+}
+commonUtil.wrap(Leaf.prototype,{
+    &quot;constructor&quot;:Leaf,
+    &quot;addChild&quot;:function(child){
+        throw new Error(&quot;this method is disabled&quot;);
+        //  叶子节点下没有添加子节点的方法,所以调用的时候抛异常
+    },
+    &quot;getChild&quot;:function(name){
+        if(this.name === name){
+            return this;
+        }
+        return null;
+    },
+    &quot;hardWorking&quot;:function(){
+        console.log(this.name + &quot; ... 努力工作！&quot;);
+    },
+    &quot;sleeping&quot;:function(name){
+        console.log(this.name + &quot; ... 睡觉！&quot;);
+    }
+});
+
+var p1 = new Leaf(&quot;张1&quot;),
+    p2 = new Leaf(&quot;张2&quot;),
+    p3 = new Leaf(&quot;张3&quot;),
+    p4 = new Leaf(&quot;张4&quot;),
+    p5 = new Leaf(&quot;张5&quot;),
+    p6 = new Leaf(&quot;张6&quot;),
+    p7 = new Leaf(&quot;张7&quot;),
+    p8 = new Leaf(&quot;张8&quot;),
+    p9 = new Leaf(&quot;张9&quot;),
+    p10 = new Leaf(&quot;张10&quot;),
+    p11 = new Leaf(&quot;张11&quot;),
+    p12 = new Leaf(&quot;张12&quot;),
+    dept1 = new Composite(&quot;南京开发部&quot;),
+    dept2 = new Composite(&quot;南京销售部&quot;),
+    dept3 = new Composite(&quot;杭州开发部&quot;),
+    dept4 = new Composite(&quot;杭州销售部&quot;),
+    org = new Composite(&quot;xx公司&quot;),
+    org2 = new Composite(&quot;南京分公司&quot;),
+    org3 = new Composite(&quot;杭州分公司&quot;);
+    //  实例化一些对象
+
+    dept1.addChild(p1).addChild(p2).addChild(p3);
+    dept2.addChild(p4).addChild(p5).addChild(p6);
+    dept3.addChild(p7).addChild(p8).addChild(p9);
+    dept4.addChild(p10).addChild(p11).addChild(p12);
+    //  组装二级、三级、叶子节点
+
+    org2.addChild(dept1).addChild(dept2);
+    org3.addChild(dept3).addChild(dept4);
+    org.addChild(org2).addChild(org3);
+    //  组装分公司和总公司
+
+    org.hardWorking();  
+    //  总公司下面的人都执行hardWork方法
+    org.hardWorking(&quot;南京分公司&quot;);  
+    //  南京分公司下面的人都执行hardWork方法
+    org.hardWorking(&quot;杭州开发部&quot;);  
+    //  某级子节点(组合对象)下面的人都执行hardWork方法
+    org.hardWorking(&quot;张12&quot;);  
+    //  具体某人执行hardWork方法
+</code></pre>
+<p>怎么样,看完这个例子是不是感觉比传统的调用方法简单多了,现在就2种类型的对象,虽然组合对象下封装的方法,只要传入具体的某个部门或者员工就能走它下面的方法;这么好的模式,何乐而不为？</p>
+</section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    <a
+      class="flex w-1/2 items-center rounded-l-md p-6 pr-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2015-06-13-js-design-mode-adoptor/"
+      ><span class="mr-1.5">←</span><span>javascript适配器模式</span></a
+    >
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2015-06-03-js-design-mode-bridge/"
+      ><span>javascript桥梁模式</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

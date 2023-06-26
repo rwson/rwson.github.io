@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>webpack on rwson</title>
+    <link>/categories/webpack/</link>
+    <description>Recent content in webpack on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Wed, 18 Jan 2017 00:00:00 +0000</lastBuildDate><atom:link href="/categories/webpack/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>实现一个webpack loader</title>
+      <link>/post/2017-01-18-wrire-a-webpack-loader/</link>
+      <pubDate>Wed, 18 Jan 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2017-01-18-wrire-a-webpack-loader/</guid>
+      <description>在React,ES6开发模式越来越普及的今天,webpack就成了前端构建的一个标配。webpack有两大重要部分组成: loader和plugin。loader是用在应用源码上的转换原件,比如最常用到的babel-loader/jsx-loader/file-loader/css-loader/url-loader等等。
+loader可链式执行,一种文件类型可以用多个loader(比如css文件,可能就需要用到css-loader和style-loader),loader之间用&amp;quot;!&amp;ldquo;分隔,当前loader处理完,把处理结果带到下一个loader,最后一个loader返回一个String或者String Buffer返回给compiler。
+loader调用方式大体有3种形式:
+  引用时调用
+ // a.js require(&amp;quot;style-loader/url!css-loader!./xxx.css&amp;quot;);    webpack直接调用
+ // webpack.config.js // ... module: { loaders: [ // ... { test: /\.css$/, loader: &amp;quot;style-loader!css-loader&amp;quot; } ] }    指定loaders数组
+ // webpack.config.js // ... module: { loaders: [ // ... { test: /\.css$/, loaders: [ &amp;quot;style-loader&amp;quot;, &amp;quot;css-loader&amp;quot; ] } ] }    webpack官网上说&amp;quot;A loader is a node module exporting a function&amp;rdquo;,也就是说一个loader就是一个暴露出去的node模块,既然是一个node module,也就基本可以写成下面的样子:</description>
+    </item>
+    
+  </channel>
+</rss>

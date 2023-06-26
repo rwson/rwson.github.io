@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>设计模式 on rwson</title>
+    <link>/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/</link>
+    <description>Recent content in 设计模式 on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Wed, 15 Jul 2015 00:00:00 +0000</lastBuildDate><atom:link href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>javascript装饰者模式</title>
+      <link>/post/2015-07-15-js-design-mode-decorator/</link>
+      <pubDate>Wed, 15 Jul 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-07-15-js-design-mode-decorator/</guid>
+      <description>js装饰者模式可以把一个对象(类/函数)透明地包装在另外一个对象上,完成对被装饰者添加一些新功能的作用。
+装饰者模式的特点:
+ 不修改原对象的原本结构来进行功能添加; 装饰对象和原对象具有相同的接口，可以使客户以与原对象相同的方式使用装饰对象; 装饰对象中包含原对象的引用，即装饰对象为真正的原对象在此包装的对象。  先看个小例子:
+ function getDate(){ var date = new Date(); return date.toString(); } function toUpperCaseDecorator(fn){ return (function(f){ return f.apply(this,arguments).toUpperCase(); })(fn); } console.log(getDate()); // Thu Jun 25 2015 23:05:04 GMT+0800 (CST) console.log(toUpperCaseDecorator(getDate)); // THU JUN 25 2015 23:05:04 GMT+0800 (CST)  在上面的例子中,getDate作为一个被装饰者(完成获取当前时间的字符串形式),toUpperCaseDecorator作为一个装饰者,在原来的基础上把原来的小写字母改成了大小,在这里就相当于添加了一个新功能。
+下面我们就还是拿汽车来模拟一个具体的场景:
+需求:现在要造一辆车,既然是车嘛,肯定有很多的零部件,这里就拿车载冰箱和车灯来说吧;比如我的车主结构20000元,车载冰箱10000元,车灯10000元,那我肯定在组装的时候就把价格给它加上去,来看具体的代码。
+ var CarInterface = new commonUtil.Interface(&amp;quot;CarInterface&amp;quot;,[&amp;quot;getPrice&amp;quot;,&amp;quot;assenble&amp;quot;]); // 定义 function Car(car){ this.car = car; // 为了让子类继承(让子类多一个父类的引用) commonUtil.Interface.ensureImplement(this,CarInterface); // 检测接口 } commonUtil.wrap(Car.prototype,{ &amp;quot;constructor&amp;quot;:Car, &amp;quot;getPrice&amp;quot;:function(){ return 200000; }, &amp;quot;assenble&amp;quot;:function(){ console.</description>
+    </item>
+    
+    <item>
+      <title>javascript门面模式</title>
+      <link>/post/2015-06-21-js-design-mode-facade/</link>
+      <pubDate>Sun, 21 Jun 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-06-21-js-design-mode-facade/</guid>
+      <description>在javascript中，门面模式常常是开发人员最亲密的朋友。它是几乎所有javascript库的核心原则。通过创建一些使得方法让复杂系统变得更加简单易用,门面模式可以使库提供的工具更容易理解。
+先来看看门面模式的写法:
+function a(x){ // do something... } function b(y){ // do something... } /** * 把a和b封装成一个方法(在一个方法里同时调用a、b) * @param x * @param y */ function facadeAB(x,y){ a(x); b(y); }  在我们平时开发中,可能就用到了门面模式,比如我们现在封装一个绑定事件的方法:
+function bindEvent(el,ev,fn){ if(el.addEventListner){ el.addEventListener(ev,fn,false); }else if(el.attachEvent){ el.attachEvent(&amp;quot;on&amp;quot; + ev,fn); }else{ el[&amp;quot;on&amp;quot; + ev] = fn; } };  这个就是一个门面模式,里面对于事件的绑定是隐蔽的,只提供bindEvent给其他地方调用。
+再来看个例子,这次我们给一个dom元素给些css样式,就可以用下面的方法实现:
+window.onload = function(){ setStyle([&amp;quot;div1&amp;quot;,&amp;quot;div2&amp;quot;,&amp;quot;div3&amp;quot;],{ &amp;quot;width&amp;quot;:&amp;quot;300px&amp;quot;, &amp;quot;height&amp;quot;:&amp;quot;300px&amp;quot;, &amp;quot;backgroundColor&amp;quot;:&amp;quot;red&amp;quot;, &amp;quot;font-size&amp;quot;:&amp;quot;70px&amp;quot; }); }; /** * 简单的门面模式 * @param ele * @param css */ function setStyle(ele,css){ for(var i = 0;i &amp;lt; ele.</description>
+    </item>
+    
+    <item>
+      <title>javascript适配器模式</title>
+      <link>/post/2015-06-13-js-design-mode-adoptor/</link>
+      <pubDate>Sat, 13 Jun 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-06-13-js-design-mode-adoptor/</guid>
+      <description>适配器模式:
+适配器,顾名思义,我们生活中能见到很多这样的例子,举个最简单的例子吧: 我现在有一台老台式机电脑和刚买的新式电脑,我们都知道,老台式机上的插口都是圆口(F32型插口),而新式电脑上的都是USB插口,假如我现在想在新式电脑上用老式电脑上的那个鼠标,但是插口又不一样,那怎么办呢？我们现在就需要一个转换器来中转,这个转换器就完成了完成由老到新的转换功能。
+再举个实际开发中可能会遇到情况:比如公司新进一批前端,然后公司急于做一个项目,需要这几个前端一起参与才能按时交工,但是这几个前端里面有的会prototype.js不会YUI,然后有的会YUI不会prototype.js,而产品经理最后说采取YUI,由于项目时间比较紧,所以没那么大的成本来给他们把这两个库都培训一遍,这时候问题来了,怎么样让这些人都参与到开发中来呢？且看下面的模拟:
+我们来模拟一个最简单的选择器
+// 模拟prototype $ function(不需要传递任何的形参,直接通过arguments对象取得传入的实参) function $(){ var ele = []; for(var i = 0;i &amp;lt; arguments.length;i ++){ var el = arguments[i]; if(typeof el === &amp;quot;string&amp;quot;){ el = document.getElementById(el); } if(el.length == 1){ return el; } ele.push(el); } return ele; } // 模拟YUI中的get (必须传递一个参数,不是字符串就是数组) var YAHOO = {}; YAHOO.get = function(el){ if(typeof el === &amp;quot;string&amp;quot;){ return document.getElementById(el); }else if(el instanceof Array){ var ele = []; for(var i = 0;i &amp;lt; el.</description>
+    </item>
+    
+    <item>
+      <title>javascript组合模式</title>
+      <link>/post/2015-06-09-js-design-mode-composite/</link>
+      <pubDate>Tue, 09 Jun 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-06-09-js-design-mode-composite/</guid>
+      <description>组合模式:
+在组合模式中，对象有两种形式，一种是叶子对象，一种是组合对象，其中组合对象是叶子对象的组成，有时候我们需要通过简单的控制来完成工作，组合模式就派上了用场。
+下面我们模拟一个场景，模拟公司内部的一个，上级(组合对象)只要交代给部门领导(组合对象)，再由部门领导交付具体的指令给具体的员工(叶子对象)来完成具体的工作。
+先来看看传统的做法：
+/** * * 公司类 **/ function Org(name){ this.name = name; this.depts = []; } Org.prototype = { &amp;quot;constructor&amp;quot;:Org, &amp;quot;addDepts&amp;quot;:function(child){ this.depts.push(child); return this; // 添加部门,return this 提供链式调用 }, &amp;quot;getDepts&amp;quot;:function(){ return this.depts; // 获取部门 } }; /** * * 部门类 **/ function Dept(name){ this.name = name; this.persons = []; } Dept.prototype = { &amp;quot;constructor&amp;quot;:Dept, &amp;quot;addPersons&amp;quot;:function(child){ this.persons.push(child); return this; // 添加部门员工 }, &amp;quot;getPersons&amp;quot;:function(){ return this.persons; // 获取部门员工 } }; /** * * 员工类 **/ function Person(name){ this.</description>
+    </item>
+    
+    <item>
+      <title>javascript桥梁模式</title>
+      <link>/post/2015-06-03-js-design-mode-bridge/</link>
+      <pubDate>Wed, 03 Jun 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-06-03-js-design-mode-bridge/</guid>
+      <description>桥模式:
+桥梁模式可以用来弱化它与使用它的类和对象之间的耦合，就是将抽象与其实现隔离开来，以便二者独立变化；这种模式对于JavaScript中常见的时间驱动的编程有很大益处，桥梁模式最常见和实际的应用场合之一是时间监听器回调函数。
+可能我们平时写代码就用到了桥模式，比如看下面的例子：
+var btn = document.getElementById(&amp;quot;btn&amp;quot;); btn.onclick = function(){ bridgeHandle(); } function bridgeHandle(){ var msg = btn.value; sendRequest(msg); } // 这里情况，比如ajax请求 function sendRequest(msg){ console.log(msg); }  在上面的代码中，bridgeHandle就是一个桥梁，原来的sendRequest应该可以写在onclick事件里面，那么这样的写法有什么好处呢？个人认为有以下几点。
+1、 实现解耦：把原来要通过点击来触发的逻辑代码抽离出来，成为一个单独的部分； 2、方便做单元测试：我们可以单独调用sendRequest方法来测试ajax请求(假设)的返回等是否是我们预期的；
+3、功能模块化，符合现在前端发展的趋势，便于自己和他人维护。
+在桥模式中，还有一个概念叫“特权函数”，我们都知道在面向对象程序设计中，类的私有成员变量或者私有方法是不能被外部访问或者调用的，但是特权函数给我们提供了这一方便的接口。
+function PublicClass(){ var name = &amp;quot;张三&amp;quot;; // 私有属性 this.getter = function(){ return name; }; // 访问私有属性getter,特权函数 function _privateMethod(){ return &amp;quot;我是私有方法！&amp;quot;; } this.bridgeMethod = function(){ return privateMethod(); }; } var class = new PublicClass(); console.log(class.getter());	//	张三 console.log(class.bridgeMethod());	//	我是私有方法！  在上面的例子中，PublicClass中有name这个私有成员变量和_privateMethod这个私有方法，如果在没有特权函数的情况下我们是不能访问和调用的的，但是通过模式，我们就完成了对私有成员变量和私有方法的访问和调用。</description>
+    </item>
+    
+    <item>
+      <title>javascript工厂模式</title>
+      <link>/post/2015-05-31-js-design-mode-factory/</link>
+      <pubDate>Sun, 31 May 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-05-31-js-design-mode-factory/</guid>
+      <description>工厂模式:
+创建一个对象常常需要复杂的过程，所以不适合在一个复杂的对象中。创建对象可能会导致大量的重复代码，也可能提供不了足够级别的抽象。工厂方法模式通过定义一个单独的创建对象的方法来解决这些问题，由子类实现这个方法来创建具体类型的对象。
+简单工厂： 类本身实现了所有功能代码，通过实例化调用其方法来完成某些功能。
+抽象工厂： 类本身定一些抽象方法，通过给子类继承的方式，来重写父类的抽象方法，该类不能被实例化，只能通过实例化它的子类来完成某些功能。
+ /** * 注： * commonUtil.wrap(xxx.prototype,{})和xxx.prototype = {}功能相同 * commonUtil.extend()是实现继承那边类式继承的代码功能 * commonUtil.Interface和commonUtil.Interface.ensureImplement是实现接口那边鸭式辨型的代码功能 * * */   这是简单工厂的一个示例：
+/* 功能描述： 有三种类型的车(奔驰,宝马,奥迪),现在要买车,定义一个汽车4店类卖车 逻辑流程： */ /** * 汽车商店构造器 * @constructor */ function CarShop() {} commonUtil.wrap(CarShop.prototype, { &amp;quot;constructor&amp;quot;: CarShop, &amp;quot;sellCar&amp;quot;: function (type) { var car; switch (type) { case &amp;quot;Benz&amp;quot;: car = new Benz(); break; case &amp;quot;Bmw&amp;quot;: car = new Bmw(); break; case &amp;quot;Audi&amp;quot;: car = new Audi(); break; default: &amp;quot;not to buy!</description>
+    </item>
+    
+  </channel>
+</rss>

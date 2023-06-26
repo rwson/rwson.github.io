@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>桌面exe on rwson</title>
+    <link>/categories/%E6%A1%8C%E9%9D%A2exe/</link>
+    <description>Recent content in 桌面exe on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Wed, 29 Mar 2017 00:00:00 +0000</lastBuildDate><atom:link href="/categories/%E6%A1%8C%E9%9D%A2exe/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>NodeJs读取windows注册表来对软件进行卸载</title>
+      <link>/post/2017-03-29-node-read-regedit-uninstall-software/</link>
+      <pubDate>Wed, 29 Mar 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2017-03-29-node-read-regedit-uninstall-software/</guid>
+      <description>最近在基于node-webkit(以下简称NW)开发windows桌面app,里面有个类似于软件市场的功能,后台管理员提供一些软件,可以从该app上进行下载、安装、卸载、升级等等。
+安装或升级可以直接通过把下载好的zip包解压出来然后执行里面的exe程序安装就好,但是卸载相对来说比较麻烦,几乎每个第三方exe在安装后的目录里面都有一个uninstall.exe,但是我们不知道这个软件具体安装在哪,所以要卸载也无从下手,这时候就想到了注册表,通过注册表可以获取到某个软件的安装目录,所以可以先把当前注册表的目录取得,再去相应目录下找卸载该软件的那个exe并执行。
+由于NW是基于nodejs的,所以可以通过一些第三方的npm包来操作,在这里主要主要用到的包是winreg,首先我们先分析下注册表:
+可以看到根下面有5个大项(HKEY_CLASSES_ROOT、HKEY_CURRENT_USER、HKEY_LOCAL_MACHINE、HKEY_USERS、HKEY_CURRENT_CONFIG),第三方软件基本上都是在HKEY_LOCAL_MACHINE下面的,所以读取的时候就从HKEY_LOCAL_MACHINE下面开始找,这里以搜狗输入法为例:
+从上图中看到该项的全路径为&amp;quot;HKEY_LOCAL_MACHINE\SOFTWARE\SogouInput&amp;quot;,注册项里的第一项就是安装路径,对应的名称是默认,所以我们读取的时候从就可以读取刚才的那个路径,下面是主要的实现:
+const Registry = require(&amp;quot;winreg&amp;quot;),child_process = require(&amp;quot;child_process&amp;quot;),path = require(&amp;quot;path&amp;quot;),key = new Registry({// 打开HKEY_LOCAL_MACHINE这个大类// 一共有5个属性,分别是&#39;HKLM&#39;, &#39;HKCU&#39;, &#39;HKCR&#39;, &#39;HKU&#39;, &#39;HKCC&#39;// 就是上面那5大项的简称hive: Registry.HKLM,// 反斜杠前面需要加&amp;quot;\&amp;quot;进行转义key: &amp;quot;\\SOFTWARE\\SogouInput&amp;quot;});let pre, end, cur, target;// 获取到注册项中中所有配置项,以键值对的形式返回// 每一小项分别包含(host、hive、key、name、type、value、arch)这几个属性key.values((err, res) =&amp;gt; {if (err) {console.log(err);} else {for(var i in res) {cur = res[i];// 判断当前项的名称是否包含default或者versionif (/default/gi.test(cur.name)) {pre = cur.</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>变量提升 on rwson</title>
+    <link>/categories/%E5%8F%98%E9%87%8F%E6%8F%90%E5%8D%87/</link>
+    <description>Recent content in 变量提升 on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Mon, 20 Jul 2015 00:00:00 +0000</lastBuildDate><atom:link href="/categories/%E5%8F%98%E9%87%8F%E6%8F%90%E5%8D%87/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>javascript变量提升</title>
+      <link>/post/2015-07-20-javascript-variable-promotion/</link>
+      <pubDate>Mon, 20 Jul 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-07-20-javascript-variable-promotion/</guid>
+      <description>在日常开发中有时候可能会遇到下面的情况:
+var var1 = 1; function fn() { console.log(var1); var var1 = 2; console.log(var1); } fn(); // undefined // 2  第一次遇到的人可能会觉得很奇怪(因为外面定义了同名变量,所以第一次应该打印出1),为什么会有这种情况出现呢？我们把代码改成下面的样子就方便理解了:
+var var1 = 1; function fn() { var var1; // 如果不给变量赋初值,它的值就是undefined console.log(var1); var1 = 2; console.log(var1); }  这就是javascript中的变量提升。 MDN上的解释是&amp;quot;变量提升是JavaScript将声明移至作用域scope (全局域或者当前函数作用域) 顶部的行为&amp;quot;。
+除了变量,函数也存在变量提升的情况,但是如果用函数直接量法定义一个函数,会报类型异常:
+function fn() { fnInner(); var fnInner = function() { console.log(&amp;quot;inner fn&amp;quot;); } } fn(); // 类型异常(undefined is not a function)  就像刚才说的,fnInner会被放到函数体的第一行,但是没有赋初值,所以就成了undefined。
+但是如果用正常函数声明的方法就可以被正确调用,就像下面的样子:
+function fn() { fnInner(); function fnInner() { console.</description>
+    </item>
+    
+  </channel>
+</rss>

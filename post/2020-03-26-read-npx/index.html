@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>npm之npx源码阅读 - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="npm是nodejs的模块管理器，功能及其强大。甚至随着前端模块化的兴起，在平时的工作中，也必不可少的会接触npm。在npm 5.2.0以及后面的版本, 新增了npx命令，该条命令主要有以下几个特点:
+  临时安装可执行依赖包，无需全局安装，不用担心长期的污染。(比如我们某个项目里用到nodemon这个nodejs启动器, 但是全局的node_modules中又没安装这个模块,然后通过npx nodemon xxx来安装并且执行。再比如我们项目里依赖的webpack 4.x，而系统全局安装的确是webkack 1.x，又不想把全局的替换掉，这时候我们可以通过npx webpack@4.x xxx来用我们项目里的版本编译相关代码)
+  可以执行依赖包中的命令，安装完成自动运行。
+  自动加载node_modules中依赖包，如果没找到，再去找全局，如果依然没找到，则会先安装，再执行。
+  可以指定node版本、包的版本，解决了不同项目使用不同版本的包的问题。
+  了解了这些特点，我们来分析下npx的具体实现。首先找到入口文件bin/index.js
+#!/usr/bin/env node  const path = require(&#39;path&#39;) const npx = require(&#39;libnpx&#39;)   const NPM_PATH = path.join(__dirname, &#39;node_modules&#39;, &#39;npm&#39;, &#39;bin&#39;, &#39;npm-cli.js&#39;)  // 解析参数 const parsed = npx.parseArgs(process.argv, NPM_PATH)  parsed.npxPkg = path.join(__dirname, &#39;package.json&#39;) npx(parsed) 入口文件中最后执行的是libnpx这个包，所以我们跟到libnpx/index.js这个文件，先看下刚才入口文件里面调用的npx.parseArgs：
+npx.parseArgs // parse-args.js  &#39;use strict&#39;  let npa const path = require(&#39;path&#39;)  module." />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">npm之npx源码阅读</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Mar 26, 2020</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p><code>npm</code>是<code>nodejs</code>的模块管理器，功能及其强大。甚至随着前端模块化的兴起，在平时的工作中，也必不可少的会接触<code>npm</code>。在<code>npm 5.2.0</code>以及后面的版本, 新增了<code>npx</code>命令，该条命令主要有以下几个特点:</p>
+<ul>
+<li>
+<p>临时安装可执行依赖包，无需全局安装，不用担心长期的污染。(比如我们某个项目里用到<code>nodemon</code>这个<code>nodejs</code>启动器, 但是全局的<code>node_modules</code>中又没安装这个模块,然后通过<code>npx nodemon xxx</code>来安装并且执行。再比如我们项目里依赖的<code>webpack 4.x</code>，而系统全局安装的确是<code>webkack 1.x</code>，又不想把全局的替换掉，这时候我们可以通过<code>npx webpack@4.x xxx</code>来用我们项目里的版本编译相关代码)</p>
+</li>
+<li>
+<p>可以执行依赖包中的命令，安装完成自动运行。</p>
+</li>
+<li>
+<p>自动加载node_modules中依赖包，如果没找到，再去找全局，如果依然没找到，则会先安装，再执行。</p>
+</li>
+<li>
+<p>可以指定<code>node</code>版本、包的版本，解决了不同项目使用不同版本的包的问题。</p>
+</li>
+</ul>
+<p>了解了这些特点，我们来分析下<code>npx</code>的具体实现。首先找到入口文件<code>bin/index.js</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env node
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">path</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;path&#39;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">npx</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;libnpx&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">NPM_PATH</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">join</span>(<span style="color:#a6e22e">__dirname</span>, <span style="color:#e6db74">&#39;node_modules&#39;</span>, <span style="color:#e6db74">&#39;npm&#39;</span>, <span style="color:#e6db74">&#39;bin&#39;</span>, <span style="color:#e6db74">&#39;npm-cli.js&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//    解析参数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">parsed</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">npx</span>.<span style="color:#a6e22e">parseArgs</span>(<span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">argv</span>, <span style="color:#a6e22e">NPM_PATH</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">parsed</span>.<span style="color:#a6e22e">npxPkg</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">join</span>(<span style="color:#a6e22e">__dirname</span>, <span style="color:#e6db74">&#39;package.json&#39;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">npx</span>(<span style="color:#a6e22e">parsed</span>)
+</span></span></code></pre></div><p>入口文件中最后执行的是<code>libnpx</code>这个包，所以我们跟到<code>libnpx/index.js</code>这个文件，先看下刚才入口文件里面调用的<code>npx.parseArgs</code>：</p>
+<h4 id="npxparseargs">npx.parseArgs</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">//    parse-args.js
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#39;use strict&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> <span style="color:#a6e22e">npa</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">path</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;path&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">module</span>.<span style="color:#a6e22e">exports</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">parseArgs</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param {String[]} argv     由[node路径, npx路径, npx xxx后面的xxx, .etc]组成的数组
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param {String} defaultNpm 默认的npm路径, 从当前项目的node_modules中找
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">parseArgs</span> (<span style="color:#a6e22e">argv</span>, <span style="color:#a6e22e">defaultNpm</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">argv</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">argv</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">argv</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">//  npx xxx而不是npx -xxx这种
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">//  比如npx webpack
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">argv</span>[<span style="color:#ae81ff">2</span>][<span style="color:#ae81ff">0</span>] <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#39;-&#39;</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fastPathArgs</span>(<span style="color:#a6e22e">argv</span>, <span style="color:#a6e22e">defaultNpm</span>)
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">//  npx -xxx yyy这种
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">npa</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;npm-package-arg&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">parser</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">yargsParser</span>(<span style="color:#a6e22e">argv</span>, <span style="color:#a6e22e">defaultNpm</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">opts</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">parser</span>.<span style="color:#a6e22e">getOptions</span>()
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">bools</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Set</span>(<span style="color:#a6e22e">opts</span>.<span style="color:#66d9ef">boolean</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">//  存储cmd所在的下面, 便于后面解析这条cmd时直接通过下标获取
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">cmdIndex</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">hasDashDash</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">let</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">length</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">opt</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">argv</span>[<span style="color:#a6e22e">i</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  遇到&#39;--&#39;, 标记hashDashDash为true, 跳出循环
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">opt</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;--&#39;</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">hasDashDash</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>    } 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  传递给nodejs的参数, 比如npx --node-arg=--inspect cowsay
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">//  使用 `--inspect` 选项执行node二进制文件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">opt</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;--node-arg&#39;</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">opt</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;-n&#39;</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">argv</span>[<span style="color:#a6e22e">i</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">`</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">opt</span><span style="color:#e6db74">}</span><span style="color:#e6db74">=</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">argv</span>[<span style="color:#a6e22e">i</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">splice</span>(<span style="color:#a6e22e">i</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">//  如果元素以&#39;-&#39;开头
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">opt</span>[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;-&#39;</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">//  npx --no-install webpack
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">opt</span> <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#39;--no-install&#39;</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">bools</span>.<span style="color:#a6e22e">has</span>(<span style="color:#a6e22e">opt</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/^--?(no-)?/i</span>, <span style="color:#e6db74">&#39;&#39;</span>)) <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">opt</span>.<span style="color:#a6e22e">indexOf</span>(<span style="color:#e6db74">&#39;=&#39;</span>) <span style="color:#f92672">===</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">cmdIndex</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">i</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">cmdIndex</span>) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 解析npx中的参数而不是需要执行的包的参数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 比如npx --no-install webpack --watch, parsed应为:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *    _: [ NODE_PATH, process.cwd(), .etc ],
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *    &#39;no-install&#39;: true,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *    其他npx默认参数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">parsed</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">parser</span>.<span style="color:#a6e22e">parse</span>(<span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">slice</span>(<span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">cmdIndex</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">parsedCmd</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">npa</span>(<span style="color:#a6e22e">argv</span>[<span style="color:#a6e22e">cmdIndex</span>])
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">parsed</span>.<span style="color:#a6e22e">command</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">parsed</span>.<span style="color:#66d9ef">package</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">parsedCmd</span>.<span style="color:#a6e22e">type</span> <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#39;directory&#39;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">?</span> <span style="color:#a6e22e">argv</span>[<span style="color:#a6e22e">cmdIndex</span>]
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">:</span> <span style="color:#a6e22e">guessCmdName</span>(<span style="color:#a6e22e">parsedCmd</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">parsed</span>.<span style="color:#a6e22e">isLocal</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">parsedCmd</span>.<span style="color:#a6e22e">type</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;directory&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">parsed</span>.<span style="color:#a6e22e">cmdOpts</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">slice</span>(<span style="color:#a6e22e">cmdIndex</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">parsed</span>.<span style="color:#66d9ef">package</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;string&#39;</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">parsed</span>.<span style="color:#66d9ef">package</span> <span style="color:#f92672">=</span> [<span style="color:#a6e22e">parsed</span>.<span style="color:#66d9ef">package</span>]
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">parsed</span>.<span style="color:#a6e22e">packageRequested</span> <span style="color:#f92672">=</span> <span style="color:#f92672">!!</span><span style="color:#a6e22e">parsed</span>.<span style="color:#66d9ef">package</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">parsed</span>.<span style="color:#a6e22e">cmdHadVersion</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">parsed</span>.<span style="color:#66d9ef">package</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">parsedCmd</span>.<span style="color:#a6e22e">type</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;directory&#39;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">?</span> <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">:</span> <span style="color:#a6e22e">parsedCmd</span>.<span style="color:#a6e22e">name</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">parsedCmd</span>.<span style="color:#a6e22e">raw</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">pkg</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">parsed</span>.<span style="color:#66d9ef">package</span> <span style="color:#f92672">||</span> [<span style="color:#a6e22e">argv</span>[<span style="color:#a6e22e">cmdIndex</span>]]
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">parsed</span>.<span style="color:#a6e22e">p</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">parsed</span>.<span style="color:#66d9ef">package</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">pkg</span>.<span style="color:#a6e22e">map</span>(<span style="color:#a6e22e">p</span> =&gt; <span style="color:#a6e22e">npa</span>(<span style="color:#a6e22e">p</span>).<span style="color:#a6e22e">toString</span>())
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">parsed</span>
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">parsed</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">parser</span>.<span style="color:#a6e22e">parse</span>(<span style="color:#a6e22e">argv</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">parsed</span>.<span style="color:#66d9ef">package</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;string&#39;</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">parsed</span>.<span style="color:#66d9ef">package</span> <span style="color:#f92672">=</span> [<span style="color:#a6e22e">parsed</span>.<span style="color:#66d9ef">package</span>]
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 指定了-c并且-p之后, -p命令用来安装npm包(仅安装, 不执行相关二进制文件), -c命令用来执行bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">//  比如: npx -p nodemon -c &#39;echo $PATH&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">//  会先按照nodemon这个包, 然后打印出系统的PATH
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">parsed</span>.<span style="color:#a6e22e">call</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">parsed</span>.<span style="color:#66d9ef">package</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">parsed</span>.<span style="color:#a6e22e">packageRequested</span> <span style="color:#f92672">=</span> <span style="color:#f92672">!!</span><span style="color:#a6e22e">parsed</span>.<span style="color:#66d9ef">package</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">parsed</span>.<span style="color:#a6e22e">cmdHadVersion</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">pkg</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">parsed</span>.<span style="color:#66d9ef">package</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">parsed</span>.<span style="color:#a6e22e">p</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">parsed</span>.<span style="color:#66d9ef">package</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">pkg</span>.<span style="color:#a6e22e">map</span>(<span style="color:#a6e22e">p</span> =&gt; <span style="color:#a6e22e">npa</span>(<span style="color:#a6e22e">p</span>).<span style="color:#a6e22e">toString</span>())
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">parsed</span>.<span style="color:#a6e22e">call</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">parsed</span>.<span style="color:#66d9ef">package</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">parsed</span>.<span style="color:#a6e22e">packageRequested</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">parsed</span>.<span style="color:#a6e22e">cmdHadVersion</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">parsed</span>.<span style="color:#a6e22e">p</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">parsed</span>.<span style="color:#66d9ef">package</span> <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">hasDashDash</span>) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">//  存在&#39;--&#39;的情况, &#39;--&#39;会被忽略, 重新截取参数进行解析
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">splitCmd</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">parsed</span>.<span style="color:#a6e22e">_</span>.<span style="color:#a6e22e">slice</span>(<span style="color:#ae81ff">2</span>)
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">parsedCmd</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">npa</span>(<span style="color:#a6e22e">splitCmd</span>[<span style="color:#ae81ff">0</span>])
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">parsed</span>.<span style="color:#a6e22e">command</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">parsed</span>.<span style="color:#66d9ef">package</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">?</span> <span style="color:#a6e22e">splitCmd</span>[<span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">:</span> <span style="color:#a6e22e">guessCmdName</span>(<span style="color:#a6e22e">parsedCmd</span>)
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">parsed</span>.<span style="color:#a6e22e">cmdOpts</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">splitCmd</span>.<span style="color:#a6e22e">slice</span>(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">parsed</span>.<span style="color:#a6e22e">packageRequested</span> <span style="color:#f92672">=</span> <span style="color:#f92672">!!</span><span style="color:#a6e22e">parsed</span>.<span style="color:#66d9ef">package</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">parsed</span>.<span style="color:#a6e22e">cmdHadVersion</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">parsed</span>.<span style="color:#66d9ef">package</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">?</span> <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">:</span> <span style="color:#a6e22e">parsedCmd</span>.<span style="color:#a6e22e">name</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">parsedCmd</span>.<span style="color:#a6e22e">raw</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">pkg</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">parsed</span>.<span style="color:#66d9ef">package</span> <span style="color:#f92672">||</span> [<span style="color:#a6e22e">splitCmd</span>[<span style="color:#ae81ff">0</span>]]
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">parsed</span>.<span style="color:#a6e22e">p</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">parsed</span>.<span style="color:#66d9ef">package</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">pkg</span>.<span style="color:#a6e22e">map</span>(<span style="color:#a6e22e">p</span> =&gt; <span style="color:#a6e22e">npa</span>(<span style="color:#a6e22e">p</span>).<span style="color:#a6e22e">toString</span>())
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">parsed</span>
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">fastPathArgs</span> (<span style="color:#a6e22e">argv</span>, <span style="color:#a6e22e">defaultNpm</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">parsedCmd</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">pkg</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">//  npx xxx, xxx中只包含大小写字母/数字/中划线/下划线
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">argv</span>[<span style="color:#ae81ff">2</span>].<span style="color:#a6e22e">match</span>(<span style="color:#e6db74">/^[a-z0-9_-]+$/i</span>)) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">parsedCmd</span> <span style="color:#f92672">=</span> { <span style="color:#a6e22e">registry</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>, <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">argv</span>[<span style="color:#ae81ff">2</span>], <span style="color:#a6e22e">raw</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">argv</span>[<span style="color:#ae81ff">2</span>] }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 使用该包的最新版本
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">pkg</span> <span style="color:#f92672">=</span> [<span style="color:#e6db74">`</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">argv</span>[<span style="color:#ae81ff">2</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74">@latest`</span>]
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">npa</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;npm-package-arg&#39;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">parsedCmd</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">npa</span>(<span style="color:#a6e22e">argv</span>[<span style="color:#ae81ff">2</span>])
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  npx ./xxx或者npx /xxx/yyy时, 认为走本地宝, 不需要安装模块
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">parsedCmd</span>.<span style="color:#a6e22e">type</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;directory&#39;</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">pkg</span> <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">pkg</span> <span style="color:#f92672">=</span> [<span style="color:#a6e22e">parsedCmd</span>.<span style="color:#a6e22e">toString</span>()]
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">command</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">guessCmdName</span>(<span style="color:#a6e22e">parsedCmd</span>),
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  把argv的第4项以及后面的元素作为执行该条命令的参数, 如npx webpack --watch, 则cmdOpts为[&#39;--watch&#39;]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">cmdOpts</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">slice</span>(<span style="color:#ae81ff">3</span>),
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">packageRequested</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">false</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  是否执行本地的包
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">isLocal</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">parsedCmd</span>.<span style="color:#a6e22e">type</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;directory&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  遇到类似npx webpack@4时, cmdHadVersion为true, 后续自动安装的时候会按照这个版本来装并执行
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">cmdHadVersion</span><span style="color:#f92672">:</span> (
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">parsedCmd</span>.<span style="color:#a6e22e">name</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">parsedCmd</span>.<span style="color:#a6e22e">raw</span> <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">parsedCmd</span>.<span style="color:#a6e22e">type</span> <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#39;directory&#39;</span>
+</span></span><span style="display:flex;"><span>    ),
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">package</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">pkg</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">p</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">pkg</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">shell</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">false</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">noYargs</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">npm</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">defaultNpm</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">&#39;npm&#39;</span>
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">parseArgs</span>.<span style="color:#a6e22e">showHelp</span> <span style="color:#f92672">=</span> () =&gt; <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;yargs&#39;</span>).<span style="color:#a6e22e">showHelp</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">module</span>.<span style="color:#a6e22e">exports</span>.<span style="color:#a6e22e">_guessCmdName</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">guessCmdName</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * 根据spec返回不同命令
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param {String|Object} spec 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">guessCmdName</span> (<span style="color:#a6e22e">spec</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">//  略
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">//  https://github.com/npm/npx/blob/latest/parse-args.js#L132
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * npx内置参数解析
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param {String[]} argv     由[node路径, npx路径, npx xxx后面的xxx, .etc]组成的数组
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param {String} defaultNpm 默认的npm路径, 从当前项目的node_modules中找
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">yargsParser</span> (<span style="color:#a6e22e">argv</span>, <span style="color:#a6e22e">defaultNpm</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">//  略
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">//  https://github.com/npm/npx/blob/latest/parse-args.js#L160
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">_y</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">Y</span> () {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">_y</span>) { <span style="color:#a6e22e">_y</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;./y.js&#39;</span>) }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">_y</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>参数解析大致实现就是上面的内容，从入口文件中我们可以看到，参数解析完成后就是执行<code>npx</code>函数：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param {*} argv  npx.parseArgs返回的参数对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">npx</span> (<span style="color:#a6e22e">argv</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">//  命令行自动回滚
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">shell</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">argv</span>[<span style="color:#e6db74">&#39;shell-auto-fallback&#39;</span>]
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">shell</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">shell</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;&#39;</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">fallback</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;./auto-fallback.js&#39;</span>)(
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">shell</span>, <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">env</span>.<span style="color:#a6e22e">SHELL</span>, <span style="color:#a6e22e">argv</span>
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">fallback</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">fallback</span>)
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">exitCode</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">//  -c, -p, 包名称都没有指定
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">call</span> <span style="color:#f92672">&amp;&amp;</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">command</span> <span style="color:#f92672">||</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">argv</span>.<span style="color:#66d9ef">package</span>)) {
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">!</span><span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">q</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">error</span>(<span style="color:#a6e22e">Y</span>()<span style="color:#e6db74">`\nERROR: You must supply a command.\n`</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">!</span><span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">q</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">parseArgs</span>.<span style="color:#a6e22e">showHelp</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">exitCode</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">startTime</span> <span style="color:#f92672">=</span> Date.<span style="color:#a6e22e">now</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">localBinPath</span>(<span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">cwd</span>()).<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">local</span> =&gt; {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">local</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">//  将当前项目路径与系统中的$PATH路径进行拼接
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">env</span>.<span style="color:#a6e22e">PATH</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">`</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">local</span><span style="color:#e6db74">}${</span><span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">delimiter</span><span style="color:#e6db74">}${</span><span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">env</span>.<span style="color:#a6e22e">PATH</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> Promise.<span style="color:#a6e22e">all</span>([
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">//  如果命令存在, 则先找出当前命令所在路径
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">command</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">getExistingPath</span>(<span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">command</span>, <span style="color:#a6e22e">argv</span>),
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">//  如果是npx -c &#39;echo $PATH&#39;这种形式, 并且当前项目的.bin目录已经存在, 获取系统中所有的变量(npm run env --parseable)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">call</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">local</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">getEnv</span>(<span style="color:#a6e22e">argv</span>)
+</span></span><span style="display:flex;"><span>    ]).<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">args</span> =&gt; {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">existing</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">args</span>[<span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">newEnv</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">args</span>[<span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">newEnv</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// NOTE - we don&#39;t need to manipulate PATH further here, because
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#75715e">//        npm has already done so. And even added the node-gyp path!
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        Object.<span style="color:#a6e22e">assign</span>(<span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">env</span>, <span style="color:#a6e22e">newEnv</span>)
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">//  在安装模块之前, 首先检查npx版本, 如果有更新则打印更新信息
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#66d9ef">if</span> ((<span style="color:#f92672">!</span><span style="color:#a6e22e">existing</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">call</span>) <span style="color:#f92672">||</span> <span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">packageRequested</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">npxPkg</span>) {
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;update-notifier&#39;</span>)({
+</span></span><span style="display:flex;"><span>              <span style="color:#a6e22e">pkg</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">require</span>(<span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">npxPkg</span>)
+</span></span><span style="display:flex;"><span>            }).<span style="color:#a6e22e">notify</span>()
+</span></span><span style="display:flex;"><span>          } <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">e</span>) {}
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 确保这个npm包存在于当前项目
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">ensurePackages</span>(<span style="color:#a6e22e">argv</span>.<span style="color:#66d9ef">package</span>, <span style="color:#a6e22e">argv</span>).<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">results</span> =&gt; {
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">results</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">results</span>.<span style="color:#a6e22e">added</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">results</span>.<span style="color:#a6e22e">updated</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">q</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">error</span>(<span style="color:#a6e22e">Y</span>()<span style="color:#e6db74">`npx: installed </span><span style="color:#e6db74">${</span>
+</span></span><span style="display:flex;"><span>              <span style="color:#a6e22e">results</span>.<span style="color:#a6e22e">added</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">results</span>.<span style="color:#a6e22e">updated</span>.<span style="color:#a6e22e">length</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">}</span><span style="color:#e6db74"> in </span><span style="color:#e6db74">${</span>(Date.<span style="color:#a6e22e">now</span>() <span style="color:#f92672">-</span> <span style="color:#a6e22e">startTime</span>) <span style="color:#f92672">/</span> <span style="color:#ae81ff">1000</span><span style="color:#e6db74">}</span><span style="color:#e6db74">s`</span>)
+</span></span><span style="display:flex;"><span>          }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>          <span style="color:#75715e">//    略
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#75715e">//    https://github.com/npm/npx/blob/latest/index.js#L79
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        })
+</span></span><span style="display:flex;"><span>      } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// We can skip any extra installation, &#39;cause everything exists.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">existing</span>
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    }).<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">existing</span> =&gt; {
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">       * 开始执行真正的命令
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">       * npx webpack --watch -&gt; wabpack --watch
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">       */</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">execCommand</span>(<span style="color:#a6e22e">existing</span>, <span style="color:#a6e22e">argv</span>)
+</span></span><span style="display:flex;"><span>    }).<span style="color:#66d9ef">catch</span>(<span style="color:#a6e22e">err</span> =&gt; {
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">!</span><span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">q</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">error</span>(<span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">message</span>)
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">exitCode</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">exitCode</span> <span style="color:#f92672">||</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    })
+</span></span><span style="display:flex;"><span>  })
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>在<code>npx</code>这个函数中,  首先调用了<code>localBinPath</code>这个函数，该函数的作用就是找到当前项目中<code>node_modules/.bin</code>的绝对路径，这边不做分析，可以从<a href="https://github.com/npm/npx/blob/latest/index.js#L120">这里</a>找到源码，下面我们看下<code>getExistingPath</code>这个函数：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * 找出要执行的命令的路径是否存在
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param {String} command 命令: webpack/nodemon这些
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param {*} opts         从npx xxx中解析的出参数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">getExistingPath</span> (<span style="color:#a6e22e">command</span>, <span style="color:#a6e22e">opts</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">isLocal</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> Promise.<span style="color:#a6e22e">resolve</span>(<span style="color:#a6e22e">command</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  如果cmd中指定了版本, 或者需要安装, 或者忽略已经存在的包
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">cmdHadVersion</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">packageRequested</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">ignoreExisting</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> Promise.<span style="color:#a6e22e">resolve</span>(<span style="color:#66d9ef">false</span>)
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  使用which命令来查找, 类似linux平台下的which xxx
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">which</span>(<span style="color:#a6e22e">command</span>).<span style="color:#66d9ef">catch</span>(<span style="color:#a6e22e">err</span> =&gt; {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">code</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;ENOENT&#39;</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">install</span> <span style="color:#f92672">===</span> <span style="color:#66d9ef">false</span>) {
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">exitCode</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">127</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">throw</span> <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>      } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">throw</span> <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    })
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>在<code>npx</code>中的<code>Promise.all</code>中同时调用了<code>getEnv</code>，在上面已经有注释，也不做分析了，可以从[这里]([https://github.com/npm/npx/blob/latest/index.js#L120](<a href="https://github.com/npm/npx/blob/latest/index.js#L127">https://github.com/npm/npx/blob/latest/index.js#L127</a>找到源码，下面我们看下<code>ensurePackages</code>这个函数，这个函数相当重要：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * 作用:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * 安装模块
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * 在程序退出后，删除安装的模块
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * 修改本次运行时的PATH,优先级: 安装缓存 &gt; 当前项目路径 &gt; 系统PATH
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">ensurePackages</span> (<span style="color:#a6e22e">specs</span>, <span style="color:#a6e22e">opts</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">cache</span> <span style="color:#f92672">?</span> Promise.<span style="color:#a6e22e">resolve</span>(<span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">cache</span>) <span style="color:#f92672">:</span> <span style="color:#a6e22e">getNpmCache</span>(<span style="color:#a6e22e">opts</span>)
+</span></span><span style="display:flex;"><span>  ).<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">cache</span> =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  将模块安装在全局的NPM_CHCHE/_npx下面
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">prefix</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">join</span>(<span style="color:#a6e22e">cache</span>, <span style="color:#e6db74">&#39;_npx&#39;</span>, <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">pid</span>.<span style="color:#a6e22e">toString</span>())
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">bins</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">platform</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;win32&#39;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">?</span> <span style="color:#a6e22e">prefix</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">:</span> <span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">join</span>(<span style="color:#a6e22e">prefix</span>, <span style="color:#e6db74">&#39;bin&#39;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">rimraf</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;rimraf&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  订阅退出事件, 退出后同步删除NPM_CHCHE/_npx里面安装的内容
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#39;exit&#39;</span>, () =&gt; <span style="color:#a6e22e">rimraf</span>.<span style="color:#a6e22e">sync</span>(<span style="color:#a6e22e">prefix</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  先删除之前的bin目录, 然后安装新包
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">promisify</span>(<span style="color:#a6e22e">rimraf</span>)(<span style="color:#a6e22e">bins</span>).<span style="color:#a6e22e">then</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">installPackages</span>(<span style="color:#a6e22e">specs</span>, <span style="color:#a6e22e">prefix</span>, <span style="color:#a6e22e">opts</span>)
+</span></span><span style="display:flex;"><span>    }).<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">info</span> =&gt; {
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">//  把本次的缓存路径也加到PATH前面
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">env</span>.<span style="color:#a6e22e">PATH</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">`</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">bins</span><span style="color:#e6db74">}${</span><span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">delimiter</span><span style="color:#e6db74">}${</span><span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">env</span>.<span style="color:#a6e22e">PATH</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">//  返回安装目录信息, 给后续查找使用
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">info</span>) { <span style="color:#a6e22e">info</span> <span style="color:#f92672">=</span> {} }
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">info</span>.<span style="color:#a6e22e">prefix</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">prefix</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">info</span>.<span style="color:#a6e22e">bin</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">bins</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">info</span>
+</span></span><span style="display:flex;"><span>    })
+</span></span><span style="display:flex;"><span>  })
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>在<code>ensurePackages</code>中调用了<code>installPackages</code>这个函数，由它负责安装具体的模块到具体路径，这里也省略分析， 可以从<a href="https://github.com/npm/npx/blob/latest/index.js#L220">这里</a>找到源码，现在我们回到<code>npx</code>函数，继续往下分析，下面就是执行真正的命令了，在<code>execCommand</code>这个函数，在<code>execCommand</code>中还有一个相对重要的函数，我们先分析它，在之前被省略的内容中，也有多次调用了，下面我们先看下<code>findNodeScript</code> 这个函数：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * 找出具体可执行文件的路径
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param {*} existing 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param {*} opts 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">findNodeScript</span> (<span style="color:#a6e22e">existing</span>, <span style="color:#a6e22e">opts</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">existing</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> Promise.<span style="color:#a6e22e">resolve</span>(<span style="color:#66d9ef">false</span>)
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">promisify</span>(<span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">stat</span>)(<span style="color:#a6e22e">existing</span>).<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">stat</span> =&gt; {
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">//  如果是执行本地文件, 并且文件格式为js, 直接返回
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#75715e">//  类似npx ./xxx.js [--xxx] [--yyy]这种形式
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">opts</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">isLocal</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">extname</span>(<span style="color:#a6e22e">existing</span>) <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;.js&#39;</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">existing</span>
+</span></span><span style="display:flex;"><span>      } 
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">//  如果执行的是本地目录
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">opts</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">isLocal</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">stat</span>.<span style="color:#a6e22e">isDirectory</span>()) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// npx will execute the directory itself
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>          <span style="color:#75715e">//  从package.json中的bin或者main指向找目标文件, 否则默认就是目录下的index.js
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">pkg</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">resolve</span>(<span style="color:#a6e22e">existing</span>, <span style="color:#e6db74">&#39;package.json&#39;</span>))
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">target</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">resolve</span>(<span style="color:#a6e22e">existing</span>, <span style="color:#a6e22e">pkg</span>.<span style="color:#a6e22e">bin</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">pkg</span>.<span style="color:#a6e22e">main</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">&#39;index.js&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>          <span style="color:#75715e">//  再判断下, 其实是走的上面的(opts &amp;&amp; opts.isLocal &amp;&amp; path.extname(existing) === &#39;.js&#39;)分支
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">findNodeScript</span>(<span style="color:#a6e22e">target</span>, <span style="color:#a6e22e">opts</span>).<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">script</span> =&gt; {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">script</span>) {
+</span></span><span style="display:flex;"><span>              <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">script</span>
+</span></span><span style="display:flex;"><span>            } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>              <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#a6e22e">Y</span>()<span style="color:#e6db74">`command not found: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">target</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>)
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>          })
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">e</span>) {
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#a6e22e">Y</span>()<span style="color:#e6db74">`command not found: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">existing</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>)
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>      } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">platform</span> <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#39;win32&#39;</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">bytecount</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">400</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">buf</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">Buffer</span>.<span style="color:#a6e22e">alloc</span>(<span style="color:#a6e22e">bytecount</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">promisify</span>(<span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">open</span>)(<span style="color:#a6e22e">existing</span>, <span style="color:#e6db74">&#39;r&#39;</span>).<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">fd</span> =&gt; {
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">promisify</span>(<span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">read</span>)(<span style="color:#a6e22e">fd</span>, <span style="color:#a6e22e">buf</span>, <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">bytecount</span>, <span style="color:#ae81ff">0</span>).<span style="color:#a6e22e">then</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">promisify</span>(<span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">close</span>)(<span style="color:#a6e22e">fd</span>)
+</span></span><span style="display:flex;"><span>          }, <span style="color:#a6e22e">err</span> =&gt; {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">promisify</span>(<span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">close</span>)(<span style="color:#a6e22e">fd</span>).<span style="color:#a6e22e">then</span>(() =&gt; { <span style="color:#66d9ef">throw</span> <span style="color:#a6e22e">err</span> })
+</span></span><span style="display:flex;"><span>          })
+</span></span><span style="display:flex;"><span>        }).<span style="color:#a6e22e">then</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>          <span style="color:#75715e">//  读取需要执行的文件内容, 并且判断文件内容里是否包含 #!/usr/bin/env node、/usr/local/bin/node、/usr/bin/node这里面的其中一个
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">re</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">/#!\s*(?:\/usr\/bin\/env\s*node|\/usr\/local\/bin\/node|\/usr\/bin\/node)\s*\r?\n/i</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>          <span style="color:#75715e">//  如果包含上面三个其中一个, 就返回具体的路径, 否则返回null
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">buf</span>.<span style="color:#a6e22e">toString</span>(<span style="color:#e6db74">&#39;utf8&#39;</span>).<span style="color:#a6e22e">match</span>(<span style="color:#a6e22e">re</span>) <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">existing</span>
+</span></span><span style="display:flex;"><span>        })
+</span></span><span style="display:flex;"><span>      } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">platform</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;win32&#39;</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">buf</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">Buffer</span>.<span style="color:#a6e22e">alloc</span>(<span style="color:#ae81ff">1000</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">promisify</span>(<span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">open</span>)(<span style="color:#a6e22e">existing</span>, <span style="color:#e6db74">&#39;r&#39;</span>).<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">fd</span> =&gt; {
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">promisify</span>(<span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">read</span>)(<span style="color:#a6e22e">fd</span>, <span style="color:#a6e22e">buf</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1000</span>, <span style="color:#ae81ff">0</span>).<span style="color:#a6e22e">then</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">promisify</span>(<span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">close</span>)(<span style="color:#a6e22e">fd</span>)
+</span></span><span style="display:flex;"><span>          }, <span style="color:#a6e22e">err</span> =&gt; {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">promisify</span>(<span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">close</span>)(<span style="color:#a6e22e">fd</span>).<span style="color:#a6e22e">then</span>(() =&gt; { <span style="color:#66d9ef">throw</span> <span style="color:#a6e22e">err</span> })
+</span></span><span style="display:flex;"><span>          })
+</span></span><span style="display:flex;"><span>        }).<span style="color:#a6e22e">then</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">buf</span>.<span style="color:#a6e22e">toString</span>(<span style="color:#e6db74">&#39;utf8&#39;</span>).<span style="color:#a6e22e">trim</span>()
+</span></span><span style="display:flex;"><span>        }).<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">str</span> =&gt; {
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">cmd</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">/&#34;%~dp0\\node\.exe&#34;\s+&#34;%~dp0\\(.*)&#34;\s+%\*/</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">mingw</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">/&#34;\$basedir\/node&#34;\s+&#34;\$basedir\/(.*)&#34;\s+&#34;\$@&#34;/i</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">str</span>.<span style="color:#a6e22e">match</span>(<span style="color:#a6e22e">cmd</span>) <span style="color:#f92672">||</span> <span style="color:#a6e22e">str</span>.<span style="color:#a6e22e">match</span>(<span style="color:#a6e22e">mingw</span>)
+</span></span><span style="display:flex;"><span>        }).<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">match</span> =&gt; {
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">match</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">join</span>(<span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">dirname</span>(<span style="color:#a6e22e">existing</span>), <span style="color:#a6e22e">match</span>[<span style="color:#ae81ff">1</span>])
+</span></span><span style="display:flex;"><span>        })
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    })
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>有了上面的<code>findNodeScript</code>，下面就是真正的调用了<code>execCommand</code> ：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * 执行真正需要执行的命令
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param {*} _existing 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param {*} argv 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">execCommand</span> (<span style="color:#a6e22e">_existing</span>, <span style="color:#a6e22e">argv</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">findNodeScript</span>(<span style="color:#a6e22e">_existing</span>, <span style="color:#a6e22e">argv</span>).<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">existing</span> =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">argvCmdOpts</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">cmdOpts</span> <span style="color:#f92672">||</span> []
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  npx ./xxx.js或者npx ./xxxx会进这个分支
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">existing</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">alwaysSpawn</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">nodeArg</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">shell</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">existing</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">argv</span>[<span style="color:#ae81ff">1</span>]) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">Module</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;module&#39;</span>)
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">noYargs</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;yargs&#39;</span>).<span style="color:#a6e22e">reset</span>()
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">argv</span> <span style="color:#f92672">=</span> [
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">argv</span>[<span style="color:#ae81ff">0</span>],
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">existing</span>
+</span></span><span style="display:flex;"><span>      ].<span style="color:#a6e22e">concat</span>(<span style="color:#a6e22e">argvCmdOpts</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">//  执行本地js, 类似node ./xxx.js [-xxx] [-yyy]或者node ./xxx [-xxx] [-yyy]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#a6e22e">Module</span>.<span style="color:#a6e22e">runMain</span>()
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">existing</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">nodeArg</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">nodeArg</span>.<span style="color:#a6e22e">length</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#a6e22e">Y</span>()<span style="color:#e6db74">`ERROR: --node-arg/-n can only be used on packages with node scripts.`</span>)
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">cmd</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">existing</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">cmdOpts</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">argvCmdOpts</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">existing</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">cmd</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">argv</span>[<span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">platform</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;win32&#39;</span>) {
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">cmd</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">child</span>.<span style="color:#a6e22e">escapeArg</span>(<span style="color:#a6e22e">cmd</span>, <span style="color:#66d9ef">true</span>)
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">cmdOpts</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">nodeArg</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  拼接命令中的参数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">cmdOpts</span>) {
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">cmdOpts</span> <span style="color:#f92672">=</span> Array.<span style="color:#a6e22e">isArray</span>(<span style="color:#a6e22e">cmdOpts</span>) <span style="color:#f92672">?</span> <span style="color:#a6e22e">cmdOpts</span> <span style="color:#f92672">:</span> [<span style="color:#a6e22e">cmdOpts</span>]
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">cmdOpts</span> <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">cmdOpts</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">cmdOpts</span>.<span style="color:#a6e22e">reduce</span>((<span style="color:#a6e22e">acc</span>, <span style="color:#a6e22e">arg</span>) =&gt; {
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">acc</span>.<span style="color:#a6e22e">concat</span>(<span style="color:#a6e22e">arg</span>.<span style="color:#a6e22e">split</span>(<span style="color:#e6db74">/\s+/</span>))
+</span></span><span style="display:flex;"><span>        }, [])
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">cmdOpts</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">cmdOpts</span>.<span style="color:#a6e22e">concat</span>(<span style="color:#a6e22e">existing</span>, <span style="color:#a6e22e">argvCmdOpts</span>)
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">opts</span> <span style="color:#f92672">=</span> Object.<span style="color:#a6e22e">assign</span>({}, <span style="color:#a6e22e">argv</span>, { <span style="color:#a6e22e">cmdOpts</span> })
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">//  runCommand在./child.js中封装, 大致实现逻辑用child_process.spawn来执行相关命令
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#75715e">//  https://github.com/npm/npx/blob/latest/child.js
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">child</span>.<span style="color:#a6e22e">runCommand</span>(<span style="color:#a6e22e">cmd</span>, <span style="color:#a6e22e">opts</span>).<span style="color:#66d9ef">catch</span>(<span style="color:#a6e22e">err</span> =&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">isOperational</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">exitCode</span>) {
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">exitCode</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">exitCode</span>
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">throw</span> <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>      })
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  })
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>这大概就是我个人认为<code>npx</code>中比较重要的相关代码的分析，踉踉跄跄，网上关于<code>npx</code>的源码基本上找不到，所以也基本上没有参考，如果有分析的不到位的，还望指正。</p>
+<h4 id="总结">总结</h4>
+<p>我们在命令行中输入了<code>npx xxxx [--yyy]</code>之后，<code>npx</code>内部大概实现了下面几件事情:</p>
+<ul>
+<li>
+<p>分析<code>xxx [--yyy]</code>这段内容，最后得出是否是执行本地文件，还是<code>npm</code>包，判断是否需要安装新版本等</p>
+</li>
+<li>
+<p>然后先找出当前命令所在真实路径，并且修改本次执行时<code>process</code>中的信息</p>
+</li>
+<li>
+<p>确保模块存在当前项目，如果不存在，安装模块到<code>$NPM_CACHE_$/_npx/xxx</code>下面</p>
+</li>
+<li>
+<p>根据路径找到真正的可执行二进制文件或者<code>js</code>的绝对路径，用<code>child_process.spawn</code> 或者类似<code>node ./[xxx/]yyy.js</code>的形式来实现启动</p>
+</li>
+<li>
+<p>程序退出，删除之前安装的临时模块</p>
+</li>
+</ul>
+</section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2020-07-22-read-sentry/"
+      ><span>Sentry源码阅读</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

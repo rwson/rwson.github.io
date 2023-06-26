@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>实现你自己的Promise - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="在现代化前端开发中，经常会用到Promise模式，Promise最大的好处就是可以使异步代码看起来如同步般清新易读，从而从回调地狱中解脱出来，ES6已经原生支持Promise对象，但在未支持的浏览器中还需要通过 polyfill 模拟实现。下面一起实现一个Promise。
+一般我们用Promise会写成类似下面的样子：
+const ins = new Promise((resolve, reject) =&gt; {  //	... });  ins.then((res) =&gt; {  // ... }, (ex) =&gt; {}); 在Promise中一共存在三种状态，PENDING, FULFILLED,REJECTED，在实例化一个Promise后，它的状态会变成PENDING，执行resolve或者reject方法会把状态改成FULFILLED或者REJECTED，此过程不可逆，也就是说每个Promise只能调用一次resolve或者reject。
+先来搭个骨架:
+const PENDING = &#34;PENDING&#34;,  FULFILLED = &#34;FULFILLED&#34;,  REJECTED = &#34;REJECTED&#34;;  function Promise(resolver) {  if (!isFunction(resolver)) {  throw new TypeError(&#34;TypeError: resolver must be a function&#34;);  }   //	实例的值  this.value = null;   //	实例的状态  this." />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">实现你自己的Promise</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Aug 4, 2017</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p>在现代化前端开发中，经常会用到<code>Promise</code>模式，<code>Promise</code>最大的好处就是可以使异步代码看起来如同步般清新易读，从而从回调地狱中解脱出来，<code>ES6</code>已经原生支持<code>Promise</code>对象，但在未支持的浏览器中还需要通过 polyfill 模拟实现。下面一起实现一个<code>Promise</code>。</p>
+<p>一般我们用<code>Promise</code>会写成类似下面的样子：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">ins</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Promise((<span style="color:#a6e22e">resolve</span>, <span style="color:#a6e22e">reject</span>) =&gt; {
+</span></span><span style="display:flex;"><span>  	<span style="color:#75715e">//	...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">ins</span>.<span style="color:#a6e22e">then</span>((<span style="color:#a6e22e">res</span>) =&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">//   ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}, (<span style="color:#a6e22e">ex</span>) =&gt; {});
+</span></span></code></pre></div><p>在<code>Promise</code>中一共存在三种状态，<code>PENDING</code>, <code>FULFILLED</code>,<code>REJECTED</code>，在实例化一个<code>Promise</code>后，它的状态会变成<code>PENDING</code>，执行<code>resolve</code>或者<code>reject</code>方法会把状态改成<code>FULFILLED</code>或者<code>REJECTED</code>，此过程不可逆，也就是说每个<code>Promise</code>只能调用一次<code>resolve</code>或者<code>reject</code>。</p>
+<p>先来搭个骨架:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">PENDING</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;PENDING&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">FULFILLED</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;FULFILLED&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">REJECTED</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;REJECTED&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> Promise(<span style="color:#a6e22e">resolver</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">isFunction</span>(<span style="color:#a6e22e">resolver</span>)) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">TypeError</span>(<span style="color:#e6db74">&#34;TypeError: resolver must be a function&#34;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//	实例的值
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">value</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//	实例的状态
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">PENDING</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//	缓存then和catch中传入的方法
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_doneCallbacks</span> <span style="color:#f92672">=</span> [];
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_failCallbacks</span> <span style="color:#f92672">=</span> [];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//	在执行resolver内部抛出异常, try ... catch 包裹
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">resolver</span>(<span style="color:#a6e22e">resolve</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#66d9ef">this</span>), <span style="color:#a6e22e">reject</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#66d9ef">this</span>));
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">ex</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">reject</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#66d9ef">this</span>)(<span style="color:#a6e22e">ex</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Promise.<span style="color:#a6e22e">prototype</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">constructor</span><span style="color:#f92672">:</span> Promise,
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">then</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">onFulfilled</span>, <span style="color:#a6e22e">onRejected</span>) {},
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">catch</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">onRejected</span>) {}
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">isFunction</span>(<span style="color:#a6e22e">obj</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">obj</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;function&#34;</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>上面实现了一个<code>Promise</code>构造器并且在它原型上声明了<code>then</code>和<code>catch</code>两个空方法，下面我们一起来实现一下<code>then</code>和<code>catch</code>两个方法, <code>Promise</code>中的<code>then</code>支持调用，所以<code>then</code>方法需要返回一个<code>Promise</code>实例。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span>Promise.<span style="color:#a6e22e">prototype</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">constructor</span><span style="color:#f92672">:</span> Promise,
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">//	then方法接受onFulfilled, onRejected两个回调, 并且返回一个新的Promise实例
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">then</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">onFulfilled</span>, <span style="color:#a6e22e">onRejected</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//	要返回的新Promise
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">ins</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Promise(() =&gt; {});
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">isFunction</span>(<span style="color:#a6e22e">onFulfilled</span>)) {
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">//	将onFulfilled缓存到_doneCallbacks中
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_doneCallbacks</span>.<span style="color:#a6e22e">push</span>(<span style="color:#a6e22e">makeCallback</span>(<span style="color:#a6e22e">ins</span>, <span style="color:#a6e22e">onFulfilled</span>, <span style="color:#e6db74">&#34;resolve&#34;</span>));
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">isFunction</span>(<span style="color:#a6e22e">onRejected</span>)) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_failCallbacks</span>.<span style="color:#a6e22e">push</span>(<span style="color:#a6e22e">makeCallback</span>(<span style="color:#a6e22e">ins</span>, <span style="color:#a6e22e">onFulfilled</span>, <span style="color:#e6db74">&#34;reject&#34;</span>));
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">ins</span>;
+</span></span><span style="display:flex;"><span>  },
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">catch</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">onRejected</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">then</span>(<span style="color:#66d9ef">null</span>, <span style="color:#a6e22e">onRejected</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>在实例化一个<code>Promise</code>时，我们的<code>resolver</code>有<code>resolve</code>和<code>reject</code>两个参数(也就是上面构造器中的最后)，在实例化完成后其中有一个将被立即调用，用于结束当前<code>Promise</code>。下面一起实现下<code>resolve</code>和<code>reject</code>，这两个函数完成的功能就是接受<code>resolver</code>中异步处理返回的值并且传递给<code>then</code>或者<code>catch</code>，并且将当前<code>PENDING</code>的状态改掉，刚才上面说到<code>Promise</code>的状态从<code>PENDING</code>到<code>FULFILLED</code>或者<code>REJECTED</code>是一个不可逆的过程，所以为了确保<code>resolve</code>或者<code>reject</code>不被多次调用，需要在方法开头提前判断下<code>status</code>是不是<code>PENDING</code>状态。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">resolve</span>(<span style="color:#a6e22e">data</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">PENDING</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">value</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">data</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">FULFILLED</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">run</span>.<span style="color:#a6e22e">call</span>(<span style="color:#66d9ef">this</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">reject</span>(<span style="color:#a6e22e">ex</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">PENDING</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">value</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">ex</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">REJECTED</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">run</span>.<span style="color:#a6e22e">call</span>(<span style="color:#66d9ef">this</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>在<code>resolve</code>和<code>reject</code>中，我们都调用了<code>run</code>方法，该方法的作用是用于触发接下来的<code>Promise</code>的执行。<code>run</code>函数中需要注意的一点是，需要异步执行相关的回调函数，下面一起来实现一个<code>run</code>方法，需要注意的是每个<code>Promise</code>只能被执行一次，所以在<code>run</code>方法最后，把<code>_doneCallbacks</code>和<code>_failCallbacks</code>置空。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">run</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">PENDING</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">//	获取到异步处理后的值, 根据当前状态获取要执行的回调
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">value</span> } <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">callbacks</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">FULFILLED</span> <span style="color:#f92672">?</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_doneCallbacks</span> <span style="color:#f92672">:</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_failCallbacks</span><span style="color:#960050;background-color:#1e0010">；</span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">//	Promise异步执行
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">timeout</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">setTimeout</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">let</span> <span style="color:#a6e22e">fn</span> <span style="color:#66d9ef">of</span> <span style="color:#a6e22e">callbacks</span>) {
+</span></span><span style="display:flex;"><span>	  <span style="color:#75715e">//	值穿透到每个then或者catch
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#a6e22e">fn</span>(<span style="color:#a6e22e">value</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">clearTimeout</span>(<span style="color:#a6e22e">timeout</span>);
+</span></span><span style="display:flex;"><span>  });
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_doneCallbacks</span> <span style="color:#f92672">=</span> [];
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_failCallbacks</span> <span style="color:#f92672">=</span> [];
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>上面<code>run</code>里执行的每个<code>fn</code>都是<code>then</code>方法中<code>push</code>进<code>_doneCallbacks</code>或<code>_failCallbacks的</code>makeCallback<code>返回值，</code>makeCallback`是整个代码中比较复杂的一部分，下面一起看下具体实现。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">makeCallback</span>(<span style="color:#a6e22e">promise</span>, <span style="color:#a6e22e">callback</span>, <span style="color:#a6e22e">action</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">promiseCallback</span>(<span style="color:#a6e22e">value</span>) {
+</span></span><span style="display:flex;"><span>    	<span style="color:#75715e">//	callback是个函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">isFunction</span>(<span style="color:#a6e22e">callback</span>)) {
+</span></span><span style="display:flex;"><span>        	<span style="color:#75715e">//	定义个变量去接受返回值
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        	<span style="color:#75715e">//	防止抛出异常, try ... catch 包裹, catch 时直接调用reject
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">x</span>;
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">x</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">callback</span>(<span style="color:#a6e22e">value</span>);
+</span></span><span style="display:flex;"><span>            } <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">ex</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">reject</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#a6e22e">promise</span>)(<span style="color:#a6e22e">ex</span>);
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//	callback中返回的是this, 会引发死循环
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#75715e">//	抛出类型异常到reject
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * const ins = new Promise((resolve, reject) =&gt; {});
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * ins.then(() =&gt; {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * 		return ins;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * });
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             */</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">x</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">promise</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">reason</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">TypeError</span>(<span style="color:#e6db74">&#34;TypeError: The return value could not be same with the promise&#34;</span>);
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">reject</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#a6e22e">promise</span>)(<span style="color:#a6e22e">reason</span>);
+</span></span><span style="display:flex;"><span>            } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">x</span> <span style="color:#66d9ef">instanceof</span> Promise) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            	<span style="color:#75715e">//	callback中返回一个新的Promise
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            	<span style="color:#75715e">//	执行该Promise的then和catch
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            	<span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * const ins = new Promise((resolve, reject) =&gt; {});
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * ins.then(() =&gt; {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 		return new Promise((resolve, reject) =&gt; {});
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * });
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 */</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">x</span>.<span style="color:#a6e22e">then</span>((<span style="color:#a6e22e">data</span>) =&gt; {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">resolve</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#a6e22e">promise</span>)(<span style="color:#a6e22e">data</span>);
+</span></span><span style="display:flex;"><span>                }, (<span style="color:#a6e22e">ex</span>) =&gt; {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">reject</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#a6e22e">promise</span>)(<span style="color:#a6e22e">ex</span>);
+</span></span><span style="display:flex;"><span>                });
+</span></span><span style="display:flex;"><span>            } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">then</span>;
+</span></span><span style="display:flex;"><span>                (<span style="color:#66d9ef">function</span> <span style="color:#a6e22e">resolveThenable</span>(<span style="color:#a6e22e">x</span>) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e">// 如果返回的是一个Thenable对象(Promise)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">x</span> <span style="color:#f92672">&amp;&amp;</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">x</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;object&#34;</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">isFunction</span>(<span style="color:#a6e22e">x</span>))) {
+</span></span><span style="display:flex;"><span>                        <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>                            <span style="color:#a6e22e">then</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">x</span>.<span style="color:#a6e22e">then</span>;
+</span></span><span style="display:flex;"><span>                        } <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">ex</span>) {
+</span></span><span style="display:flex;"><span>                            <span style="color:#a6e22e">reject</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#a6e22e">promise</span>)(<span style="color:#a6e22e">ex</span>);
+</span></span><span style="display:flex;"><span>                            <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>                        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">isFunction</span>(<span style="color:#a6e22e">then</span>)) {
+</span></span><span style="display:flex;"><span>                            <span style="color:#75715e">// 调用Thenable对象的then方法时,传递进去的resolvePromise和rejectPromise方法（及下面的两个匿名方法）
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                            <span style="color:#75715e">// 可能会被重复调用。 但Promise+规范规定这两个方法有且只能有其中的一个被调用一次,多次调用将被忽略
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                            <span style="color:#75715e">// 此处通过invoked来处理重复调用
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                            <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">invoked</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>;
+</span></span><span style="display:flex;"><span>                            <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>                                <span style="color:#a6e22e">then</span>.<span style="color:#a6e22e">call</span>( <span style="color:#a6e22e">x</span>, (<span style="color:#a6e22e">y</span>) =&gt; {
+</span></span><span style="display:flex;"><span>                                		<span style="color:#75715e">//	如果已经被调用了，直接return掉
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                                        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">invoked</span>) {
+</span></span><span style="display:flex;"><span>                                            <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>                                        }
+</span></span><span style="display:flex;"><span>                                        <span style="color:#a6e22e">invoked</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                                        <span style="color:#75715e">// 避免死循环
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                                        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">y</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">x</span>) {
+</span></span><span style="display:flex;"><span>                                            <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">TypeError</span>(<span style="color:#e6db74">&#34;TypeError: The return value could not be same with the previous thenable object&#34;</span>);
+</span></span><span style="display:flex;"><span>                                        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                                        <span style="color:#75715e">// y仍有可能是thenable对象，递归调用
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                                        <span style="color:#a6e22e">resolveThenable</span>(<span style="color:#a6e22e">y</span>);
+</span></span><span style="display:flex;"><span>                                    }, (<span style="color:#a6e22e">e</span>) =&gt; {
+</span></span><span style="display:flex;"><span>                                        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">invoked</span>) {
+</span></span><span style="display:flex;"><span>                                            <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>                                        }
+</span></span><span style="display:flex;"><span>                                        <span style="color:#a6e22e">invoked</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+</span></span><span style="display:flex;"><span>                                        <span style="color:#a6e22e">reject</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#a6e22e">promise</span>)(<span style="color:#a6e22e">e</span>);
+</span></span><span style="display:flex;"><span>                                    }
+</span></span><span style="display:flex;"><span>                                );
+</span></span><span style="display:flex;"><span>                            } <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">e</span>) {
+</span></span><span style="display:flex;"><span>                                <span style="color:#75715e">// 如果resolvePromise和rejectPromise方法被调用后,再抛出异常,则忽略异常
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                                <span style="color:#75715e">// 否则用异常对象reject此Promise对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                                <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">invoked</span>) {
+</span></span><span style="display:flex;"><span>                                    <span style="color:#a6e22e">reject</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#a6e22e">promise</span>)(<span style="color:#a6e22e">e</span>);
+</span></span><span style="display:flex;"><span>                                }
+</span></span><span style="display:flex;"><span>                            }
+</span></span><span style="display:flex;"><span>                        } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>                            <span style="color:#a6e22e">resolve</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#a6e22e">promise</span>)(<span style="color:#a6e22e">x</span>);
+</span></span><span style="display:flex;"><span>                        }
+</span></span><span style="display:flex;"><span>                    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">resolve</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#a6e22e">promise</span>)(<span style="color:#a6e22e">x</span>);
+</span></span><span style="display:flex;"><span>                    }
+</span></span><span style="display:flex;"><span>                }(<span style="color:#a6e22e">x</span>));
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        	<span style="color:#75715e">//	根据action判断执行resolve或者reject
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        	<span style="color:#a6e22e">action</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;resolve&#34;</span> <span style="color:#f92672">?</span> <span style="color:#a6e22e">resolve</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#a6e22e">promise</span>)(<span style="color:#a6e22e">value</span>) <span style="color:#f92672">:</span> <span style="color:#a6e22e">reject</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#a6e22e">promise</span>)(<span style="color:#a6e22e">value</span>);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    };
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>上面就是我对于一个<code>Promise</code>的实现，完整代码请移步我的<a href="https://github.com/rwson/My-Promise">GitHub</a></p>
+<p>参考：</p>
+<ul>
+<li><a href="http://www.ituring.com.cn/article/66566">Promises/A+规范</a></li>
+<li><a href="http://bruce-xu.github.io/blogs/js/promise">JS Promise的实现原理</a></li>
+</ul>
+</section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    <a
+      class="flex w-1/2 items-center rounded-l-md p-6 pr-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2017-09-04-write-your-own-react-1/"
+      ><span class="mr-1.5">←</span><span>从零开始写一个React - 初始化渲染</span></a
+    >
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2017-05-14-write-your-async.waterfall/"
+      ><span>编写你自己的async.waterfall</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

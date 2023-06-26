@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>命令行工具 on rwson</title>
+    <link>/categories/%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%B7%A5%E5%85%B7/</link>
+    <description>Recent content in 命令行工具 on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Sun, 20 Nov 2016 00:00:00 +0000</lastBuildDate><atom:link href="/categories/%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%B7%A5%E5%85%B7/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>一起写一个npm命令行工具</title>
+      <link>/post/2016-11-20-write-a-client/</link>
+      <pubDate>Sun, 20 Nov 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-11-20-write-a-client/</guid>
+      <description>自从nodejs问世之后，随着前端不断的发展，出现过很多的命令行工具，就比如前端构建工具，从最开始的grunt，再到gulp，然后到现在的webpack等等，它们都有自己的命令行，接下来我们一起分析并实现一个简单的命令行工具
+首先需要建一个目录，在这里我们暂且叫cli-starter
+mkdir cli-starter 然后我们需要去用npm初始化这个目录，这里我们用默认的就好
+npm init -y 普通的 node.js 脚本需要使用node 文件名的形式执行，在脚本首行加上#!/usr/bin/env node可以在linux环境中指定脚本的解释程序
+一切从hello world开始，我们现在新建一个bin目录，在下面用建一个hello.js，写入下面内容
+#!/usr/bin/env node console.log(&amp;#34;hello world&amp;#34;); 然后去node ./bin/hello，可以看到控制台会输出hello world
+当然这个只是在特定目录下去执行这个文件，如果想和其他命令行工具做到无处不在，可以在package.json中做如下指定
+{  &amp;#34;name&amp;#34;: &amp;#34;hello&amp;#34;,  &amp;#34;bin&amp;#34;: {  &amp;#34;hello&amp;#34;: &amp;#34;./bin/hello&amp;#34;  } } 然后再通过npm link去添加到系统PATH，不要担心会污染系统，既然有npm link，肯定就有npm unlink，就是把我们添加的删除，这样，我们就可以在任何一个目录下使用这个hello命令了
+上面就是一个最简单的命令行了，接下来我们需要对它进行完善，最常见的就是参数，有很多npm模块可以解析我们传入的参数，常用的有commander、minimist等
+在这里我用的minimist这个模块，用法npm上已经有了这里不再赘述，下面我们一起完成一个翻译小工具，调用谷歌的翻译接口，这里我直接用的translate-api这个npm包,一起看下实现：
+#!/usr/bin/env node  var minimist = require(&amp;#34;minimist&amp;#34;),  translate = require(&amp;#34;translate-api&amp;#34;);  //	获取参数 var args = minimist((process.argv.slice(2)), {  /** * 参数别名 * hello --target=abc &amp;lt;=&amp;gt; hello -t=abc */  alias: {  t: &amp;#34;target&amp;#34;,  i: &amp;#34;input&amp;#34;  } });  //	存储输入的参数 var target = args.</description>
+    </item>
+    
+  </channel>
+</rss>

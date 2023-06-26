@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>短路语法 on rwson</title>
+    <link>/categories/%E7%9F%AD%E8%B7%AF%E8%AF%AD%E6%B3%95/</link>
+    <description>Recent content in 短路语法 on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Thu, 26 Feb 2015 00:00:00 +0000</lastBuildDate><atom:link href="/categories/%E7%9F%AD%E8%B7%AF%E8%AF%AD%E6%B3%95/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>javascript中的短路语法</title>
+      <link>/post/2015-02-24-short-circuit-gramar/</link>
+      <pubDate>Thu, 26 Feb 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-02-24-short-circuit-gramar/</guid>
+      <description>在js代码中，以前写判断都是通过最简单的&amp;quot;if&amp;hellip;else&amp;hellip;&amp;ldquo;来判断,最近无意中改了个写法,发现也可以用,而且相对于的判断方法,省去了&amp;quot;if&amp;hellip;else&amp;hellip;&amp;quot;,取而代之的是&amp;rdquo;&amp;amp;&amp;amp;&amp;ldquo;或者&amp;rdquo;||&amp;quot;,下面我们一起看下关于短路语法。
+与或非语法中，有一种经典的短路语法：
+var a = boolean || function(){ do some thing }(); //	这种情况下,只有当前面的boolean值为false时,才会执行后面的匿名方法 //	当前面的boolean值为true时,出于性能优化机制,后面的匿名方法就不会继续执行 var b = boolean &amp;amp;&amp;amp; function(){ do some thing }(); //	这种情况则与上面相反,只有boolean值为true时,才会执行后的匿名方法  再看一个例子：
+if(typeof obj === &amp;quot;undefined&amp;quot;) obj = {}; 可以改写成这样 obj === undefined &amp;amp;&amp;amp; (obj = {}); //	需要注意的是,当判断依据后面的为赋值语句的时候,该语句需加括号，否则会报&amp;quot;无效左值&amp;quot;的错  下面看看传统判断和	短路语法的性能对比：
+var i = 1; console.time(&amp;quot;普通的if else判断&amp;quot;); for (var j = 0; j &amp;lt; 100000; j++) { if (i === 1) { i = 2; } else { i = 1; } } console.</description>
+    </item>
+    
+  </channel>
+</rss>

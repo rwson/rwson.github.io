@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>函数去抖 on rwson</title>
+    <link>/categories/%E5%87%BD%E6%95%B0%E5%8E%BB%E6%8A%96/</link>
+    <description>Recent content in 函数去抖 on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Wed, 20 Jul 2016 00:00:00 +0000</lastBuildDate><atom:link href="/categories/%E5%87%BD%E6%95%B0%E5%8E%BB%E6%8A%96/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>javascript函数节流和函数去抖</title>
+      <link>/post/2016-07-20-javascript-function-throttle-debounce/</link>
+      <pubDate>Wed, 20 Jul 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-07-20-javascript-function-throttle-debounce/</guid>
+      <description>在underscore这个库中提供了两个关于控制函数执行频率的方法, throttle和debounce。
+throttle和debounce是解决请求和响应速度不匹配问题的两个方案。差异在于选择不同的策略。
+比如生活中的最常见的电梯, 分别用这两种策略解释下:
+ throttle: 开门按钮按下 -&amp;gt; 有人进来 -(等10秒, 不管有没有人进来)-&amp;gt; 准时关门运行 debounce: 开门按钮按下 -&amp;gt; 有人进来, 关门按钮按下 -(开始计时10秒)-&amp;gt; 开门按钮按下, 又有人进来, 关门按钮按下 -&amp;gt; 重新计时 -(开始计时10秒) -&amp;gt; 10秒时间到, 关门运行  如果我们需要做一个过滤的功能,类似于下面这个效果
+throttle 我们需要给input绑定一个keyup事件,然后根据它的value操作页面或者过滤数据重新渲染页面,但是在数据比较多的时候, 如果在keyup里面不做一定限制的话, 在性能方面就会有一些影响, 这时候, 就需要&amp;quot;函数节流&amp;quot;这个东西, 限制在多少秒内触发一次某个函数。
+就拿我们上面的效果来说:
+	// HTML &amp;lt;input type=&amp;#34;text&amp;#34; id=&amp;#34;input&amp;#34; /&amp;gt; &amp;lt;ul id=&amp;#34;ul&amp;#34;&amp;gt; &amp;lt;li&amp;gt;111111111&amp;lt;/li&amp;gt; &amp;lt;li&amp;gt;22222222&amp;lt;/li&amp;gt; &amp;lt;li&amp;gt;333333&amp;lt;/li&amp;gt; &amp;lt;li&amp;gt;4444&amp;lt;/li&amp;gt; &amp;lt;li&amp;gt;1234&amp;lt;/li&amp;gt; &amp;lt;li&amp;gt;5678&amp;lt;/li&amp;gt; &amp;lt;li&amp;gt;9999&amp;lt;/li&amp;gt; &amp;lt;li&amp;gt;6789&amp;lt;/li&amp;gt; &amp;lt;li&amp;gt;01234&amp;lt;/li&amp;gt; &amp;lt;/ul&amp;gt; // javascript window.onload = function() { var input = document.getElementById(&amp;#34;input&amp;#34;); var ul = document.</description>
+    </item>
+    
+  </channel>
+</rss>

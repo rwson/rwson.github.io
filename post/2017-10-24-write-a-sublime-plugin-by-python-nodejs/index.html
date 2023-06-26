@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>用NodeJs和Python开发一个Sublime插件 - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="Sublime Text著有最性感的编辑器之称,它轻量,易于拓展,通过插件的方式可使它变得很强大,而我更是把它作为自己的主要编辑器使用。
+有一次逛package control的时候,发现一个用NodeJs来写插件的脚手架: SublimeJS_Samples,才发现用NodeJs结合Python也可以来开发插件,这对于对Python不是特别了解的人可能很吃力,然后就研究了几个常用插件的源码,拿sublime-vue-formatter这个插件详细看了下,总结出原理大概是这样的:
+ 在Python中拿到当前正在编辑的文件或者选中的内容 用Python子进程subprocess去执行一段cmd命令并接受输出,Node路径为我们电脑上装的Node绝对路径(用户事先配置好), 再去执行一个NodeJs脚本, 以Mac为例, 最后要执行的命令大概是这样的/usr/local/bin/node script/run.js --arg1=argVal1 --arg2=argVal2(其实和我们平时在Terminal里运行的一样) Python接收到NodeJs的执行返回的时候, 替换文件中的相关内容  抱着试试看的心理,我也决定自己用这个模式写个图片压缩相关的插件,先简单介绍下我想写的插件的功能:
+ 用户在项目根目录下新建配置文件, 指定压缩目录和释放目录, 调用tinypng的开发者API进行压缩 当压缩完的图片小于多少字节时把css中的引用转换成Base64编码,也是通过配置项 用户可以通过一些快捷键或者命令(子命令)在项目根目录新建配置文件、修改全局NodeJs路径配置等等  现在知道了我们想做什么, 下一步就是根据这个需求开始写代码, 因为是图片压缩插件, 所以我把它命名成sublime-image-compressor
+命令、子命令 在插件配置中, 命令都是通过配置文件写入的, 下面贴下我们这个插件支持命令的一个配置并做介绍
+//	ImageCompressor.sublime-commands  [{  &#34;caption&#34;: &#34;ImageCompress&#34;,  &#34;command&#34;: &#34;image_compress&#34; }, {  &#34;caption&#34;: &#34;ImageCompress: Init Project Config File&#34;,  &#34;command&#34;: &#34;imagecompress_config_project&#34; }, {  &#34;caption&#34;: &#34;ImageCompress: Set Global Config&#34;,  &#34;command&#34;: &#34;imagecompress_set_global_plugin_options&#34; }] .sublime-commands是用来指定插件支持的命令的, 里面指定一个对象型数组, 数组有caption和command两项, 需要注意的是, command的值和Python的类是对应的, 且Python中用驼峰命名法来定义类名, 以第一项为例, 比如command的值为image_compress, 我们的Python中就需要像类似下面的样子定义一个类:" />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">用NodeJs和Python开发一个Sublime插件</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Oct 24, 2017</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p><a href="https://www.sublimetext.com/">Sublime Text</a>著有最性感的编辑器之称,它轻量,易于拓展,通过插件的方式可使它变得很强大,而我更是把它作为自己的主要编辑器使用。</p>
+<p>有一次逛<a href="https://packagecontrol.io">package control</a>的时候,发现一个用<code>NodeJs</code>来写插件的脚手架: <a href="https://github.com/akira-cn/SublimeJS_Samples">SublimeJS_Samples</a>,才发现用<code>NodeJs</code>结合<code>Python</code>也可以来开发插件,这对于对<code>Python</code>不是特别了解的人可能很吃力,然后就研究了几个常用插件的源码,拿<a href="https://github.com/luozhihua/sublime-vue-formatter">sublime-vue-formatter</a>这个插件详细看了下,总结出原理大概是这样的:</p>
+<ol>
+<li>在<code>Python</code>中拿到当前正在编辑的文件或者选中的内容</li>
+<li>用<code>Python</code>子进程<code>subprocess</code>去执行一段cmd命令并接受输出,<code>Node</code>路径为我们电脑上装的<code>Node</code>绝对路径(用户事先配置好), 再去执行一个<code>NodeJs</code>脚本, 以Mac为例, 最后要执行的命令大概是这样的<code>/usr/local/bin/node script/run.js --arg1=argVal1  --arg2=argVal2</code>(其实和我们平时在Terminal里运行的一样)</li>
+<li><code>Python</code>接收到<code>NodeJs</code>的执行返回的时候, 替换文件中的相关内容</li>
+</ol>
+<p>抱着试试看的心理,我也决定自己用这个模式写个图片压缩相关的插件,先简单介绍下我想写的插件的功能:</p>
+<ol>
+<li>用户在项目根目录下新建配置文件, 指定压缩目录和释放目录, 调用<a href="http://tinypng.com">tinypng</a>的开发者API进行压缩</li>
+<li>当压缩完的图片小于多少字节时把css中的引用转换成<code>Base64</code>编码,也是通过配置项</li>
+<li>用户可以通过一些快捷键或者命令(子命令)在项目根目录新建配置文件、修改全局<code>NodeJs</code>路径配置等等</li>
+</ol>
+<p>现在知道了我们想做什么, 下一步就是根据这个需求开始写代码, 因为是图片压缩插件, 所以我把它命名成<code>sublime-image-compressor</code></p>
+<h4 id="命令子命令">命令、子命令</h4>
+<p>在插件配置中, 命令都是通过配置文件写入的, 下面贴下我们这个插件支持命令的一个配置并做介绍</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#75715e">//	ImageCompressor.sublime-commands
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>[{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;caption&#34;</span>: <span style="color:#e6db74">&#34;ImageCompress&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;command&#34;</span>: <span style="color:#e6db74">&#34;image_compress&#34;</span>
+</span></span><span style="display:flex;"><span>}, {
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;caption&#34;</span>: <span style="color:#e6db74">&#34;ImageCompress: Init Project Config File&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;command&#34;</span>: <span style="color:#e6db74">&#34;imagecompress_config_project&#34;</span>
+</span></span><span style="display:flex;"><span>}, {
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;caption&#34;</span>: <span style="color:#e6db74">&#34;ImageCompress: Set Global Config&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;command&#34;</span>: <span style="color:#e6db74">&#34;imagecompress_set_global_plugin_options&#34;</span>
+</span></span><span style="display:flex;"><span>}]
+</span></span></code></pre></div><p><code>.sublime-commands</code>是用来指定插件支持的命令的, 里面指定一个对象型数组, 数组有<code>caption</code>和<code>command</code>两项, 需要注意的是, <code>command</code>的值和<code>Python</code>的类是对应的, 且<code>Python</code>中用驼峰命名法来定义类名, 以第一项为例, 比如<code>command</code>的值为<code>image_compress</code>, 我们的<code>Python</code>中就需要像类似下面的样子定义一个类:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ImageCompressCommand</span>(sublime_plugin<span style="color:#f92672">.</span>TextCommand):
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">run</span>(self, edit):
+</span></span></code></pre></div><p>其他类似</p>
+<h4 id="快捷键">快捷键</h4>
+<p>在插件配置中, 快捷键都是通过配置文件写入的, 下面贴下我们这个插件快捷键的一个配置并做介绍, 需要注意的是, 如果需要兼容多平台, 因为每个平台的键可能都不太一样, 则需要多份配置文件, <code>Windows</code>/<code>Mac</code>/<code>Linux</code>的命名分别是<code>Default (Windows).sublime-keymap</code>/<code>Default (OSX).sublime-keymap</code>/<code>Default (Linux).sublime-keymap</code>, 下面我们把<code>Default (OSX).sublime-keymap</code>这个文件的内容贴出来看下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>[{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;keys&#34;</span>: [<span style="color:#e6db74">&#34;ctrl+shift+i&#34;</span>, <span style="color:#e6db74">&#34;c&#34;</span>],
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;command&#34;</span>: <span style="color:#e6db74">&#34;image_compress&#34;</span>
+</span></span><span style="display:flex;"><span>}, {
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;keys&#34;</span>: [<span style="color:#e6db74">&#34;ctrl+alt+i&#34;</span>, <span style="color:#e6db74">&#34;f&#34;</span>],
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;command&#34;</span>: <span style="color:#e6db74">&#34;image_compress_config_project&#34;</span>
+</span></span><span style="display:flex;"><span>}, {
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;keys&#34;</span>: [<span style="color:#e6db74">&#34;ctrl+alt+i&#34;</span>, <span style="color:#e6db74">&#34;g&#34;</span>],
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;command&#34;</span>: <span style="color:#e6db74">&#34;image_compress_set_global_plugin_options&#34;</span>
+</span></span><span style="display:flex;"><span>}]
+</span></span></code></pre></div><p><code>.sublime-keymap</code>也是指定一个对象型数组, 每个对象有<code>keys</code>和<code>command</code>两个属性, <code>keys</code>是指定按哪几个键生效的, <code>command</code>的配置和之前的命令配置一样</p>
+<p>当然我们也可以通过添加其他配置文件比如<code>Context.sublime-menu</code>或者<code>Main.sublime-menu</code>来指定插件的右键菜单或者在<code>Toolbar</code>上的菜单配置</p>
+<p>说完了几个配置, 我们一起来写<code>Python</code>和<code>NodeJs</code>, 先写<code>Python</code>吧</p>
+<p>在<code>Python</code>中我们需要完成大概下面几个任务:</p>
+<ol>
+<li>首先获取用户当前项目的根目录</li>
+<li>获取根目录下的配置文件, 如果用户没有新建配置文件, 就读取一份默认的配置文件, 拼出命令行参数(&ndash;arg1=argVal1 &ndash;arg2=argVal2)</li>
+<li>获取用户装的<code>NodeJs</code>全路径, 结合上一步拼好的命令行参数再拼出一个可执行命令(类似刚才分析流程那边那条)</li>
+<li>用<code>subprocess</code>模块来运行该命令</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># 写插件必须引入这两个模块</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> sublime<span style="color:#f92672">,</span> sublime_plugin
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Python内置模块的引入</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> os<span style="color:#f92672">,</span> sys<span style="color:#f92672">,</span> subprocess<span style="color:#f92672">,</span> codecs<span style="color:#f92672">,</span> webbrowser<span style="color:#f92672">,</span> platform<span style="color:#f92672">,</span> json
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 当前插件, 配置文件, 快捷键配置, 执行任务的js路径配置</span>
+</span></span><span style="display:flex;"><span>PLUGIN_FOLDER <span style="color:#f92672">=</span> os<span style="color:#f92672">.</span>path<span style="color:#f92672">.</span>dirname(os<span style="color:#f92672">.</span>path<span style="color:#f92672">.</span>realpath(__file__))
+</span></span><span style="display:flex;"><span>CONFIG_FILE <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;image-compressor.config.json&#34;</span>
+</span></span><span style="display:flex;"><span>SETTINGS_FILE <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;ImageCompressor.sublime-settings&#34;</span>
+</span></span><span style="display:flex;"><span>KEYMAP_FILE <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Default ($PLATFORM).sublime-keymap&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 这里JS_PATH必须为绝对路径, 否则会去${nodepath}找/scripts/index.js,找不到肯定会报错</span>
+</span></span><span style="display:flex;"><span>JS_PATH <span style="color:#f92672">=</span> PLUGIN_FOLDER<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">&#34; &#34;</span>, <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74"> &#34;</span>) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;/scripts/index.js&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">//</span>	引入commands模块, 并catch异常
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">import</span> commands
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">except</span> <span style="color:#a6e22e">ImportError</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">pass</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ImageCompressCommand</span>(sublime_plugin<span style="color:#f92672">.</span>TextCommand):
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    插件需要一个run方法, 该方法接收self和edit两个参数
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    def run(self, run[, args])
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    self: 代表当前类
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    view: 代表当前编辑的tab
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    args: 其他参数, 可以在配置中指定
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      比如 { &#34;caption&#34;: &#34;xxx&#34;, &#34;command&#34;: &#34;xxxx&#34;, &#34;args&#34;: {&#34;by&#34;: &#34;abc&#34;} }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      class Xxxx(sublime_plugin.TextCommand):
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        def run(self, edit, by):
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          print(&#34;by=&#34; + by)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          # by=file
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">run</span>(self, edit):
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 拿到项目根路径的绝对路径</span>
+</span></span><span style="display:flex;"><span>    currentDir <span style="color:#f92672">=</span> PluginUtils<span style="color:#f92672">.</span>get_active_project_path()
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 从.sublime-settings配置文件中获取当前平台的node_path</span>
+</span></span><span style="display:flex;"><span>    nodepath <span style="color:#f92672">=</span> PluginUtils<span style="color:#f92672">.</span>get_node_path()
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 获取根路径</span>
+</span></span><span style="display:flex;"><span>    configs <span style="color:#f92672">=</span> PluginUtils<span style="color:#f92672">.</span>load_config()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    configs <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34; --currentDir=&#39;&#34;</span> <span style="color:#f92672">+</span> currentDir <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;&#39;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 空格替换</span>
+</span></span><span style="display:flex;"><span>    nodepath <span style="color:#f92672">=</span> nodepath<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">&#34; &#34;</span>, <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74"> &#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 拼一个cmd数组</span>
+</span></span><span style="display:flex;"><span>    cmd <span style="color:#f92672">=</span> [nodepath, JS_PATH]
+</span></span><span style="display:flex;"><span>    cmd<span style="color:#f92672">.</span>append(configs)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 执行命令</span>
+</span></span><span style="display:flex;"><span>    PluginUtils<span style="color:#f92672">.</span>exec_cmd(cmd)
+</span></span></code></pre></div><p>上面我们完成了一个<code>ImageCompressCommand</code>这个类的封装,并且在<code>run</code>里面好几个地方都调用了<code>PluginUtils</code>下的静态方法, 下面我们看看<code>PluginUtils</code>的定义</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e">#在python用staticmethod Decorator表示静态方法</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">PluginUtils</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;&#39;&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      读取配置文件
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      这里的逻辑有点不对, 应该先去项目根目录下找配置文件
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      找不到再找默认的配置
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#39;&#39;&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@staticmethod</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">load_config</span>(base):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>            args <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># 以读取的模式打开配置文件</span>
+</span></span><span style="display:flex;"><span>            fs <span style="color:#f92672">=</span> open(CONFIG_FILE, <span style="color:#e6db74">&#34;r&#34;</span>)
+</span></span><span style="display:flex;"><span>            stream <span style="color:#f92672">=</span> fs<span style="color:#f92672">.</span>read()
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># steam读出来是个json字符串, 所以需要用json.loads转换成dict</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># http://python3-cookbook.readthedocs.io/zh_CN/latest/c06/p02_read-write_json_data.html</span>
+</span></span><span style="display:flex;"><span>            data <span style="color:#f92672">=</span> json<span style="color:#f92672">.</span>loads(stream)
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># 获取dict下的key变成一个list</span>
+</span></span><span style="display:flex;"><span>            keys <span style="color:#f92672">=</span> data<span style="color:#f92672">.</span>keys()
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># 关闭文件</span>
+</span></span><span style="display:flex;"><span>            fs<span style="color:#f92672">.</span>close()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># 枚举所有key</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">for</span> key <span style="color:#f92672">in</span> keys:
+</span></span><span style="display:flex;"><span>                val <span style="color:#f92672">=</span> data[key]
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e"># 数组类型参数转换成字符串</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> isinstance(val, list):
+</span></span><span style="display:flex;"><span>                    val <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;-compress-config-split-&#34;</span><span style="color:#f92672">.</span>join(val)
+</span></span><span style="display:flex;"><span>                args <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34; --&#34;</span> <span style="color:#f92672">+</span> key <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;=&#34;</span> <span style="color:#f92672">+</span> str(val)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> args
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">except</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">#从.sublime-settings里面获取相关配置项</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@staticmethod</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_pref</span>(key):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> sublime<span style="color:#f92672">.</span>load_settings(SETTINGS_FILE)<span style="color:#f92672">.</span>get(key)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;&#39;&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        从.sublime-settings里面获取当前平台下nodejs的路径
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#39;&#39;&#39;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@staticmethod</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_node_path</span>():
+</span></span><span style="display:flex;"><span>        platform <span style="color:#f92672">=</span> sublime<span style="color:#f92672">.</span>platform()
+</span></span><span style="display:flex;"><span>        node <span style="color:#f92672">=</span> PluginUtils<span style="color:#f92672">.</span>get_pref(<span style="color:#e6db74">&#34;node_path&#34;</span>)<span style="color:#f92672">.</span>get(platform)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> node
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;&#39;&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        获取当前激活项目的根路径
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        参考https://github.com/fyneworks/sublime-TortoiseGIT/blob/master/TortoiseGIT.py#L8实现
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#39;&#39;&#39;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@staticmethod</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_active_project_path</span>():
+</span></span><span style="display:flex;"><span>        window <span style="color:#f92672">=</span> sublime<span style="color:#f92672">.</span>active_window()
+</span></span><span style="display:flex;"><span>        folders <span style="color:#f92672">=</span> window<span style="color:#f92672">.</span>folders()
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> len(folders) <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> folders[<span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>            active_view <span style="color:#f92672">=</span> window<span style="color:#f92672">.</span>active_view()
+</span></span><span style="display:flex;"><span>            active_file_name <span style="color:#f92672">=</span> active_view<span style="color:#f92672">.</span>file_name() <span style="color:#66d9ef">if</span> active_view <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> active_file_name:
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> folders[<span style="color:#ae81ff">0</span>] <span style="color:#66d9ef">if</span> len(folders) <span style="color:#66d9ef">else</span> os<span style="color:#f92672">.</span>path<span style="color:#f92672">.</span>expanduser(<span style="color:#e6db74">&#34;~&#34;</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">for</span> folder <span style="color:#f92672">in</span> folders:
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> active_file_name<span style="color:#f92672">.</span>startswith(folder):
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">return</span> folder
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> os<span style="color:#f92672">.</span>path<span style="color:#f92672">.</span>dirname(active_file_name)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;&#39;&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        执行命令
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        参考https://github.com/luozhihua/sublime-vue-formatter/blob/master/vue-next-formatter.py#L196实现
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#39;&#39;&#39;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@staticmethod</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">exec_cmd</span>(cmd):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> int(sublime<span style="color:#f92672">.</span>version()) <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">3000</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> sublime<span style="color:#f92672">.</span>platform() <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#34;windows&#34;</span>:
+</span></span><span style="display:flex;"><span>                run <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#34;&#39;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;&#34; &#34;&#39;</span><span style="color:#f92672">.</span>join(cmd) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;&#34;&#39;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> commands<span style="color:#f92672">.</span>getoutput(run)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>                startupinfo <span style="color:#f92672">=</span> subprocess<span style="color:#f92672">.</span>STARTUPINFO()
+</span></span><span style="display:flex;"><span>                startupinfo<span style="color:#f92672">.</span>dwFlags <span style="color:#f92672">|=</span> subprocess<span style="color:#f92672">.</span>STARTF_USESHOWWINDOW
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> subprocess<span style="color:#f92672">.</span>Popen(cmd, \
+</span></span><span style="display:flex;"><span>                                        stdout<span style="color:#f92672">=</span>subprocess<span style="color:#f92672">.</span>PIPE, \
+</span></span><span style="display:flex;"><span>                                        startupinfo<span style="color:#f92672">=</span>startupinfo)<span style="color:#f92672">.</span>communicate()[<span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>            run <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34; &#34;</span><span style="color:#f92672">.</span>join(cmd)
+</span></span><span style="display:flex;"><span>            res <span style="color:#f92672">=</span> subprocess<span style="color:#f92672">.</span>check_output(run, stderr<span style="color:#f92672">=</span>subprocess<span style="color:#f92672">.</span>STDOUT, shell<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>, env<span style="color:#f92672">=</span>os<span style="color:#f92672">.</span>environ)
+</span></span><span style="display:flex;"><span>            print(res)
+</span></span></code></pre></div><p>上面我们就完成了对<code>PluginUtils</code>这个类的封装, 在最后一个方法中, 我们用了<code>subprocess</code>下面的几个方法, <code>subprocess</code>下面还有很多其他方法, 这些在<a href="http://python3-cookbook.readthedocs.io/zh_CN/latest/c13/p06_executing_external_command_and_get_its_output.html">文档</a>里面都能找到, 下面再看看<code>NodeJs</code>部分实现:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">dir</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;node-dir&#34;</span>),
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">co</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;co&#34;</span>),
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">tinify</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;tinify&#34;</span>),
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mkdirp</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;mkdirp&#34;</span>),
+</span></span><span style="display:flex;"><span>    Promise <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;bluebird&#34;</span>),
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fs</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;fs&#34;</span>),
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">path</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;path&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	缓存Object.prototype
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">obj2</span> <span style="color:#f92672">=</span> {};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	参数解析
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">parseArgs</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">arr</span> =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">res</span> <span style="color:#f92672">=</span> {},
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">tmp</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">arr</span>.<span style="color:#a6e22e">map</span>(<span style="color:#a6e22e">item</span> =&gt; <span style="color:#a6e22e">item</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/^-{2}/</span>, <span style="color:#e6db74">&#34;&#34;</span>))
+</span></span><span style="display:flex;"><span>        .<span style="color:#a6e22e">forEach</span>(<span style="color:#a6e22e">val</span> =&gt; {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">tmp</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">val</span>.<span style="color:#a6e22e">split</span>(<span style="color:#e6db74">&#34;=&#34;</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//	Python中布尔值转换成True/False, 数字转换成&#39;123&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> (<span style="color:#e6db74">/^[\d]+$/</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">tmp</span>[<span style="color:#ae81ff">1</span>])) {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">tmp</span>[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span> Number(<span style="color:#a6e22e">tmp</span>[<span style="color:#ae81ff">1</span>]);
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> (<span style="color:#e6db74">/^True$/</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">tmp</span>[<span style="color:#ae81ff">1</span>])) {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">tmp</span>[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> (<span style="color:#e6db74">/^False/</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">tmp</span>[<span style="color:#ae81ff">1</span>])) {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">tmp</span>[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>;
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">res</span>[<span style="color:#a6e22e">tmp</span>[<span style="color:#ae81ff">0</span>]] <span style="color:#f92672">=</span> <span style="color:#a6e22e">tmp</span>[<span style="color:#ae81ff">1</span>];
+</span></span><span style="display:flex;"><span>        });
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">res</span>;
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	判断是否为一个图片文件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">isImageFile</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">file</span> =&gt; <span style="color:#f92672">/</span><span style="color:#960050;background-color:#1e0010">\</span>.(<span style="color:#a6e22e">jpe</span><span style="color:#f92672">?</span><span style="color:#a6e22e">g</span><span style="color:#f92672">|</span><span style="color:#a6e22e">png</span><span style="color:#f92672">|</span><span style="color:#a6e22e">gif</span>)<span style="color:#a6e22e">$</span><span style="color:#f92672">/</span><span style="color:#a6e22e">i</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">file</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	判断是否为一个css文件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">isCssFile</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">file</span> =&gt; <span style="color:#f92672">/</span><span style="color:#960050;background-color:#1e0010">\</span>.<span style="color:#a6e22e">css$</span><span style="color:#f92672">/</span><span style="color:#a6e22e">i</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">file</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	目标目录
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">distDir</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">prefix</span>, <span style="color:#a6e22e">folder</span>) =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">folder</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">folder</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">prefix</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">prefix</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">__dirname</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//	拼路径
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">join</span>(<span style="color:#a6e22e">prefix</span>, <span style="color:#a6e22e">folder</span>);
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	同步读取一个文件的状态
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">fstat</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">filePath</span> =&gt; <span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">fstatSync</span>(<span style="color:#a6e22e">filePath</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	把文件转换成base64编码
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">toBase64</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">filePath</span> =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">buffer</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">readFileSync</span>(<span style="color:#a6e22e">filePath</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">buffer</span>.<span style="color:#a6e22e">toString</span>(<span style="color:#e6db74">&#34;base64&#34;</span>);
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	把一个数组按照20个每项做子项目拆分成二级数组
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">splitArray</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">array</span> =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">length</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">array</span>.<span style="color:#a6e22e">length</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">res</span> <span style="color:#f92672">=</span> [];
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">let</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">length</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">+=</span> <span style="color:#ae81ff">20</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">push</span>(<span style="color:#a6e22e">array</span>.<span style="color:#a6e22e">slice</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">i</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">20</span>));
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">res</span>;
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	判断目录是否存在
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">folderExist</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">folder</span> =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">readdirSync</span>(<span style="color:#a6e22e">folder</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span>;
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">e</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	读取目录下的css并且转换成AST对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">listCssAST</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">cssdir</span> =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">list</span> <span style="color:#f92672">=</span> [],
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">fullPath</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">basename</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">stream</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">files</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">readFileSync</span>(<span style="color:#a6e22e">cssdir</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">list</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">files</span>.<span style="color:#a6e22e">filter</span>(<span style="color:#a6e22e">file</span> =&gt; <span style="color:#a6e22e">isCssFile</span>).<span style="color:#a6e22e">map</span>(<span style="color:#a6e22e">file</span> =&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">fullPath</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">join</span>(<span style="color:#a6e22e">cssdir</span>, <span style="color:#a6e22e">file</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">stream</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">readFileSync</span>(<span style="color:#a6e22e">fullPath</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">basename</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">basename</span>(<span style="color:#a6e22e">fullPath</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">ast</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">stream</span>.<span style="color:#a6e22e">parse</span>(<span style="color:#a6e22e">stream</span>.<span style="color:#a6e22e">toString</span>()),
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">sourcePath</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">fullPath</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">distPath</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">join</span>(
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">cssdir</span>,
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">`</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">basename</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/\.css$/i</span>, <span style="color:#e6db74">&#34;&#34;</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">.css`</span>
+</span></span><span style="display:flex;"><span>            )
+</span></span><span style="display:flex;"><span>        };
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">list</span>;
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	替换css中的background: url(xxx) 为 background: url(base64: xxxx)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">replaceCss</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">cssdir</span>, <span style="color:#a6e22e">files</span>) =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">files</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">files</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">===</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">csses</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">listCssAST</span>(<span style="color:#a6e22e">cssdir</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">csses</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">===</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">files</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">files</span>.<span style="color:#a6e22e">map</span>(<span style="color:#a6e22e">file</span> =&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">source</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">file</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">encoded</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">toBase64</span>(<span style="color:#a6e22e">file</span>)
+</span></span><span style="display:flex;"><span>        };
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//	TODO:遍历CSS AST并替换引用
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// csses.forEach(({ ast, distPath }) =&gt; {});
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * promiseifyToFile -&gt; source = yield promiseifyToFile(&#34;a/b/c/d.jpg&#34;);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  {String} file 源文件路径
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  {String} dist 目标文件路径
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * 在调用tinypng API异常后, 直接拷贝源文件到相关目录
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">promiseifyToFile</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">file</span>, <span style="color:#a6e22e">dist</span>) =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> Promise((<span style="color:#a6e22e">resolve</span>, <span style="color:#a6e22e">reject</span>) =&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">fileUp</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">tinify</span>.<span style="color:#a6e22e">fromFile</span>(<span style="color:#a6e22e">file</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">fileUp</span>.<span style="color:#a6e22e">_url</span>
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">res</span> =&gt; {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">fileUp</span>
+</span></span><span style="display:flex;"><span>                        .<span style="color:#a6e22e">toFile</span>(<span style="color:#a6e22e">dist</span>)
+</span></span><span style="display:flex;"><span>                        .<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">e</span> =&gt; {
+</span></span><span style="display:flex;"><span>                            <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">e</span>) {
+</span></span><span style="display:flex;"><span>                                <span style="color:#a6e22e">reject</span>(<span style="color:#a6e22e">e</span>);
+</span></span><span style="display:flex;"><span>                                <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>                            }
+</span></span><span style="display:flex;"><span>                            <span style="color:#a6e22e">resolve</span>();
+</span></span><span style="display:flex;"><span>                        })
+</span></span><span style="display:flex;"><span>                        .<span style="color:#66d9ef">catch</span>(<span style="color:#a6e22e">reject</span>);
+</span></span><span style="display:flex;"><span>                })
+</span></span><span style="display:flex;"><span>                .<span style="color:#66d9ef">catch</span>(<span style="color:#a6e22e">reject</span>);
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">e</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">copyFileSync</span>(<span style="color:#a6e22e">file</span>, <span style="color:#a6e22e">dist</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">resolve</span>();
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	获取类型名
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">typeOf</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">obj</span> =&gt; <span style="color:#a6e22e">obj2</span>.<span style="color:#a6e22e">toString</span>.<span style="color:#a6e22e">call</span>(<span style="color:#a6e22e">obj</span>).<span style="color:#a6e22e">slice</span>(<span style="color:#ae81ff">8</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>).<span style="color:#a6e22e">toLowerCase</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> <span style="color:#a6e22e">args</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">2</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	参数读取和处理
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">args</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">parseArgs</span>(<span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">slice</span>(<span style="color:#ae81ff">2</span>));
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">args</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	prefix处理
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">prefix</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">prefix</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">&#34;&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	源文件目录和css文件目录的绝度路径处理
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">source</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">source</span>.<span style="color:#a6e22e">split</span>(<span style="color:#e6db74">&#34;-compress-config-split-&#34;</span>).<span style="color:#a6e22e">map</span>(<span style="color:#a6e22e">item</span> =&gt; <span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">join</span>(<span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">currentDir</span>, <span style="color:#a6e22e">item</span>));
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">cssDir</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">cssDir</span>.<span style="color:#a6e22e">split</span>(<span style="color:#e6db74">&#34;-compress-config-split-&#34;</span>).<span style="color:#a6e22e">map</span>(<span style="color:#a6e22e">item</span> =&gt; <span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">join</span>(<span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">currentDir</span>, <span style="color:#a6e22e">item</span>));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	tinypng的API Key
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">tinify</span>.<span style="color:#a6e22e">key</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">key</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * 入口函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  options.source
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  options.outputDir
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  options.prefix
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  options.injectCssUrl
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  options.injectMaxSize
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  options.cssDir
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  options.currentDir
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">init</span>({
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">source</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">outputDir</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">prefix</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">injectCssUrl</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">injectMaxSize</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">cssDir</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">currentDir</span>
+</span></span><span style="display:flex;"><span>}) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">distPath</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">distDir</span>(<span style="color:#a6e22e">currentDir</span>, <span style="color:#a6e22e">outputDir</span>),
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">filesList</span> <span style="color:#f92672">=</span> [],
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">tmp</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">basename</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mkdirp</span>.<span style="color:#a6e22e">sync</span>(<span style="color:#a6e22e">distPath</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//	异步上传, 并且放到具体的目录
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">co</span>(<span style="color:#66d9ef">function</span><span style="color:#f92672">*</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">let</span> <span style="color:#a6e22e">i</span> <span style="color:#66d9ef">of</span> <span style="color:#a6e22e">dirs</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">tmp</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">yield</span> <span style="color:#a6e22e">dir</span>.<span style="color:#a6e22e">promiseFiles</span>(<span style="color:#a6e22e">i</span>);
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">filesList</span> <span style="color:#f92672">=</span> [].<span style="color:#a6e22e">concat</span>.<span style="color:#a6e22e">call</span>(<span style="color:#a6e22e">filesList</span>, <span style="color:#a6e22e">tmp</span>.<span style="color:#a6e22e">filter</span>(<span style="color:#a6e22e">file</span> =&gt; <span style="color:#a6e22e">isImageFile</span>(<span style="color:#a6e22e">file</span>)));
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">for</span> (<span style="color:#a6e22e">tmp</span> <span style="color:#66d9ef">of</span> <span style="color:#a6e22e">filesList</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">basename</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">basename</span>(<span style="color:#a6e22e">tmp</span>);
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">res</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">yield</span> <span style="color:#a6e22e">promiseifyToFile</span>(
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">tmp</span>,
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">join</span>(<span style="color:#a6e22e">distPath</span>, <span style="color:#a6e22e">basename</span>)
+</span></span><span style="display:flex;"><span>                );
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">e</span>) {
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">init</span>(<span style="color:#a6e22e">args</span>);
+</span></span></code></pre></div><p>到这里, 我们的第一个命令就实现好了, 如果想测试, 可以直接在<code>Sublime Text</code>按下<code>ctrl + '</code>(数字1前面那个键), 然后在<code>console</code>中运行<code>view.run_command(&quot;image_compress&quot;)</code>, <code>view.run_command</code>接收的参数和我们在<code>keyMap</code>或者<code>command</code>里面定义的一致。</p>
+<p>至此, 我们插件的第一个功能就完成了, 后面还有两个需要做, 相对简单, 不再做介绍, 用法和代码请移步<a href="https://github.com/rwson/sublime-image-compressor">GitHub</a>。</p>
+<h4 id="总结">总结</h4>
+<p>我们可以用这种模式开发很多插件, 比如代码压缩类、 代码格式化类、 代码语法检测类等等, 关于这些, <a href="https://www.npmjs.com/">npm</a>上面有很多现成的包, <code>NodeJs</code>端需要做的只有处理输入, 再返回结果就好。</p>
+<p>这种模式方便了很多人去自己开发插件, 但是也有一些缺点, 首先开发的时候很痛苦, 不易调试, 而且在用<code>Node</code>和<code>Python</code>通信的时候, 数据多的时候可能会有些延迟等等。</p>
+</section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    <a
+      class="flex w-1/2 items-center rounded-l-md p-6 pr-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2017-11-09-vue-computed-watch/"
+      ><span class="mr-1.5">←</span><span>Vue中computed计算属性和watch观察者原理</span></a
+    >
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2017-09-25-read-webpack-source/"
+      ><span>webpack源码阅读</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

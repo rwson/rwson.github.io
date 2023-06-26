@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Sentry on rwson</title>
+    <link>/categories/sentry/</link>
+    <description>Recent content in Sentry on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Thu, 26 Mar 2020 00:00:00 +0000</lastBuildDate><atom:link href="/categories/sentry/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Sentry源码阅读</title>
+      <link>/post/2020-07-22-read-sentry/</link>
+      <pubDate>Thu, 26 Mar 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2020-07-22-read-sentry/</guid>
+      <description>在平时做前端开发时，特别是互联网业务，我们需要及时知道发布后的项目，在运行时有哪些问题，在什么平台或者什么条件下会抛出异常，从而更精确的定位问题，及时修复线上bug。
+Sentry 做为一款开源的监控平台，对各大框架或者语言都有支持，今天我们一起来讨论下它的源码结构。本文分析的是打包完没有压缩的版本，完整地址在这里。
+捕获异常的几种方式 //	运行错误 //	https://developer.mozilla.org/zh-CN/docs/Web/API/GlobalEventHandlers/onerror try catch  window.onerror = xxx window.addEventListener(&amp;#39;error&amp;#39;, xxx) //	其中try catch只能捕获其包裹的代码段里的异常，我们不能对每一个代码段都用try catch包起来，这样可读性太差了 //	window.onerror能捕获所有运行时异常，但是对于资源加载异常无法捕获 //	window.addEventListener(&amp;#39;error&amp;#39;, xxx)较为完善，既能捕获运行时异常，也能捕获资源加载的异常   //	Promise异常 //	https://developer.mozilla.org/zh-CN/docs/Web/Events/unhandledrejection window.onunhandledrejection = xxx window.addEventListener(&amp;#39;unhandledrejection&amp;#39;, xxx) //	对于Promise来说，用捕获运行时错误的方式无法捕获到其抛出的异常，所以就需要用&amp;#39;unhandledrejection&amp;#39;来捕获  //	接口异常(XMLHttpRequest，fetch) //	代理内部方法，此处省略 错误上报的方案   ajax通信，向后台发送错误信息
+  new Image().src = &#39;xxxx&#39;上报，这也是主流方式
+  前面分析的都是异常原生里面捕获和上报的一些方式，现在我们看看Sentry是怎么处理的：
+Sentry.init 初始化 //	dsn是我们用Sentry部署的监控平台上新建项目时生成的， Sentry.init({  dsn: &amp;#39;https://xxxx&amp;#39; }); init 源码：
+function init(options) { 	//	如果options为undefined， 则把options赋值为空对象  if (options === void 0) { options = {}; }   //	如果没有指定集成哪些捕获钩子，则默认全部集成  if (options.</description>
+    </item>
+    
+  </channel>
+</rss>

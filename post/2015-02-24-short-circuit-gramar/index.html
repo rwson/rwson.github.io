@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>javascript中的短路语法 - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="在js代码中，以前写判断都是通过最简单的&quot;if&hellip;else&hellip;&ldquo;来判断,最近无意中改了个写法,发现也可以用,而且相对于的判断方法,省去了&quot;if&hellip;else&hellip;&quot;,取而代之的是&rdquo;&amp;&amp;&ldquo;或者&rdquo;||&quot;,下面我们一起看下关于短路语法。
+与或非语法中，有一种经典的短路语法：
+var a = boolean || function(){ do some thing }(); //	这种情况下,只有当前面的boolean值为false时,才会执行后面的匿名方法 //	当前面的boolean值为true时,出于性能优化机制,后面的匿名方法就不会继续执行 var b = boolean &amp;&amp; function(){ do some thing }(); //	这种情况则与上面相反,只有boolean值为true时,才会执行后的匿名方法  再看一个例子：
+if(typeof obj === &quot;undefined&quot;) obj = {}; 可以改写成这样 obj === undefined &amp;&amp; (obj = {}); //	需要注意的是,当判断依据后面的为赋值语句的时候,该语句需加括号，否则会报&quot;无效左值&quot;的错  下面看看传统判断和	短路语法的性能对比：
+var i = 1; console.time(&quot;普通的if else判断&quot;); for (var j = 0; j &lt; 100000; j&#43;&#43;) { if (i === 1) { i = 2; } else { i = 1; } } console." />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">javascript中的短路语法</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Feb 26, 2015</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p>在js代码中，以前写判断都是通过最简单的&quot;if&hellip;else&hellip;&ldquo;来判断,最近无意中改了个写法,发现也可以用,而且相对于的判断方法,省去了&quot;if&hellip;else&hellip;&quot;,取而代之的是&rdquo;&amp;&amp;&ldquo;或者&rdquo;||&quot;,下面我们一起看下关于短路语法。</p>
+<p>与或非语法中，有一种经典的短路语法：</p>
+<pre><code>var a = boolean || function(){
+	do some thing
+}();
+//	这种情况下,只有当前面的boolean值为false时,才会执行后面的匿名方法
+//	当前面的boolean值为true时,出于性能优化机制,后面的匿名方法就不会继续执行
+
+var b = boolean &amp;&amp; function(){
+	do some thing
+}();
+//	这种情况则与上面相反,只有boolean值为true时,才会执行后的匿名方法
+</code></pre>
+<p>再看一个例子：</p>
+<pre><code>if(typeof obj === &quot;undefined&quot;) obj = {};
+可以改写成这样
+obj === undefined &amp;&amp; (obj = {});
+//	需要注意的是,当判断依据后面的为赋值语句的时候,该语句需加括号，否则会报&quot;无效左值&quot;的错
+</code></pre>
+<p>下面看看传统判断和	短路语法的性能对比：</p>
+<pre><code>var i = 1;
+
+console.time(&quot;普通的if else判断&quot;);
+for (var j = 0; j &lt; 100000; j++) {
+    if (i === 1) {
+        i = 2;
+    } else {
+        i = 1;
+    }
+}
+console.timeEnd(&quot;普通的if else判断&quot;);
+
+i = 1;
+console.time(&quot;短路语法&quot;);
+for (var j = 0; j &lt; 100000; j++) {
+    i === 1 &amp;&amp; (i = 2);
+    i !== 1 &amp;&amp; (i = 1);
+}
+console.timeEnd(&quot;短路语法&quot;);
+
+//	我把两种方法各循环执行了100000次
+</code></pre>
+<p>下面是运行时间对比</p>
+<p><img src="/imgs/run-times-compare.jpg" alt="canvas刮刮卡"></p>
+<p>从图中可见,在一样的执行次数中,短路语法执行需要的时间更短,性能更好</p>
+</section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    <a
+      class="flex w-1/2 items-center rounded-l-md p-6 pr-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2015-03-07-arguments/"
+      ><span class="mr-1.5">←</span><span>javascript中arguments对象</span></a
+    >
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2015-02-24-apply-call/"
+      ><span>我理解的apply和call</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

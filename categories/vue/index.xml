@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Vue on rwson</title>
+    <link>/categories/vue/</link>
+    <description>Recent content in Vue on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Thu, 09 Nov 2017 00:00:00 +0000</lastBuildDate><atom:link href="/categories/vue/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Vue中computed计算属性和watch观察者原理</title>
+      <link>/post/2017-11-09-vue-computed-watch/</link>
+      <pubDate>Thu, 09 Nov 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2017-11-09-vue-computed-watch/</guid>
+      <description>在用Vue做开发中, 我们多多少少都会用到里面两个比较重要的东西: computed和watch, 接下来我们一起分析并简单实现下这两个属性。
+computed computed名为计算属性, 目的就是让我们在模板里面只关注简单的绑定, 不做复杂操作, 拿官网的代码做例子,下面就是一个相对复杂的操作:
+&amp;lt;div id=&amp;#34;example&amp;#34;&amp;gt;  {{ message.split(&amp;#39;&amp;#39;).reverse().join(&amp;#39;&amp;#39;) }} &amp;lt;/div&amp;gt; 先来看下用法:
+new Vue({  data() {  return {  firstName: &amp;#34;rw&amp;#34;,  lastName: &amp;#34;son&amp;#34;,  age: 25  };  },  computed: {  // 指定计算属性的getter  info() {  return `info content: my name is ${this.firstName}${this.lastName}, I&amp;#39;m ${this.age}years old`;  },  // 同时提供getter和setter, setter中可以操作其他数据  fullName: {  get() {  return `my fullName is: ${this.</description>
+    </item>
+    
+  </channel>
+</rss>

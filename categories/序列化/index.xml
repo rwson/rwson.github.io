@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>序列化 on rwson</title>
+    <link>/categories/%E5%BA%8F%E5%88%97%E5%8C%96/</link>
+    <description>Recent content in 序列化 on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Sat, 17 Sep 2016 00:00:00 +0000</lastBuildDate><atom:link href="/categories/%E5%BA%8F%E5%88%97%E5%8C%96/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>javascript中的序列化</title>
+      <link>/post/2016-09-17-javascript-serialize/</link>
+      <pubDate>Sat, 17 Sep 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-09-17-javascript-serialize/</guid>
+      <description>在用jQuery发送ajax(POST)请求的时候,最常见的提交方式就是&amp;quot;application/x-www-form-urlencoded&amp;quot;,通常都会传入一个data属性作为传输给后端的数据,在ajax发送之前,那么我们直接如果直接传入把这个对象传递给后端,后端就不能对该对象进行解析,因为对象会被转成字符串&amp;quot;[object Object]&amp;quot;,所以就需要我们对该对象进行url编码,并且转换成字符串,再传给后端。
+假设我们先传递一个简单的对象(所有的key对应的value都不是引用类型[Array、Object]),就像下面这样:
+{ string: &amp;quot;string&amp;quot;, number: 1 }  用jQuery中的$.ajax方法,POST提交,打开请求面板,在form data那边,点击view source,可以看到下面这一串字符串,就像下面的样子:
+string=string&amp;amp;number=1  在jQuery中,$.param这个方法可以实现进行url编码的作用。
+现在可以自己实现一个:
+// 获取对象上的类名 function _typeOf(obj) { return {}.toString.call(obj).slice(8, -1); } // encodeURIComponent简写 function _encode(data) { data = data || &amp;quot;&amp;quot;; return encodeURIComponent(data); } // 序列化主函数 function _serializenData(data) { var res = data, typeIn; // 判断传入的是否是一个Object类型的数据 if (_typeOf(data) === &amp;quot;Object&amp;quot;) { res = []; for (var i in data) { typeIn = _typeOf(data[i]); switch (typeIn) { // 遇到Object、Array时需要进行遍历或者枚举,对其内部元素、属性做处理后再放到结果集数组中 case &amp;quot;Object&amp;quot;: res.</description>
+    </item>
+    
+  </channel>
+</rss>

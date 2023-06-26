@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>NodeJs on rwson</title>
+    <link>/categories/nodejs/</link>
+    <description>Recent content in NodeJs on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Thu, 26 Mar 2020 00:00:00 +0000</lastBuildDate><atom:link href="/categories/nodejs/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>npm之npx源码阅读</title>
+      <link>/post/2020-03-26-read-npx/</link>
+      <pubDate>Thu, 26 Mar 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2020-03-26-read-npx/</guid>
+      <description>npm是nodejs的模块管理器，功能及其强大。甚至随着前端模块化的兴起，在平时的工作中，也必不可少的会接触npm。在npm 5.2.0以及后面的版本, 新增了npx命令，该条命令主要有以下几个特点:
+  临时安装可执行依赖包，无需全局安装，不用担心长期的污染。(比如我们某个项目里用到nodemon这个nodejs启动器, 但是全局的node_modules中又没安装这个模块,然后通过npx nodemon xxx来安装并且执行。再比如我们项目里依赖的webpack 4.x，而系统全局安装的确是webkack 1.x，又不想把全局的替换掉，这时候我们可以通过npx webpack@4.x xxx来用我们项目里的版本编译相关代码)
+  可以执行依赖包中的命令，安装完成自动运行。
+  自动加载node_modules中依赖包，如果没找到，再去找全局，如果依然没找到，则会先安装，再执行。
+  可以指定node版本、包的版本，解决了不同项目使用不同版本的包的问题。
+  了解了这些特点，我们来分析下npx的具体实现。首先找到入口文件bin/index.js
+#!/usr/bin/env node  const path = require(&amp;#39;path&amp;#39;) const npx = require(&amp;#39;libnpx&amp;#39;)   const NPM_PATH = path.join(__dirname, &amp;#39;node_modules&amp;#39;, &amp;#39;npm&amp;#39;, &amp;#39;bin&amp;#39;, &amp;#39;npm-cli.js&amp;#39;)  // 解析参数 const parsed = npx.parseArgs(process.argv, NPM_PATH)  parsed.npxPkg = path.join(__dirname, &amp;#39;package.json&amp;#39;) npx(parsed) 入口文件中最后执行的是libnpx这个包，所以我们跟到libnpx/index.js这个文件，先看下刚才入口文件里面调用的npx.parseArgs：
+npx.parseArgs // parse-args.js  &amp;#39;use strict&amp;#39;  let npa const path = require(&amp;#39;path&amp;#39;)  module.</description>
+    </item>
+    
+    <item>
+      <title>用NodeJs和Python开发一个Sublime插件</title>
+      <link>/post/2017-10-24-write-a-sublime-plugin-by-python-nodejs/</link>
+      <pubDate>Tue, 24 Oct 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2017-10-24-write-a-sublime-plugin-by-python-nodejs/</guid>
+      <description>Sublime Text著有最性感的编辑器之称,它轻量,易于拓展,通过插件的方式可使它变得很强大,而我更是把它作为自己的主要编辑器使用。
+有一次逛package control的时候,发现一个用NodeJs来写插件的脚手架: SublimeJS_Samples,才发现用NodeJs结合Python也可以来开发插件,这对于对Python不是特别了解的人可能很吃力,然后就研究了几个常用插件的源码,拿sublime-vue-formatter这个插件详细看了下,总结出原理大概是这样的:
+ 在Python中拿到当前正在编辑的文件或者选中的内容 用Python子进程subprocess去执行一段cmd命令并接受输出,Node路径为我们电脑上装的Node绝对路径(用户事先配置好), 再去执行一个NodeJs脚本, 以Mac为例, 最后要执行的命令大概是这样的/usr/local/bin/node script/run.js --arg1=argVal1 --arg2=argVal2(其实和我们平时在Terminal里运行的一样) Python接收到NodeJs的执行返回的时候, 替换文件中的相关内容  抱着试试看的心理,我也决定自己用这个模式写个图片压缩相关的插件,先简单介绍下我想写的插件的功能:
+ 用户在项目根目录下新建配置文件, 指定压缩目录和释放目录, 调用tinypng的开发者API进行压缩 当压缩完的图片小于多少字节时把css中的引用转换成Base64编码,也是通过配置项 用户可以通过一些快捷键或者命令(子命令)在项目根目录新建配置文件、修改全局NodeJs路径配置等等  现在知道了我们想做什么, 下一步就是根据这个需求开始写代码, 因为是图片压缩插件, 所以我把它命名成sublime-image-compressor
+命令、子命令 在插件配置中, 命令都是通过配置文件写入的, 下面贴下我们这个插件支持命令的一个配置并做介绍
+//	ImageCompressor.sublime-commands  [{  &amp;#34;caption&amp;#34;: &amp;#34;ImageCompress&amp;#34;,  &amp;#34;command&amp;#34;: &amp;#34;image_compress&amp;#34; }, {  &amp;#34;caption&amp;#34;: &amp;#34;ImageCompress: Init Project Config File&amp;#34;,  &amp;#34;command&amp;#34;: &amp;#34;imagecompress_config_project&amp;#34; }, {  &amp;#34;caption&amp;#34;: &amp;#34;ImageCompress: Set Global Config&amp;#34;,  &amp;#34;command&amp;#34;: &amp;#34;imagecompress_set_global_plugin_options&amp;#34; }] .sublime-commands是用来指定插件支持的命令的, 里面指定一个对象型数组, 数组有caption和command两项, 需要注意的是, command的值和Python的类是对应的, 且Python中用驼峰命名法来定义类名, 以第一项为例, 比如command的值为image_compress, 我们的Python中就需要像类似下面的样子定义一个类:</description>
+    </item>
+    
+    <item>
+      <title>NodeJs读取windows注册表来对软件进行卸载</title>
+      <link>/post/2017-03-29-node-read-regedit-uninstall-software/</link>
+      <pubDate>Wed, 29 Mar 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2017-03-29-node-read-regedit-uninstall-software/</guid>
+      <description>最近在基于node-webkit(以下简称NW)开发windows桌面app,里面有个类似于软件市场的功能,后台管理员提供一些软件,可以从该app上进行下载、安装、卸载、升级等等。
+安装或升级可以直接通过把下载好的zip包解压出来然后执行里面的exe程序安装就好,但是卸载相对来说比较麻烦,几乎每个第三方exe在安装后的目录里面都有一个uninstall.exe,但是我们不知道这个软件具体安装在哪,所以要卸载也无从下手,这时候就想到了注册表,通过注册表可以获取到某个软件的安装目录,所以可以先把当前注册表的目录取得,再去相应目录下找卸载该软件的那个exe并执行。
+由于NW是基于nodejs的,所以可以通过一些第三方的npm包来操作,在这里主要主要用到的包是winreg,首先我们先分析下注册表:
+可以看到根下面有5个大项(HKEY_CLASSES_ROOT、HKEY_CURRENT_USER、HKEY_LOCAL_MACHINE、HKEY_USERS、HKEY_CURRENT_CONFIG),第三方软件基本上都是在HKEY_LOCAL_MACHINE下面的,所以读取的时候就从HKEY_LOCAL_MACHINE下面开始找,这里以搜狗输入法为例:
+从上图中看到该项的全路径为&amp;quot;HKEY_LOCAL_MACHINE\SOFTWARE\SogouInput&amp;quot;,注册项里的第一项就是安装路径,对应的名称是默认,所以我们读取的时候从就可以读取刚才的那个路径,下面是主要的实现:
+const Registry = require(&amp;quot;winreg&amp;quot;),child_process = require(&amp;quot;child_process&amp;quot;),path = require(&amp;quot;path&amp;quot;),key = new Registry({// 打开HKEY_LOCAL_MACHINE这个大类// 一共有5个属性,分别是&#39;HKLM&#39;, &#39;HKCU&#39;, &#39;HKCR&#39;, &#39;HKU&#39;, &#39;HKCC&#39;// 就是上面那5大项的简称hive: Registry.HKLM,// 反斜杠前面需要加&amp;quot;\&amp;quot;进行转义key: &amp;quot;\\SOFTWARE\\SogouInput&amp;quot;});let pre, end, cur, target;// 获取到注册项中中所有配置项,以键值对的形式返回// 每一小项分别包含(host、hive、key、name、type、value、arch)这几个属性key.values((err, res) =&amp;gt; {if (err) {console.log(err);} else {for(var i in res) {cur = res[i];// 判断当前项的名称是否包含default或者versionif (/default/gi.test(cur.name)) {pre = cur.</description>
+    </item>
+    
+    <item>
+      <title>NodeJs处理excel返回json</title>
+      <link>/post/2015-11-17-node-deal-excel/</link>
+      <pubDate>Tue, 17 Nov 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-11-17-node-deal-excel/</guid>
+      <description>快3个月没写博客了，感觉好生疏。
+由于最近在做一个乐队投票活动，每个乐队都有几个预览图片，但是运营上传图片的时候没有考虑顺序问题，后端也没做类似于拖拽排序的功能，为了快速改出来，乐队预览图的url格式是&amp;quot;http://api.juhuaba.com/api/file/z2/图片id&amp;quot;, 然后一想，前端可以根据指定的id的顺序来显示，然后运营那边就给了我一个excel表格，每个乐队的id和图片，然后，看了一眼excel表格，好几百条数据，感觉手动处理太烦，而且容易出错，所以就想搞个办法让程序来处理。
+先上一张excel的图
+然后开始从网上找办法，很多都是说用一个&amp;quot;node-xlsx&amp;quot;的插件，但是我试了下，可能是excel表格的问题吧，报了个很奇怪的错，就放弃了。后来去npm上找到一个&amp;quot;xlsx-json&amp;quot;的插件，试了下，确实可以取得表格里的数据做为一个数组，每一项都有，只不过如果是空单元格或者被合并的单元格都会显示null,所以还是得自己处理下。
+首先肯定是执行&amp;quot;npm install xlsx-json&amp;quot;啦
+然后这个插件需要有个配置文件，暂且叫task.json吧，下面是task.json中的内容。
+[ { &amp;quot;input&amp;quot;: &amp;quot;data.xlsx&amp;quot;, &amp;quot;sheet&amp;quot;: &amp;quot;Sheet1&amp;quot;, &amp;quot;range&amp;quot;: &amp;quot;A1:C240&amp;quot;, &amp;quot;raw&amp;quot;: true, &amp;quot;output&amp;quot;: &amp;quot;data.json&amp;quot; } ] //	该数组接受多个对象，每个对象的基本格式是上面那种 //	input代表是哪个文件 //	sheet代表一个工作簿 //	range代表要转换的一个区域 //	row代表逐行读取 //	output代表输出到哪个文件  下面是调用代码
+var xlsx2json = require(&#39;xlsx-json&#39;); xlsx2json(task, function(err, jsonArr) { if (err) { console.error(err); return; } });  虽然配置了这些参数，但是读取出来的不如人意，就像下面这样：
+然后就对转换出来数组的进行了处理，下面是完整代码，前台浏览器访问http://localhost:3000,直接返回json给前台
+var xlsx2json = require(&#39;xlsx-json&#39;), // 加载xlsx-json模块 task = require(&#39;./task.json&#39;), // 配置文件 express = require(&amp;quot;express&amp;quot;), app = express(), jsonData, // 临时变量,存储转转出来的数据 tmpObj = {}, // 对象,循环时用 lastTmp = {}, // 对象,循环用,存储每个乐队的完整对象 result = []; // 由完整乐队对象构成的数组 xlsx2json(task, function (err, jsonArr) { if (err) { console.</description>
+    </item>
+    
+    <item>
+      <title>NodeJs中redis窜库插入</title>
+      <link>/post/2015-08-20-node-redis-across-database-insert/</link>
+      <pubDate>Thu, 20 Aug 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-08-20-node-redis-across-database-insert/</guid>
+      <description>最近在用NodeJs+redis搭建一个类似漂流瓶的服务器,有个需求如下:根据漂流瓶的类型来将数据用hash的方式插入到数据库中,这边类型主要根据性别(male/female)来区分,当类型为male时插入到0号数据库,female时插入到1号数据库。
+先贴代码:
+var redis = require(&#39;redis&#39;), client = redis.createClient(); /** * 扔一个漂流瓶,随机分配一个id当存入redis的建,然后根据不同的类型存放到不同的数据库 * @param {[type]} bottle [description] * @param {Function} callback [description] * @return {[type]} [description] */ exports.throw = function (bottle, callback) { bottle.time = bottle.time || Date.now(); var bottleId = Math.random().toString(16), //	为每个瓶子随机生成一个id type = { &#39;male&#39;: 0, &#39;female&#39;: 1 }; //	根据不同类型将不同漂流瓶保存到不同的数据库 console.log(&#39;现在应该选择&#39; + type[bottle.type] + &#39;号数据库进行插入&#39;); client.SELECT(type[bottle.type], function () { client.HMSET(bottleId, bottle, function (err, res) { //	以hash类型保存漂流瓶对象 if (err) { return callback({ &#39;code&#39;: 0, &#39;msg&#39;: &#39;过会再试吧!</description>
+    </item>
+    
+  </channel>
+</rss>

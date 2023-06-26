@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>javascript接口 - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="接口:
+接口是提供了一种用以说明一个对象应该具有哪些方法的手段，但它并不规定这些方法应该如何实现。在JS中，没有像其他面向对象程序语言的interface关键字，所以实现的方法也语言不同；JS实现接口的主要方式主要为定义描述法、属性检测法和鸭式辨型法，其中鸭式辨型法是目前用的最多的。
+1、定义描述法
+/** * interface CompsiteImpl{ * function add(); * function remove(); * function update(); * } */ /** * 实现接口 * @constructor */ function CompsiteImpl(){ } CompsiteImpl.prototype = { &quot;constructor&quot;:CompsiteImpl, &quot;add&quot;:function(){ console.log(&quot;我是add方法！&quot;); }, &quot;remove&quot;:function(){ console.log(&quot;我是remove方法！&quot;); }, &quot;update&quot;:function(){ console.log(&quot;我是update方法！&quot;); } };  此方法也称注释法，顾名思义，就是通过一系列的注释来定义该类需要实现哪些接口方法，这是最简单定义接口的一种方法。但是此方法缺点实在太明显了，比如一个人代码写完了，他只能通过肉眼来判断是不是都把刚才注释里面的方法都实现了；他哪天代码做修改了，是否和注释一致等等的。只是属于一个类似于帮助文档的范畴，太死板。
+2、属性检测法
+/** * interface Compsite{ * function add(); * function remove(); * function update(); * } * * interface FormItem{ * function select(); * } * */ // 实现接口 // 需要实现 Compsite FormItem function CompsiteImpl(){ // 在类的内部定义一个变量 this." />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">javascript接口</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>May 27, 2015</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p>接口:</p>
+<p>接口是提供了一种用以说明一个对象应该具有哪些方法的手段，但它并不规定这些方法应该如何实现。在JS中，没有像其他面向对象程序语言的interface关键字，所以实现的方法也语言不同；JS实现接口的主要方式主要为定义描述法、属性检测法和鸭式辨型法，其中鸭式辨型法是目前用的最多的。</p>
+<p>1、定义描述法</p>
+<pre><code>/**
+ *  interface CompsiteImpl{
+ *      function add();
+ *      function remove();
+ *      function update();
+ *  }
+ */
+
+/**
+ * 实现接口
+ * @constructor
+ */
+function CompsiteImpl(){
+}
+
+CompsiteImpl.prototype = {
+    &quot;constructor&quot;:CompsiteImpl,
+    &quot;add&quot;:function(){
+        console.log(&quot;我是add方法！&quot;);
+    },
+    &quot;remove&quot;:function(){
+        console.log(&quot;我是remove方法！&quot;);
+    },
+    &quot;update&quot;:function(){
+        console.log(&quot;我是update方法！&quot;);
+    }
+};
+</code></pre>
+<p>此方法也称注释法，顾名思义，就是通过一系列的注释来定义该类需要实现哪些接口方法，这是最简单定义接口的一种方法。但是此方法缺点实在太明显了，比如一个人代码写完了，他只能通过肉眼来判断是不是都把刚才注释里面的方法都实现了；他哪天代码做修改了，是否和注释一致等等的。只是属于一个类似于帮助文档的范畴，太死板。</p>
+<p>2、属性检测法</p>
+<pre><code>/**
+ *  interface Compsite{
+ *      function add();
+ *      function remove();
+ *      function update();
+ *  }
+ *
+ *  interface FormItem{
+ *      function select();
+ *  }
+ *
+ */
+
+//  实现接口
+//  需要实现 Compsite FormItem
+function CompsiteImpl(){
+    //  在类的内部定义一个变量
+    this.implementsInterface = [&quot;Compsite&quot;,&quot;FormItem&quot;];
+}
+
+CompsiteImpl.prototype = {
+    &quot;constructor&quot;:CompsiteImpl,
+    &quot;add&quot;:function(){
+        console.log(&quot;add 方法&quot;);
+    },
+    &quot;remove&quot;:function(){
+		console.log(&quot;remove 方法&quot;);
+	},
+    &quot;update&quot;:function(){
+		console.log(&quot;remove 方法&quot;);},
+    &quot;select&quot;:function(){
+		console.log(&quot;select 方法&quot;);
+	}
+};
+
+/**
+ *
+ * @param instance
+ *
+ * 检测类的方法
+ */
+function checkCompsiteImpl(instance){
+    //  判断当前对象是否实现了所有的接口
+    if(!isImplements(instance,&quot;Compsite&quot;,&quot;FormItem&quot;))
+	{
+        throw new Error(&quot;object does not implement 
+			a required interface&quot;);
+    }
+}
+
+/**
+ *
+ * @param object
+ *
+ * 公共的、具体的检测方法(核心方法)
+ */
+function isImplements(object){
+    for(var i = 1,l = arguments.length;
+	i &lt; l;i ++){
+        var interfaceName = arguments[i],
+            interfaceFound = false;
+        for(var j = 0,
+			len = object.implementsInterface.length;
+		j &lt; len;j ++)
+		{
+            if(object.implementsInterface[j] ==
+		 interfaceName){
+                interfaceFound = true;
+            }
+        }
+        if(!interfaceFound){
+            return false;
+        }
+        return true;
+    }
+}
+
+var c1 = new CompsiteImpl();
+checkCompsiteImpl(c1);
+c1.add();
+</code></pre>
+<p>这种方法相对来说高级一点了，如果有一个接口没有没实现，会看到一个错误，代码不往下继续走了。但缺点在于仍无法判断是否真正实现了对应的接口方法，仅仅只是&quot;自称&quot;实现了接口，同时这种方法耦合性也比较高，放到另外一个地方可能就需要进行修改才能复用。</p>
+<p>3、鸭式辨型法</p>
+<pre><code>/**
+ *
+ * @param name      接口名,字符串
+ * @param methods   需要实现的方法,接收方法的集合、数组
+ * @constructor
+ * 接口类
+ */
+function Interface(name,methods){
+    //  判断接口的参数个数
+    if(arguments.length != 2){
+        throw new Error(&quot;this instance interface 
+		constructor required 2 arguments!&quot;);
+    }
+    this.name = name;
+    this.methods = [];
+    //  定义一个空数组,等待接收methods里面的方法名
+    for(var i = 0,len = methods.length; i &lt; len; i ++){
+        if(typeof methods[i] !== &quot;string&quot;){
+            throw new Error(&quot;the Instance method name
+			 is error!&quot;);
+        }
+        this.methods.push(methods[i]);
+    }
+}
+
+/**
+ *
+ * @param object
+ *
+ * 检验方法,如果通过,不做任何操作,否则抛出异常
+ */
+Interface.ensureImplement = function(object){
+    //  至少得实现一个接口
+    if(arguments.length &lt; 2){
+        throw new Error(&quot;Interface.ensureImplement 
+	constructor arguments must be 2 
+		or more arguments!&quot;);
+    }
+    //  获得接口实例对象
+    for(var i = 1,len = arguments.length;
+	i &lt; len;i ++){
+        var instanceInterface = arguments[i];
+        //  判断参数是否为接口类的
+        if(!(instanceInterface instanceof Interface))
+		{
+            throw new Error(&quot;the arguments&quot; + 
+			instanceInterface + &quot;is 
+			not an instance of Interface Class&quot;);
+        }
+        //  循环接口实例对象里面的每个方法
+        for(var j = 0,l = instanceInterface.methods.length;
+		 j &lt; l;j ++){
+            var methodName = 
+			instanceInterface.methods[j];
+            //  接收每个方法的名字(字符串)
+            if(!arguments[0][methodName] || 
+	typeof arguments[0][methodName] !== &quot;function&quot;)
+	{
+                throw new Error(&quot;the method &quot;+ 
+				methodName +&quot; is not found&quot;);
+            }
+            //  不存在或者不是方法类型
+        }
+    }
+};
+
+//  实例化接口对象
+var CompsiteInterface = new Interface(&quot;CompsiteInterface&quot;,
+[&quot;add&quot;,&quot;remove&quot;]),
+FormInteInterface = new 
+Interface(&quot;FormInteInterface&quot;,
+[&quot;update&quot;,&quot;select&quot;]);
+
+/**
+ *
+ * @constructor
+ * 接口类
+ */
+function CompsiteImpl(){
+}
+//  实现接口
+CompsiteImpl.prototype = {
+    &quot;constructor&quot;:CompsiteImpl,
+    add:function(){
+        console.log(&quot;add 方法&quot;);
+    },
+    remove:function(){},
+    update:function(){},
+    select:function(){}
+};
+
+//  检验接口里的方法
+var c1 = new CompsiteImpl
+(c1,CompsiteInterface,FormInteInterface);
+
+Interface.ensureImplement
+(c1,CompsiteInterface,FormInteInterface);
+
+c1.add();
+</code></pre>
+<p>此方法就是目前最经典的一种方法，从上面的代码中可以看出，在这里完全采用的是面向对象的方法，通过实例化两个接口对象来声明需要实现的方法，最后实例化我们真正需要需要实例化的对象c1,通过Interface下的静态方法来判断是否已经实现全部接口，如果有一个没被实现则会看到具体是哪个没被实现，并且终止代码的继续运行，且耦合度较低。</p>
+<p>接口的好处主要是提高了系统相似模块的重用性，使得不同类的通信更加稳固。一旦实现接口，则必须实现接口中所有的方法。在大型系统中，接口的益处是显而易见的，但是如果在一个小的web系统中使用接口就显得画蛇添足了。</p>
+</section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    <a
+      class="flex w-1/2 items-center rounded-l-md p-6 pr-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2015-05-31-js-design-mode-factory/"
+      ><span class="mr-1.5">←</span><span>javascript工厂模式</span></a
+    >
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2015-05-26-js-object-extend/"
+      ><span>javascript实现继承</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

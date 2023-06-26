@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>new操作符 on rwson</title>
+    <link>/categories/new%E6%93%8D%E4%BD%9C%E7%AC%A6/</link>
+    <description>Recent content in new操作符 on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Thu, 20 Apr 2017 00:00:00 +0000</lastBuildDate><atom:link href="/categories/new%E6%93%8D%E4%BD%9C%E7%AC%A6/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>实现一个new函数</title>
+      <link>/post/2017-04-20-write-a-new-operator/</link>
+      <pubDate>Thu, 20 Apr 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2017-04-20-write-a-new-operator/</guid>
+      <description>在日常javaScript开发中，我们多多少少都会用到new，最常见的比如new Date等等，在一些js面向对象中，用到new的地方更多了，比如我们通过function来模拟声明一个类，需要实例化的时候就需要用new xxx():
+function Class() {  //	... }  var inst = new Class(); 在MDN上对在执行了new之后的介绍如下:
+ 一个新对象被创建。它继承自*foo*.prototype 构造函数 *foo* 被执行。执行的时候，相应的传参会被传入，同时上下文会被指定为这个新实例。new *foo* 等同于 new *foo*(), 只能用在不传递任何参数的情况。 如果构造函数返回了一个“对象”，那么这个对象会取代整个new出来的结果。如果构造函数没有返回对象，那么new出来的结果为步骤1创建的对象。(一般情况下构造函数不返回任何值，不过用户如果想覆盖这个返回值，可以自己选择返回一个普通对象来覆盖。当然，返回数组也会覆盖，因为数组也是对象。)  在知道了new之后发生的事情，我们的_new函数就可以按照上面的几个步骤来：
+function _new() {  //	获取到所有参数 	var args = [].slice.call(arguments),  //	创建一个空对象 	obj = Object.create({}),  //	把第一个参数作为构造器 	Constructor = args[0], 	res;  //	继承构造器下的原型 	obj.__proto__ = args[0].prototype;  //	执行构造器，并传入相关参数 	res = Constructor.</description>
+    </item>
+    
+  </channel>
+</rss>

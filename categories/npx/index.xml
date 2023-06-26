@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>npx on rwson</title>
+    <link>/categories/npx/</link>
+    <description>Recent content in npx on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Thu, 26 Mar 2020 00:00:00 +0000</lastBuildDate><atom:link href="/categories/npx/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>npm之npx源码阅读</title>
+      <link>/post/2020-03-26-read-npx/</link>
+      <pubDate>Thu, 26 Mar 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2020-03-26-read-npx/</guid>
+      <description>npm是nodejs的模块管理器，功能及其强大。甚至随着前端模块化的兴起，在平时的工作中，也必不可少的会接触npm。在npm 5.2.0以及后面的版本, 新增了npx命令，该条命令主要有以下几个特点:
+  临时安装可执行依赖包，无需全局安装，不用担心长期的污染。(比如我们某个项目里用到nodemon这个nodejs启动器, 但是全局的node_modules中又没安装这个模块,然后通过npx nodemon xxx来安装并且执行。再比如我们项目里依赖的webpack 4.x，而系统全局安装的确是webkack 1.x，又不想把全局的替换掉，这时候我们可以通过npx webpack@4.x xxx来用我们项目里的版本编译相关代码)
+  可以执行依赖包中的命令，安装完成自动运行。
+  自动加载node_modules中依赖包，如果没找到，再去找全局，如果依然没找到，则会先安装，再执行。
+  可以指定node版本、包的版本，解决了不同项目使用不同版本的包的问题。
+  了解了这些特点，我们来分析下npx的具体实现。首先找到入口文件bin/index.js
+#!/usr/bin/env node  const path = require(&amp;#39;path&amp;#39;) const npx = require(&amp;#39;libnpx&amp;#39;)   const NPM_PATH = path.join(__dirname, &amp;#39;node_modules&amp;#39;, &amp;#39;npm&amp;#39;, &amp;#39;bin&amp;#39;, &amp;#39;npm-cli.js&amp;#39;)  // 解析参数 const parsed = npx.parseArgs(process.argv, NPM_PATH)  parsed.npxPkg = path.join(__dirname, &amp;#39;package.json&amp;#39;) npx(parsed) 入口文件中最后执行的是libnpx这个包，所以我们跟到libnpx/index.js这个文件，先看下刚才入口文件里面调用的npx.parseArgs：
+npx.parseArgs // parse-args.js  &amp;#39;use strict&amp;#39;  let npa const path = require(&amp;#39;path&amp;#39;)  module.</description>
+    </item>
+    
+  </channel>
+</rss>

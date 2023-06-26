@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>javascript中事件代理和取消 - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="在日常前端开发中，事件是必不可少的一部分，有时候我们需要根据后端接口的返回来动态输出HTML，这时候直接用jQuery中的click之类的方法已经不能达到目的，需要重新绑定或者用事件代理来实现事件绑定。
+事件代理的原理很简单: 事件冒泡会触发容器 dom 的相关事件并执行监听函数。
+比如我们有这样一段HTML:
+ &lt;div class=&#34;container&#34;&gt;  &lt;div class=&#34;block1&#34;&gt;&lt;/div&gt;  &lt;div class=&#34;block2&#34;&gt;&lt;/div&gt;  &lt;div class=&#34;block3&#34;&gt;&lt;/div&gt;  &lt;div class=&#34;block4&#34;&gt;&lt;/div&gt;  &lt;/div&gt; 我们想给class中带有block的元素绑定一个点击事件：
+window.onload = function() {  var container = document.querySelector(&#34;.selector&#34;);   container.addEventListener(&#34;click&#34;, function(e) {  var ev = e || window.event,  target = ev.target,  classList = target.classList;  if (classList.contains(&#34;block1&#34;) || classList.contains(&#34;block2&#34;) || classList.contains(&#34;block3&#34;) || classList.contains(&#34;block4&#34;)) {  console.log(&#34;target clicked,&#34; &#43; classList[0]);  }  }); }; 如上我们就实现一个事件代理。" />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">javascript中事件代理和取消</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Apr 5, 2016</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p>在日常前端开发中，事件是必不可少的一部分，有时候我们需要根据后端接口的返回来动态输出HTML，这时候直接用<code>jQuery</code>中的<code>click</code>之类的方法已经不能达到目的，需要重新绑定或者用事件代理来实现事件绑定。</p>
+<p>事件代理的原理很简单: 事件冒泡会触发容器 dom 的相关事件并执行监听函数。</p>
+<p>比如我们有这样一段HTML:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>    &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;container&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;block1&#34;</span>&gt;&lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;block2&#34;</span>&gt;&lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;block3&#34;</span>&gt;&lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;block4&#34;</span>&gt;&lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;/<span style="color:#f92672">div</span>&gt;
+</span></span></code></pre></div><p>我们想给<code>class</code>中带有<code>block</code>的元素绑定一个点击事件：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span>window.<span style="color:#a6e22e">onload</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>() {
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">container</span> <span style="color:#f92672">=</span> document.<span style="color:#a6e22e">querySelector</span>(<span style="color:#e6db74">&#34;.selector&#34;</span>);
+</span></span><span style="display:flex;"><span>   
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">container</span>.<span style="color:#a6e22e">addEventListener</span>(<span style="color:#e6db74">&#34;click&#34;</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">e</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">ev</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">e</span> <span style="color:#f92672">||</span> window.<span style="color:#a6e22e">event</span>,
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">target</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">ev</span>.<span style="color:#a6e22e">target</span>,
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">classList</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">target</span>.<span style="color:#a6e22e">classList</span>;
+</span></span><span style="display:flex;"><span>   	  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">classList</span>.<span style="color:#a6e22e">contains</span>(<span style="color:#e6db74">&#34;block1&#34;</span>) <span style="color:#f92672">||</span> <span style="color:#a6e22e">classList</span>.<span style="color:#a6e22e">contains</span>(<span style="color:#e6db74">&#34;block2&#34;</span>) <span style="color:#f92672">||</span> <span style="color:#a6e22e">classList</span>.<span style="color:#a6e22e">contains</span>(<span style="color:#e6db74">&#34;block3&#34;</span>) <span style="color:#f92672">||</span> <span style="color:#a6e22e">classList</span>.<span style="color:#a6e22e">contains</span>(<span style="color:#e6db74">&#34;block4&#34;</span>)) {
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;target clicked,&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">classList</span>[<span style="color:#ae81ff">0</span>]);
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>  });
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>如上我们就实现一个事件代理。</p>
+<p>这种方法最大的好处的简单方便，但是问题来了，如果我们在某个操作后把相关元素从<code>DOM</code>中删除了之后，之前代理的事件并不会随着一起取消，在<code>jQuery</code>中有<code>deletegate</code>和<code>undeletegate</code>之类的方法来进行和取消事件代理，下面我们用<code>javascript</code>来实现并且封装一个事件代理函数，完成事件代理和提供取消事件代理两个功能：</p>
+<p>还是上面的HTML，这次我们加点样式：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>    &lt;<span style="color:#f92672">style</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;text/css&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>    .<span style="color:#a6e22e">container</span> <span style="color:#f92672">div</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">width</span>: <span style="color:#ae81ff">100</span><span style="color:#66d9ef">px</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">height</span>: <span style="color:#ae81ff">100</span><span style="color:#66d9ef">px</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    .<span style="color:#a6e22e">block1</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">background</span>: <span style="color:#66d9ef">red</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    .<span style="color:#a6e22e">block2</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">background</span>: <span style="color:#66d9ef">green</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    .<span style="color:#a6e22e">block3</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">background</span>: <span style="color:#66d9ef">yellow</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    .<span style="color:#a6e22e">block4</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">background</span>: <span style="color:#66d9ef">black</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    &lt;/<span style="color:#f92672">style</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;container&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;block1&#34;</span>&gt;&lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;block2&#34;</span>&gt;&lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;block3&#34;</span>&gt;&lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;block4&#34;</span>&gt;&lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;/<span style="color:#f92672">div</span>&gt;
+</span></span></code></pre></div><p>下面我们完成对刚才需求的封装：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">//	event.match() Polyfill
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//	https://developer.mozilla.org/zh-CN/docs/Web/API/Element/matches
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">Element</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">matches</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">Element</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">matches</span> <span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">Element</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">matchesSelector</span> <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">Element</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">mozMatchesSelector</span> <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">Element</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">msMatchesSelector</span> <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">Element</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">oMatchesSelector</span> <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">Element</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">webkitMatchesSelector</span> <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">s</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">matches</span> <span style="color:#f92672">=</span> (<span style="color:#66d9ef">this</span>.document <span style="color:#f92672">||</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">ownerDocument</span>).<span style="color:#a6e22e">querySelectorAll</span>(<span style="color:#a6e22e">s</span>),
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">matches</span>.<span style="color:#a6e22e">length</span>;
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">while</span> (<span style="color:#f92672">--</span><span style="color:#a6e22e">i</span> <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">matches</span>.<span style="color:#a6e22e">item</span>(<span style="color:#a6e22e">i</span>) <span style="color:#f92672">!==</span> <span style="color:#66d9ef">this</span>) {}
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">&gt;</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>            };
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    window.<span style="color:#a6e22e">onload</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">container</span> <span style="color:#f92672">=</span> document.<span style="color:#a6e22e">querySelector</span>(<span style="color:#e6db74">&#34;.container&#34;</span>),
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//	定义每个元素的处理函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#a6e22e">handlers</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">block1</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">evt</span>, <span style="color:#a6e22e">inst</span>) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;block1 clicked!&#34;</span>);
+</span></span><span style="display:flex;"><span>                },
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">block2</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">evt</span>, <span style="color:#a6e22e">inst</span>) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;block2 clicked!&#34;</span>);
+</span></span><span style="display:flex;"><span>                  	<span style="color:#75715e">//	响应处理一遍后将当前代理取消
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                    <span style="color:#a6e22e">handlers</span>[<span style="color:#e6db74">&#34;block2-undelegate&#34;</span>].<span style="color:#a6e22e">destroy</span>();
+</span></span><span style="display:flex;"><span>                },
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">block3</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">evt</span>, <span style="color:#a6e22e">inst</span>) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;block3 clicked!&#34;</span>);
+</span></span><span style="display:flex;"><span>                },
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">block4</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">evt</span>, <span style="color:#a6e22e">inst</span>) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;block4 clicked!&#34;</span>);
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>            },
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">evt</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      	
+</span></span><span style="display:flex;"><span>       <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         *  @param   {HTMLElement}  container  绑定事件的元素
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         *  @param   {String}  		type       需要代理的事件类型
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         *  @param   {String}	    selector   css选择器
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         *  @param   {Function}  	handler    事件处理函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         *  @param   {Boolean}  	capture    useCapture
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         *  @return  {Object}             	   取消代理承载对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         */</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">deletegate</span>(<span style="color:#a6e22e">container</span>, <span style="color:#a6e22e">type</span>, <span style="color:#a6e22e">selector</span>, <span style="color:#a6e22e">handler</span>, <span style="color:#a6e22e">capture</span>) {
+</span></span><span style="display:flex;"><span>        	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">ev</span>, <span style="color:#a6e22e">target</span>, <span style="color:#a6e22e">inst</span>, <span style="color:#a6e22e">listener</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        	<span style="color:#75715e">//	响应函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        	<span style="color:#a6e22e">listener</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">e</span>) {
+</span></span><span style="display:flex;"><span>	            <span style="color:#a6e22e">ev</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">e</span> <span style="color:#f92672">||</span> window.<span style="color:#a6e22e">event</span>;
+</span></span><span style="display:flex;"><span>	            <span style="color:#a6e22e">target</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">ev</span>.<span style="color:#a6e22e">target</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	            <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">target</span>.<span style="color:#a6e22e">matches</span>(<span style="color:#a6e22e">selector</span>)) {
+</span></span><span style="display:flex;"><span>	            	<span style="color:#a6e22e">handler</span>(<span style="color:#a6e22e">ev</span>);
+</span></span><span style="display:flex;"><span>	            }
+</span></span><span style="display:flex;"><span>        	};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        	<span style="color:#75715e">//	提供destroy接口
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        	<span style="color:#a6e22e">inst</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>	        	<span style="color:#a6e22e">destroy</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>() {
+</span></span><span style="display:flex;"><span>	        		<span style="color:#75715e">//	解除元素上的事件绑定
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	        		<span style="color:#a6e22e">container</span>.<span style="color:#a6e22e">removeEventListener</span>(<span style="color:#a6e22e">type</span>, <span style="color:#a6e22e">listener</span>, <span style="color:#a6e22e">capture</span>);
+</span></span><span style="display:flex;"><span>	        	}
+</span></span><span style="display:flex;"><span>	        };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	        <span style="color:#75715e">//	添加事件绑定, 处理函数用我们上面组织的
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>			<span style="color:#a6e22e">container</span>.<span style="color:#a6e22e">addEventListener</span>(<span style="color:#a6e22e">type</span>, <span style="color:#a6e22e">listener</span>, <span style="color:#a6e22e">capture</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">inst</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      	<span style="color:#75715e">//	枚举刚才定义的handlers, 给每个元素代理click事件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">i</span> <span style="color:#66d9ef">in</span> <span style="color:#a6e22e">handlers</span>) {
+</span></span><span style="display:flex;"><span>        	<span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">handlers</span>.<span style="color:#a6e22e">hasOwnProperty</span>(<span style="color:#a6e22e">i</span>)) {
+</span></span><span style="display:flex;"><span>              	<span style="color:#75715e">//	给handlers上添加新属性，包含该元素上的destroy
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        		<span style="color:#a6e22e">handlers</span>[<span style="color:#a6e22e">i</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;-undelegate&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">deletegate</span>(<span style="color:#a6e22e">container</span>, <span style="color:#e6db74">&#34;click&#34;</span>, <span style="color:#e6db74">&#34;.&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">handlers</span>[<span style="color:#a6e22e">i</span>]);
+</span></span><span style="display:flex;"><span>        	}
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    };
+</span></span></code></pre></div><p>上面就是我们对事件代理和取消事件代理的封装和应用，下图就是我们的运行效果：</p>
+<p><img src="/imgs/event-delegate.gif" alt="事件代理"></p>
+<h5 id="总结下">总结下：</h5>
+<p>事件代理有可以给动态添加到<code>DOM</code>中的元素绑定事件，减少事件注册的优点</p>
+<p>缺点就是该方法的局限性，仅适合动态加入到页面中的元素（当然例子中只是做demo），就没有动态创建<code>DOM</code>元素了</p>
+</section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    <a
+      class="flex w-1/2 items-center rounded-l-md p-6 pr-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2016-05-04-es6-promise/"
+      ><span class="mr-1.5">←</span><span>ES6中的Promise</span></a
+    >
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2016-03-24-javascript-self-loader/"
+      ><span>实现模块化编程</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

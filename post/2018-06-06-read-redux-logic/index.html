@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>redux-logic源码阅读 - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="在用React和Redux做开发时, 都会用到异步的一些东西, 之前更多的用的是redux-thunk或者redux-saga之类的, 但是都有用的不顺的地方, 有一次突然发现redux-logic是一个很不错的解决方案, 用起来也感觉很顺手, 与市面上其他redux中间件不同的分析都在这里, 感兴趣的可以自己查看。
+首先我们来看下redux-logic的基本用法:
+ //	logic/index.js import { createLogic } from &#39;redux-logic&#39;;  const someLogic = createLogic({ 	//	当前logic监听的actionType 	type: &#39;SOME_ACTION_TYPE&#39;,  	//	取消当前logic执行的actionType 	cancelType: &#39;CANCEL_TYPE&#39;,  	//	是否获取最后一个返回 	latest: true,  	//	当前actionType的业务逻辑 	async process({ getState, action, cancelled }, dispatch, done) { 	const res = await asyncFn(); 	dispatch(newAction({ 	...res 	})); 	done(); 	} });  export someLogic;  //	store/index." />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">redux-logic源码阅读</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Jun 6, 2018</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p>在用<a href="https://reactjs.org/">React</a>和<a href="https://redux.js.org/">Redux</a>做开发时, 都会用到异步的一些东西, 之前更多的用的是<code>redux-thunk</code>或者<code>redux-saga</code>之类的, 但是都有用的不顺的地方, 有一次突然发现<a href="https://github.com/jeffbski/redux-logic">redux-logic</a>是一个很不错的解决方案, 用起来也感觉很顺手, 与市面上其他<code>redux</code>中间件不同的分析都在<a href="https://codewinds.com/assets/article/redux-logic-nodevember.pdf">这里</a>, 感兴趣的可以自己查看。</p>
+<p>首先我们来看下<code>redux-logic</code>的基本用法:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	logic/index.js
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">import</span> { <span style="color:#a6e22e">createLogic</span> } <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;redux-logic&#39;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">someLogic</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">createLogic</span>({
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	当前logic监听的actionType
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;SOME_ACTION_TYPE&#39;</span>,
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	取消当前logic执行的actionType
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">cancelType</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;CANCEL_TYPE&#39;</span>,
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	是否获取最后一个返回
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">latest</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>,
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	当前actionType的业务逻辑
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">async</span> <span style="color:#a6e22e">process</span>({ <span style="color:#a6e22e">getState</span>, <span style="color:#a6e22e">action</span>, <span style="color:#a6e22e">cancelled</span> }, <span style="color:#a6e22e">dispatch</span>, <span style="color:#a6e22e">done</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">res</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">asyncFn</span>();
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">dispatch</span>(<span style="color:#a6e22e">newAction</span>({
+</span></span><span style="display:flex;"><span>			...<span style="color:#a6e22e">res</span>
+</span></span><span style="display:flex;"><span>		}));
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">done</span>();
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#a6e22e">someLogic</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	store/index.js
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">import</span> { <span style="color:#a6e22e">createStore</span>, <span style="color:#a6e22e">applyMiddleware</span> } <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;redux&#39;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">import</span> { <span style="color:#a6e22e">createLogicMiddleware</span> } <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;redux-logic&#39;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">import</span> { <span style="color:#a6e22e">routerMiddleware</span> } <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;react-router-redux&#39;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">import</span> <span style="color:#a6e22e">reducer</span> <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;../reducers&#39;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">import</span> <span style="color:#a6e22e">history</span> <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;../history&#39;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">import</span> { <span style="color:#a6e22e">someLogic</span> } <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;../logic&#39;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">configureStore</span> <span style="color:#f92672">=</span> () =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">reduxRouteMiddleware</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">routerMiddleware</span>(<span style="color:#a6e22e">history</span>),
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">//	将所有的logic应用到中间件中
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    	<span style="color:#a6e22e">loggicMiddleware</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">createLogicMiddleware</span>([<span style="color:#a6e22e">someLogic</span>]),
+</span></span><span style="display:flex;"><span>    	<span style="color:#a6e22e">middlewares</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">env</span>.<span style="color:#a6e22e">NODE_ENV</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;development&#39;</span> <span style="color:#f92672">?</span> [<span style="color:#a6e22e">loggicMiddleware</span>, <span style="color:#a6e22e">reduxRouteMiddleware</span>, <span style="color:#a6e22e">logger</span>] <span style="color:#f92672">:</span> [<span style="color:#a6e22e">loggicMiddleware</span>, <span style="color:#a6e22e">reduxRouteMiddleware</span>],
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">createStoreWithMiddleware</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">applyMiddleware</span>(...<span style="color:#a6e22e">middlewares</span>)(<span style="color:#a6e22e">createStore</span>),
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">store</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">createStoreWithMiddleware</span>(<span style="color:#a6e22e">reducer</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">store</span>;
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span> <span style="color:#a6e22e">configureStore</span>();
+</span></span></code></pre></div><p>本文会逐步分析<code>redux-logic</code>的相关实现, 首先把<a href="https://github.com/jeffbski/redux-logic">redux-logic</a>克隆到本地, 源码都位于<code>redux-logic/src</code>里面, 所以我们从<code>src/index.js</code>开始:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">import</span> <span style="color:#a6e22e">createLogic</span>, { <span style="color:#a6e22e">configureLogic</span> } <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;./createLogic&#39;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">import</span> <span style="color:#a6e22e">createLogicMiddleware</span> <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;./createLogicMiddleware&#39;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">configureLogic</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">createLogic</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">createLogicMiddleware</span>
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">configureLogic</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">createLogic</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">createLogicMiddleware</span>
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>从上面的代码中可以看到, 一共导出3个函数, <code>configureLogic</code>的功能就是对所有的<code>logic</code>进行配置(超时警告时间等), 我们主要看<code>createLogic</code>和<code>createLogicMiddleware</code>:</p>
+<ul>
+<li>createLogic</li>
+</ul>
+<p><code>createLogic</code>位于<code>src/createLogic</code>里</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * 创建一个Logic对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  {Object} logicOptions
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *         @param  {String}     logicOptions.name           可选值, 主要用于Logic中的异常提示, 可选值
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *         @param  {String}     logicOptions.type           触发当前Logic的redux action type
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *         @param  {String}     logicOptions.cancelType     取消执行当前Logic的redux action type
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *         @param  {Boolean}    logicOptions.latest         是否只获取最后一次的结果,类似redux-saga中的takeLatest effect
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *         @param  {Number}     logicOptions.debounce       函数去抖配置, 单位为毫秒
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *         @param  {Object}     logicOptions.throttle       函数节流配置, 单位为毫秒
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *         @param  {Function}   logicOptions.validate       在执行process之前的一个钩子, 可以对当前action执行一些操作
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *         @param  {Function}   logicOptions.transform      validate的一个别名, validate和transform只需指定一个即可
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *         @param  {Function}   logicOptions.process        当前redux action type对应的处理逻辑(发起异步请求, 在异步请求返回成功之后触发新的redux action)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *         @param  {Object}     logicOptions.processOptions process中需要的一些配置
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *         @param  {Number}     logicOptions.warnTimeout    超时警告时间, 默认60秒, 需要在process中手动调用done来终止这个Logic, 如果是一个持续性的Logic, warnTimeout需要设置成0
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @return {Object}              创建出来的Logic
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">createLogic</span>(<span style="color:#a6e22e">logicOptions</span> <span style="color:#f92672">=</span> {}) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  无效配置项验证, 把无效的配置项键名放数组返回
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">invalidOptions</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">getInvalidOptions</span>(<span style="color:#a6e22e">logicOptions</span>, <span style="color:#a6e22e">allowedOptions</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">invalidOptions</span>.<span style="color:#a6e22e">length</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">`unknown or misspelled option(s): </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">invalidOptions</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  name, type, cancelType, validate, transform都从传入的logicOptions里面获取
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">//  如果其他配置项没有在logicOptions中声明, 就从默认配置中获取或者给一个默认值
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">name</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">type</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">cancelType</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">warnTimeout</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">defaultOptions</span>.<span style="color:#a6e22e">warnTimeout</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">latest</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">defaultOptions</span>.<span style="color:#a6e22e">latest</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">debounce</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">defaultOptions</span>.<span style="color:#a6e22e">debounce</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">throttle</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">defaultOptions</span>.<span style="color:#a6e22e">throttle</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">validate</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">transform</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">process</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">emptyProcess</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">processOptions</span> <span style="color:#f92672">=</span> {}
+</span></span><span style="display:flex;"><span>    } <span style="color:#f92672">=</span> <span style="color:#a6e22e">logicOptions</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  type必传
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">type</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">&#39;type is required, use \&#39;*\&#39; to match all actions&#39;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  validate和tranform只能同时指定一个
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">validate</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">transform</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">&#39;logic cannot define both the validate and transform hooks they are aliases&#39;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  warnTimeout需要放在processOptions同级
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">processOptions</span>.<span style="color:#a6e22e">warnTimeout</span> <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#39;undefined&#39;</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">&#39;warnTimeout is a top level createLogic option, not a processOptions option&#39;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  获取processOptions中的无效配置项
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">invalidProcessOptions</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">getInvalidOptions</span>(<span style="color:#a6e22e">processOptions</span>, <span style="color:#a6e22e">allowedProcessOptions</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">invalidProcessOptions</span>.<span style="color:#a6e22e">length</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">`unknown or misspelled processOption(s): </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">invalidProcessOptions</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  如果validate和transform都没传入,就用默认的, 否则就用传入的validate
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">validateDefaulted</span> <span style="color:#f92672">=</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">validate</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">transform</span>) <span style="color:#f92672">?</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">identityValidation</span> <span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">validate</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  如果在processOptions里面指定了dispatchMultiple, warnTimeout应该是0
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">NODE_ENV</span> <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#39;production&#39;</span> <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">processOptions</span>.<span style="color:#a6e22e">dispatchMultiple</span> <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#39;undefined&#39;</span> <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">warnTimeout</span> <span style="color:#f92672">!==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">error</span>(<span style="color:#e6db74">`warning: in logic for type(s): </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">type</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> - dispatchMultiple is always true in next version. For non-ending logic, set warnTimeout to 0`</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">        根据process.length可以获取传入的process对应的处理函数中的形参个数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">        从而确定processOption中的一些默认值
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">        const fn = function(arg1, agr2) {};
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">        console.log(fn.length);  -&gt; 2
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">        const fn = function(arg1, agr2, arg3) {};
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">        console.log(fn.length); -&gt; 3
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    **/</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">switch</span> (<span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">length</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  如果没有或只有一个形参没有传入且dispatchReturn没有在processOptions传入, 就把它设置成true
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">case</span> <span style="color:#ae81ff">0</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">case</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">setIfUndefined</span>(<span style="color:#a6e22e">processOptions</span>, <span style="color:#e6db74">&#39;dispatchReturn&#39;</span>, <span style="color:#66d9ef">true</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  两个形参(single-dispatch模式[已废弃])
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">case</span> <span style="color:#ae81ff">2</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">NODE_ENV</span> <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#39;production&#39;</span> <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">!</span><span style="color:#a6e22e">processOptions</span>.<span style="color:#a6e22e">dispatchMultiple</span> <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">warnTimeout</span> <span style="color:#f92672">!==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">error</span>(<span style="color:#e6db74">`warning: in logic for type(s): </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">type</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> - single-dispatch mode is deprecated, call done when finished dispatching. For non-ending logic, set warnTimeout: 0`</span>);
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            3个形参及更多, 认为是multi-dispatch模式
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            processOptions.dispatchMultiple = processOptions === undefined ? true : processOptions.dispatchMultiple
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">        **/</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">case</span> <span style="color:#ae81ff">3</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">default</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">setIfUndefined</span>(<span style="color:#a6e22e">processOptions</span>, <span style="color:#e6db74">&#39;dispatchMultiple&#39;</span>, <span style="color:#66d9ef">true</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  返回处理好的对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">typeToStrFns</span>(<span style="color:#a6e22e">name</span>),
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">typeToStrFns</span>(<span style="color:#a6e22e">type</span>),
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">cancelType</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">typeToStrFns</span>(<span style="color:#a6e22e">cancelType</span>),
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">latest</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">debounce</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">throttle</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">validate</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">validateDefaulted</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">transform</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">process</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">processOptions</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">warnTimeout</span>
+</span></span><span style="display:flex;"><span>    };
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>从上面的分析中我们可以得出: 在<code>createLogic</code>中做的主要是一些参数的验证和默认值的处理, 下面我们一起看看他里面的调用的一些的实现:</p>
+<p>先来看下<code>getInvalidOptions</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span>   <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">getInvalidOptions</span>(<span style="color:#a6e22e">options</span>, <span style="color:#a6e22e">validOptions</span>) {
+</span></span><span style="display:flex;"><span>	  <span style="color:#66d9ef">return</span> Object.<span style="color:#a6e22e">keys</span>(<span style="color:#a6e22e">options</span>)
+</span></span><span style="display:flex;"><span>	    .<span style="color:#a6e22e">filter</span>(<span style="color:#a6e22e">k</span> =&gt; <span style="color:#a6e22e">validOptions</span>.<span style="color:#a6e22e">indexOf</span>(<span style="color:#a6e22e">k</span>) <span style="color:#f92672">===</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>   }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">/**	比如在createLogic里的第一行就调用了该方法
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	export default function createLogic(logicOptions = {}) {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	  const invalidOptions = getInvalidOptions(logicOptions, allowedOptions);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	  //	...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	const allowedOptions = [
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	  &#39;name&#39;,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	  &#39;type&#39;,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	  &#39;cancelType&#39;,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	  &#39;latest&#39;,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	  &#39;debounce&#39;,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	  &#39;throttle&#39;,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	  &#39;validate&#39;,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	  &#39;transform&#39;,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	  &#39;process&#39;,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	  &#39;processOptions&#39;,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	  &#39;warnTimeout&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	];
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	**/</span>
+</span></span></code></pre></div><p>从上面的分析中我们可以看出, <code>getInvalidOptions</code>用来获取<code>Object</code>里的不合法的配置项, 并把非法的<code>key</code>作为数组的形式返回。</p>
+<p><code>typeToStrFns</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">//	如果是数组形式就针对数组的每一项都调用typeToStrFns, 返回一个新数组
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//	如果是函数形式就返回函数体的字符串形式
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//	其它直接返回
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">typeToStrFns</span>(<span style="color:#a6e22e">type</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (Array.<span style="color:#a6e22e">isArray</span>(<span style="color:#a6e22e">type</span>)) { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">type</span>.<span style="color:#a6e22e">map</span>(<span style="color:#a6e22e">x</span> =&gt; <span style="color:#a6e22e">typeToStrFns</span>(<span style="color:#a6e22e">x</span>)); }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">type</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;function&#39;</span>) <span style="color:#f92672">?</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">type</span>.<span style="color:#a6e22e">toString</span>() <span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">type</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>setIfUndefined</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">setIfUndefined</span>(<span style="color:#a6e22e">obj</span>, <span style="color:#a6e22e">propName</span>, <span style="color:#a6e22e">propValue</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">obj</span>[<span style="color:#a6e22e">propName</span>] <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;undefined&#39;</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">obj</span>[<span style="color:#a6e22e">propName</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">propValue</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>没什么好说的😂</p>
+<ul>
+<li>createLogicMiddleware
+<code>createLogic</code>分析完了, 下面一起看看<code>createLogicMiddleware</code>, <code>createLogicMiddleware</code>位于<code>src/createLogicMiddleware</code>里:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	@param arrLogic  Array.&lt;logic&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	@param deps 	 Object
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">**/</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">createLogicMiddleware</span>(<span style="color:#a6e22e">arrLogic</span> <span style="color:#f92672">=</span> [], <span style="color:#a6e22e">deps</span> <span style="color:#f92672">=</span> {}) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>Array.<span style="color:#a6e22e">isArray</span>(<span style="color:#a6e22e">arrLogic</span>)) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">&#39;createLogicMiddleware needs to be called with an array of logic items&#39;</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	判断是否有重复的logic
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">duplicateLogic</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">findDuplicates</span>(<span style="color:#a6e22e">arrLogic</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">duplicateLogic</span>.<span style="color:#a6e22e">length</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">`duplicate logic, indexes: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">duplicateLogic</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">		因为redux-logic集成了rxjs
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">		所以Subject和BehaviorSubject都是rxjs里的主体
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">		BehaviorSubject作为Subject的一个变体, 和Subject不同的是它有一个初始值
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">		https://cn.rx.js.org/manual/overview.html#h15
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	**/</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">actionSrc$</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Subject</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	用来监视所有action
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">monitor$</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Subject</span>();
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">lastPending$</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">BehaviorSubject</span>({ <span style="color:#a6e22e">op</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">OP_INIT</span> });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	对monitor$使用累加器函数,返回生成的中间值,可选的初始值
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">monitor$</span>
+</span></span><span style="display:flex;"><span>    .<span style="color:#a6e22e">scan</span>((<span style="color:#a6e22e">acc</span>, <span style="color:#a6e22e">x</span>) =&gt; { <span style="color:#75715e">// 追加一个pending状态的计数器
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">pending</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">acc</span>.<span style="color:#a6e22e">pending</span> <span style="color:#f92672">||</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">switch</span> (<span style="color:#a6e22e">x</span>.<span style="color:#a6e22e">op</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#39;top&#39;</span> <span style="color:#f92672">:</span> 		<span style="color:#75715e">// 当前action位于logic栈的顶级
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#39;begin&#39;</span> <span style="color:#f92672">:</span> 		<span style="color:#75715e">// 开始触发一个action
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#a6e22e">pending</span> <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">			在createLogic里的process中调用了done, done的实现稍候分析;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">		**/</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#39;end&#39;</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#39;bottom&#39;</span><span style="color:#f92672">:</span> 			<span style="color:#75715e">// action变成了一个被转换后的新action
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">			在createLogic里的validate中调用了allow, 且触发了一个新的action
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">			craeteLogic({
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">				...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">				validate({ getState, action }, allow, reject) {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">					allow(action);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">				}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">			})
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">		**/</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#39;nextDisp&#39;</span> <span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#39;filtered&#39;</span> <span style="color:#f92672">:</span> 		<span style="color:#75715e">// 	当前action由于无效被过滤
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#39;dispatchError&#39;</span> <span style="color:#f92672">:</span> <span style="color:#75715e">// 	派发action的时候异常(好像暂时没用到)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">			在action拦截器(validate)里面执行reject
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">			craeteLogic({
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">				...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">				validate({ getState, action }, allow, reject) {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">					reject(action);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">				}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">			})
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">		**/</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#39;cancelled&#39;</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">pending</span> <span style="color:#f92672">-=</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>        ...<span style="color:#a6e22e">x</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">pending</span>
+</span></span><span style="display:flex;"><span>      };
+</span></span><span style="display:flex;"><span>    }, { <span style="color:#a6e22e">pending</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">0</span> })
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	https://cn.rx.js.org/manual/usage.html
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    .<span style="color:#a6e22e">subscribe</span>(<span style="color:#a6e22e">lastPending$</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">savedStore</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">savedNext</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">actionEnd$</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">logicSub</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">logicCount</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	缓存传入的logic数组
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">savedLogicArr</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">arrLogic</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	调用完createLogicMiddleware后返回的redux中间件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">mw</span>(<span style="color:#a6e22e">store</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	多次调用了createLogicMiddleware, 并且传入了不同的store
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">savedStore</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">savedStore</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">store</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">&#39;cannot assign logicMiddleware instance to multiple stores, create separate instance for each&#39;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	缓存本次调用传入的store
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">savedStore</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">store</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">next</span> =&gt; {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">savedNext</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">next</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">//	从applyLogic返回中获取action$, sub, 把logicCount赋值给cnt
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">action$</span>, <span style="color:#a6e22e">sub</span>, <span style="color:#a6e22e">logicCount</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">cnt</span> } <span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">applyLogic</span>(<span style="color:#a6e22e">arrLogic</span>, <span style="color:#a6e22e">savedStore</span>, <span style="color:#a6e22e">savedNext</span>,
+</span></span><span style="display:flex;"><span>                       <span style="color:#a6e22e">logicSub</span>, <span style="color:#a6e22e">actionSrc$</span>, <span style="color:#a6e22e">deps</span>, <span style="color:#a6e22e">logicCount</span>,
+</span></span><span style="display:flex;"><span>                       <span style="color:#a6e22e">monitor$</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">actionEnd$</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">action$</span>;
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">logicSub</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">sub</span>;
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">logicCount</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">cnt</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">action</span> =&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">debug</span>(<span style="color:#e6db74">&#39;starting off&#39;</span>, <span style="color:#a6e22e">action</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">monitor$</span>.<span style="color:#a6e22e">next</span>({ <span style="color:#a6e22e">action</span>, <span style="color:#a6e22e">op</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;top&#39;</span> });
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">actionSrc$</span>.<span style="color:#a6e22e">next</span>(<span style="color:#a6e22e">action</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">action</span>;
+</span></span><span style="display:flex;"><span>      };
+</span></span><span style="display:flex;"><span>    };
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">//	给mw挂载一个指向monitor$的monitor$属性
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">mw</span>.<span style="color:#a6e22e">monitor$</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">monitor$</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * 一个自定义钩子函数, 主要用于测试
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * @param  {Function} fn   可写入相关测试逻辑
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * @return {Objetc}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mw</span>.<span style="color:#a6e22e">whenComplete</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">whenComplete</span>(<span style="color:#a6e22e">fn</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">identity</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">lastPending$</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//  只有当x.pending &gt; 0是才继续往下走
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            .<span style="color:#a6e22e">takeWhile</span>(<span style="color:#a6e22e">x</span> =&gt; <span style="color:#a6e22e">x</span>.<span style="color:#a6e22e">pending</span>)
+</span></span><span style="display:flex;"><span>            .<span style="color:#a6e22e">map</span>(( <span style="color:#75715e">/* x */</span> ) =&gt; <span style="color:#66d9ef">undefined</span>)
+</span></span><span style="display:flex;"><span>            .<span style="color:#a6e22e">toPromise</span>()
+</span></span><span style="display:flex;"><span>            .<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">fn</span>);
+</span></span><span style="display:flex;"><span>    };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">		给当前redux中间件动态添加依赖(相当于createLogicMiddleware第二个参数的拓展)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	**/</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">mw</span>.<span style="color:#a6e22e">addDeps</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">addDeps</span>(<span style="color:#a6e22e">additionalDeps</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	所添加的依赖必须是一个对象类型
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">additionalDeps</span> <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#39;object&#39;</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">&#39;addDeps should be called with an object&#39;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	遍历所添加的中间件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    Object.<span style="color:#a6e22e">keys</span>(<span style="color:#a6e22e">additionalDeps</span>).<span style="color:#a6e22e">forEach</span>(<span style="color:#a6e22e">k</span> =&gt; {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">existing</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">deps</span>[<span style="color:#a6e22e">k</span>];
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">newValue</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">additionalDeps</span>[<span style="color:#a6e22e">k</span>];
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">//	所添加的中间件不能和当前已有的重名(当前已经有的不能被覆盖)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">existing</span> <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#39;undefined&#39;</span> <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">existing</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">newValue</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">`addDeps cannot override an existing dep value: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">k</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">deps</span>[<span style="color:#a6e22e">k</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">newValue</span>;
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>  };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">		给当前redux中间件动态添加新的logic
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">		@param arrNewLogic Array.&lt;Logic&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	**/</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">mw</span>.<span style="color:#a6e22e">addLogic</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">addLogic</span>(<span style="color:#a6e22e">arrNewLogic</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">arrNewLogic</span>.<span style="color:#a6e22e">length</span>) { <span style="color:#66d9ef">return</span> { <span style="color:#a6e22e">logicCount</span> }; }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	合并到当前已有的数组里面
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">combinedLogic</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">savedLogicArr</span>.<span style="color:#a6e22e">concat</span>(<span style="color:#a6e22e">arrNewLogic</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">duplicateLogic</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">findDuplicates</span>(<span style="color:#a6e22e">combinedLogic</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	判断是否有重复
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">duplicateLogic</span>.<span style="color:#a6e22e">length</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">`duplicate logic, indexes: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">duplicateLogic</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">action$</span>, <span style="color:#a6e22e">sub</span>, <span style="color:#a6e22e">logicCount</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">cnt</span> } <span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">applyLogic</span>(<span style="color:#a6e22e">arrNewLogic</span>, <span style="color:#a6e22e">savedStore</span>, <span style="color:#a6e22e">savedNext</span>,
+</span></span><span style="display:flex;"><span>                     <span style="color:#a6e22e">logicSub</span>, <span style="color:#a6e22e">actionEnd$</span>, <span style="color:#a6e22e">deps</span>, <span style="color:#a6e22e">logicCount</span>, <span style="color:#a6e22e">monitor$</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">actionEnd$</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">action$</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">logicSub</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">sub</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">logicCount</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">cnt</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">savedLogicArr</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">combinedLogic</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">debug</span>(<span style="color:#e6db74">&#39;added logic&#39;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> { <span style="color:#a6e22e">logicCount</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">cnt</span> };
+</span></span><span style="display:flex;"><span>  };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">		给当前redux中间件合并新的logic
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">		@param arrNewLogic Array.&lt;Logic&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	**/</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">mw</span>.<span style="color:#a6e22e">mergeNewLogic</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">mergeNewLogic</span>(<span style="color:#a6e22e">arrMergeLogic</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 判断是否重名
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">duplicateLogic</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">findDuplicates</span>(<span style="color:#a6e22e">arrMergeLogic</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">duplicateLogic</span>.<span style="color:#a6e22e">length</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">`duplicate logic, indexes: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">duplicateLogic</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 过滤掉重复的
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">arrNewLogic</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">arrMergeLogic</span>.<span style="color:#a6e22e">filter</span>(<span style="color:#a6e22e">x</span> =&gt;
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">savedLogicArr</span>.<span style="color:#a6e22e">indexOf</span>(<span style="color:#a6e22e">x</span>) <span style="color:#f92672">===</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">mw</span>.<span style="color:#a6e22e">addLogic</span>(<span style="color:#a6e22e">arrNewLogic</span>);
+</span></span><span style="display:flex;"><span>  };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	替换当前所有的logic变成新的logic
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">   **/</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">mw</span>.<span style="color:#a6e22e">replaceLogic</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">replaceLogic</span>(<span style="color:#a6e22e">arrRepLogic</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">duplicateLogic</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">findDuplicates</span>(<span style="color:#a6e22e">arrRepLogic</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	判断新的logic数组里是否有重复的logic
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">duplicateLogic</span>.<span style="color:#a6e22e">length</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">`duplicate logic, indexes: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">duplicateLogic</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">action$</span>, <span style="color:#a6e22e">sub</span>, <span style="color:#a6e22e">logicCount</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">cnt</span> } <span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">applyLogic</span>(<span style="color:#a6e22e">arrRepLogic</span>, <span style="color:#a6e22e">savedStore</span>, <span style="color:#a6e22e">savedNext</span>,
+</span></span><span style="display:flex;"><span>                     <span style="color:#a6e22e">logicSub</span>, <span style="color:#a6e22e">actionSrc$</span>, <span style="color:#a6e22e">deps</span>, <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">monitor$</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">actionEnd$</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">action$</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">logicSub</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">sub</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">logicCount</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">cnt</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">savedLogicArr</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">arrRepLogic</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">debug</span>(<span style="color:#e6db74">&#39;replaced logic&#39;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> { <span style="color:#a6e22e">logicCount</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">cnt</span> };
+</span></span><span style="display:flex;"><span>  };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">mw</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>从上面的分析中我们可以看出, <code>createLogicMiddleware</code>返回了一个中间件, 该中间件基于<a href="https://cn.rx.js.org/">Rxjs</a>实现, 返回的中间件中处理相关<code>redux action</code>对应的逻辑。</p>
+<p>在<code>createLogicMiddleware</code>中调用了一些其他函数, 逐个看下这些函数的实现:</p>
+<p><code>findDuplicates</code>, 该方法完成查找数组里面重复的<code>Logic</code>, 并记录重复的下标返回</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	@param arrLogic  Array.&lt;Logic&gt;   logic数组
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">**/</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  {Array.&lt;Logic&gt;}  arrLogic Logic数组
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @return {Array.&lt;Number&gt;}          重复的Logic下标
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">findDuplicates</span>(<span style="color:#a6e22e">arrLogic</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">arrLogic</span>.<span style="color:#a6e22e">reduce</span>((<span style="color:#a6e22e">acc</span>, <span style="color:#a6e22e">x1</span>, <span style="color:#a6e22e">idx1</span>) =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  不是同一个下标, 且值相等的情况下就把下标放到acc里面
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">arrLogic</span>.<span style="color:#a6e22e">some</span>((<span style="color:#a6e22e">x2</span>, <span style="color:#a6e22e">idx2</span>) =&gt; (<span style="color:#a6e22e">idx1</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">idx2</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">x1</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">x2</span>))) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">acc</span>.<span style="color:#a6e22e">push</span>(<span style="color:#a6e22e">idx1</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">acc</span>;
+</span></span><span style="display:flex;"><span>  }, []);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>再看看看<code>applyLogic</code>的实现:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  {Array.&lt;Logic&gt;}   arrLogic        Logic数组
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  {Object}         store            redux store
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  {Function}       next             redux中间件中的第二层函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  {Rx.Subject}     sub              当前action对应的
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  {Rx.Subject}     actionIn$        当前action对应的可订阅对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  {Object}         deps             createLogicMiddle的第二个参数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  {Number}         startLogicCount  用于命名
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  {Rx.Subject}     monitor$         全局可订阅对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @return {Object}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">applyLogic</span>(<span style="color:#a6e22e">arrLogic</span>, <span style="color:#a6e22e">store</span>, <span style="color:#a6e22e">next</span>, <span style="color:#a6e22e">sub</span>, <span style="color:#a6e22e">actionIn$</span>, <span style="color:#a6e22e">deps</span>, <span style="color:#a6e22e">startLogicCount</span>, <span style="color:#a6e22e">monitor$</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">store</span> <span style="color:#f92672">||</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">next</span>) { <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">&#39;store is not defined&#39;</span>); }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  如果当前Logic已经是一个Rx.Subject(已经被订阅过了), 取消订阅
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">sub</span>) { <span style="color:#a6e22e">sub</span>.<span style="color:#a6e22e">unsubscribe</span>(); }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  对当前Logic数组进行操作(命名等), 返回一个新数组
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">wrappedLogic</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">arrLogic</span>.<span style="color:#a6e22e">map</span>((<span style="color:#a6e22e">logic</span>, <span style="color:#a6e22e">idx</span>) =&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  给当前未指定name的Logic进行命名并且返回, naming稍候分析
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">namedLogic</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">naming</span>(<span style="color:#a6e22e">logic</span>, <span style="color:#a6e22e">idx</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">startLogicCount</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  包装命名后的Logic, wrapper稍候分析
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">wrapper</span>(<span style="color:#a6e22e">namedLogic</span>, <span style="color:#a6e22e">store</span>, <span style="color:#a6e22e">deps</span>, <span style="color:#a6e22e">monitor$</span>);
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">actionOut$</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">wrappedLogic</span>.<span style="color:#a6e22e">reduce</span>((<span style="color:#a6e22e">acc$</span>, <span style="color:#a6e22e">wep</span>) =&gt; <span style="color:#a6e22e">wep</span>(<span style="color:#a6e22e">acc$</span>), <span style="color:#a6e22e">actionIn$</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  订阅新的Observable对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">newSub</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">actionOut$</span>.<span style="color:#a6e22e">subscribe</span>(<span style="color:#a6e22e">action</span> =&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">debug</span>(<span style="color:#e6db74">&#39;actionEnd$&#39;</span>, <span style="color:#a6e22e">action</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">result</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">next</span>(<span style="color:#a6e22e">action</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">debug</span>(<span style="color:#e6db74">&#39;result&#39;</span>, <span style="color:#a6e22e">result</span>);
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">err</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">error</span>(<span style="color:#e6db74">&#39;error in mw dispatch or next call, probably in middlware/reducer/render fn:&#39;</span>, <span style="color:#a6e22e">err</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">msg</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">err</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">message</span>) <span style="color:#f92672">?</span> <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">message</span> <span style="color:#f92672">:</span> <span style="color:#a6e22e">err</span>;
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">monitor$</span>.<span style="color:#a6e22e">next</span>({ <span style="color:#a6e22e">action</span>, <span style="color:#a6e22e">err</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">msg</span>, <span style="color:#a6e22e">op</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;nextError&#39;</span> });
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  action变成了一个被转换后的新action
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">monitor$</span>.<span style="color:#a6e22e">next</span>({ <span style="color:#a6e22e">nextAction</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">action</span>, <span style="color:#a6e22e">op</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;bottom&#39;</span> });
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">action$</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">actionOut$</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">sub</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">newSub</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">logicCount</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">startLogicCount</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">arrLogic</span>.<span style="color:#a6e22e">length</span>
+</span></span><span style="display:flex;"><span>    };
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>从上面的分析中我们可以看出, <code>applyLogic</code>返回了一个新的<a href="https://cn.rx.js.org/class/es6/Observable.js~Observable.html">Rx.Observable</a>, 里面调用了<code>naming</code>和<code>wrapper</code>, 下面我们逐个分析下。</p>
+<p>先看<code>naming</code>的实现吧:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * 判断当前传入的Logic有没有name, 有就不做任何操作直接返回, 没有就给当前Logic添加一个name属性后返回
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  {Object} logic 当前Logic
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  {Number} idx   当前Logic在arrLogic中的下标地址
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @return {Object}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">naming</span>(<span style="color:#a6e22e">logic</span>, <span style="color:#a6e22e">idx</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">logic</span>.<span style="color:#a6e22e">name</span>) { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">logic</span>; }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>        ...<span style="color:#a6e22e">logic</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">`L(</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">logic</span>.<span style="color:#a6e22e">type</span>.<span style="color:#a6e22e">toString</span>()<span style="color:#e6db74">}</span><span style="color:#e6db74">)-</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">idx</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>
+</span></span><span style="display:flex;"><span>    };
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>再看下<code>wrapper</code>的, <code>wrapper</code>是写在<code>src/logicWrapper</code>里的, <code>wrapper</code>返回的是一个<code>Rx.Observable</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * Logic中相关处理
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  {Object}     options.action   当前action
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  {Object}     options.logic    当前logic
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  {Object}     options.store    redux store
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  {Object}     options.deps     createLogicMiddleware的第二个参数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  {Rx.Subject} options.cancel$  取消Logic执行的订阅对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @param  {Rx.Subject} options.monitor$ 全局可订阅对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * @return {Rx.Observable}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">createLogicAction$</span>({ <span style="color:#a6e22e">action</span>, <span style="color:#a6e22e">logic</span>, <span style="color:#a6e22e">store</span>, <span style="color:#a6e22e">deps</span>, <span style="color:#a6e22e">cancel$</span>, <span style="color:#a6e22e">monitor$</span> }) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  reduxStore.getState()
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">getState</span> } <span style="color:#f92672">=</span> <span style="color:#a6e22e">store</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  从当前logic中取得相关配置参数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">name</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">warnTimeout</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">process</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">processFn</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">processOptions</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">dispatchReturn</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">dispatchMultiple</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">successType</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">failType</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    } <span style="color:#f92672">=</span> <span style="color:#a6e22e">logic</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  当前Logic的拦截器
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">intercept</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">logic</span>.<span style="color:#a6e22e">validate</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">logic</span>.<span style="color:#a6e22e">transform</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">debug</span>(<span style="color:#e6db74">&#39;createLogicAction$&#39;</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">action</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  开始本次action的执行
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">monitor$</span>.<span style="color:#a6e22e">next</span>({ <span style="color:#a6e22e">action</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">op</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;begin&#39;</span> });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">        1.当前action发生改变
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">        2.在validate/transform中调用allow
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">        3.无效的action type
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">        4.action被取消
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">        interceptComplete都会变成true, 标记拦截器处理完成
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     **/</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">interceptComplete</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  https://cn.rx.js.org/class/es6/Observable.js~Observable.html#instance-method-take
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">logicAction$</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">Observable</span>.<span style="color:#a6e22e">create</span>(<span style="color:#a6e22e">logicActionObs</span> =&gt; {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//  创建一个主题(只发出一个值), 用来订阅`取消Logic执行的订阅对象`, 在取消本次action后, 通知`取消Logic执行的订阅对象`
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">cancelled$</span> <span style="color:#f92672">=</span> (<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Subject</span>()).<span style="color:#a6e22e">take</span>(<span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">cancel$</span>.<span style="color:#a6e22e">subscribe</span>(<span style="color:#a6e22e">cancelled$</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">cancelled$</span>
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">subscribe</span>(
+</span></span><span style="display:flex;"><span>                    () =&gt; {
+</span></span><span style="display:flex;"><span>                        <span style="color:#75715e">//  确保cancel不会被调用2次(在createLogicMiddle中追加的pending只会被减一次)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                        <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">interceptComplete</span>) {
+</span></span><span style="display:flex;"><span>                            <span style="color:#a6e22e">monitor$</span>.<span style="color:#a6e22e">next</span>({ <span style="color:#a6e22e">action</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">op</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;cancelled&#39;</span> });
+</span></span><span style="display:flex;"><span>                        } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>                            <span style="color:#a6e22e">monitor$</span>.<span style="color:#a6e22e">next</span>({ <span style="color:#a6e22e">action</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">op</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;dispCancelled&#39;</span> });
+</span></span><span style="display:flex;"><span>                        }
+</span></span><span style="display:flex;"><span>                    }
+</span></span><span style="display:flex;"><span>                );
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//  如果当前Logic不是一个持续性的, 且没有在warnTimeout / 1000秒内调用done(warnTimeout &gt; 0), 就给出异常提示
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">NODE_ENV</span> <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#39;production&#39;</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">warnTimeout</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">Observable</span>.<span style="color:#a6e22e">timer</span>(<span style="color:#a6e22e">warnTimeout</span>)
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e">//  https://cn.rx.js.org/class/es6/Observable.js~Observable.html#instance-method-takeUntil
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                    <span style="color:#75715e">//  https://cn.rx.js.org/class/es6/Observable.js~Observable.html#instance-method-defaultIfEmpty
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                    .<span style="color:#a6e22e">takeUntil</span>(<span style="color:#a6e22e">cancelled$</span>.<span style="color:#a6e22e">defaultIfEmpty</span>(<span style="color:#66d9ef">true</span>))
+</span></span><span style="display:flex;"><span>                    .<span style="color:#66d9ef">do</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>                        <span style="color:#75715e">//	console.error(`warning: logic (${name}) is still running after ${warnTimeout / 1000}s, forget to call done()? For non-ending logic, set warnTimeout: 0`);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                    })
+</span></span><span style="display:flex;"><span>                    .<span style="color:#a6e22e">subscribe</span>();
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">dispatch$</span> <span style="color:#f92672">=</span> (<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Subject</span>())
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">mergeAll</span>()
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">takeUntil</span>(<span style="color:#a6e22e">cancel$</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">dispatch$</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                    .do({
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                        nextOrObserver: mapToActionAndDispatch,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                        error: mapErrorToActionAndDispatch
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                    })
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                    这里省略了nextOrObserver和error
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                    https://cn.rx.js.org/class/es6/Observable.js~Observable.html#instance-method-do
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                 **/</span>
+</span></span><span style="display:flex;"><span>                .<span style="color:#66d9ef">do</span>(
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">mapToActionAndDispatch</span>,
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">mapErrorToActionAndDispatch</span>
+</span></span><span style="display:flex;"><span>                )
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">subscribe</span>({
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">error</span><span style="color:#f92672">:</span> ( <span style="color:#75715e">/* err */</span> ) =&gt; {
+</span></span><span style="display:flex;"><span>                        <span style="color:#75715e">//  在发生异常后, 终止本次acion, 并且取消订阅cancelled$
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                        <span style="color:#a6e22e">monitor$</span>.<span style="color:#a6e22e">next</span>({ <span style="color:#a6e22e">action</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">op</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;end&#39;</span> });
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">cancelled$</span>.<span style="color:#a6e22e">complete</span>();
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">cancelled$</span>.<span style="color:#a6e22e">unsubscribe</span>();
+</span></span><span style="display:flex;"><span>                    },
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">complete</span><span style="color:#f92672">:</span> () =&gt; {
+</span></span><span style="display:flex;"><span>                        <span style="color:#75715e">//  本次action处理完成
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                        <span style="color:#a6e22e">monitor$</span>.<span style="color:#a6e22e">next</span>({ <span style="color:#a6e22e">action</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">op</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;end&#39;</span> });
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">cancelled$</span>.<span style="color:#a6e22e">complete</span>();
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">cancelled$</span>.<span style="color:#a6e22e">unsubscribe</span>();
+</span></span><span style="display:flex;"><span>                    }
+</span></span><span style="display:flex;"><span>                });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//  触发redux里面的action
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">storeDispatch</span>(<span style="color:#a6e22e">act</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">monitor$</span>.<span style="color:#a6e22e">next</span>({ <span style="color:#a6e22e">action</span>, <span style="color:#a6e22e">dispAction</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">act</span>, <span style="color:#a6e22e">op</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;dispatch&#39;</span> });
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">store</span>.<span style="color:#a6e22e">dispatch</span>(<span style="color:#a6e22e">act</span>);
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * 适配不同情况的action, 组装后如果是一个有效的redux action, 就调用reduxStore.dispatch
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @param  {Object} actionOrValue
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             */</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">mapToActionAndDispatch</span>(<span style="color:#a6e22e">actionOrValue</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                    let act;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                    if (isInterceptAction(actionOrValue)) {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                        act = unwrapInterceptAction(actionOrValue);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                    } else {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                        if (successType) {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                            act = mapToAction(successType, actionOrValue, false);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                        } else {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                            act = actionOrValue;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                        }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                    }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                    把下面的代码拆成上面的样子, 大概做了下面几件事情:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                    判断是不是一个拦截器, 如果是就把之前包装的拦截器解包
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                    判断processOptions.successType是否存在, 存在就调用mapToAction, 拼出一个新的redux action, 调用reduxSrore.dispatch
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                    否则就直接使用actionOrValue
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                **/</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">act</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">isInterceptAction</span>(<span style="color:#a6e22e">actionOrValue</span>)) <span style="color:#f92672">?</span> 
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">unwrapInterceptAction</span>(<span style="color:#a6e22e">actionOrValue</span>) <span style="color:#f92672">:</span> (<span style="color:#a6e22e">successType</span>) <span style="color:#f92672">?</span> 
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">mapToAction</span>(<span style="color:#a6e22e">successType</span>, <span style="color:#a6e22e">actionOrValue</span>, <span style="color:#66d9ef">false</span>) <span style="color:#f92672">:</span> <span style="color:#a6e22e">actionOrValue</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">act</span>) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">storeDispatch</span>(<span style="color:#a6e22e">act</span>);
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * 根据actionOrValue的类型来组装可以被reduxStore.dispatch调用的action
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @param  {any} actionOrValue
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @return {Object}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             */</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">mapErrorToActionAndDispatch</span>(<span style="color:#a6e22e">actionOrValue</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  拦截器类型的直接调用触发__interceptAction
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">isInterceptAction</span>(<span style="color:#a6e22e">actionOrValue</span>)) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">interceptAction</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">unwrapInterceptAction</span>(<span style="color:#a6e22e">actionOrValue</span>);
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">storeDispatch</span>(<span style="color:#a6e22e">interceptAction</span>);
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  判断Logic中的processOptions里有没有failType
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">failType</span>) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e">//  如果有failType, 组装一个新的redux action并触发
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">act</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">mapToAction</span>(<span style="color:#a6e22e">failType</span>, <span style="color:#a6e22e">actionOrValue</span>, <span style="color:#66d9ef">true</span>);
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">act</span>) {
+</span></span><span style="display:flex;"><span>                        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">storeDispatch</span>(<span style="color:#a6e22e">act</span>);
+</span></span><span style="display:flex;"><span>                    }
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  actionOrValue本身就是一个异常
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">actionOrValue</span> <span style="color:#66d9ef">instanceof</span> Error) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">act</span> <span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>                        <span style="color:#75715e">//  actionOrValue本身包含type, 直接调用redux.dispatch(actionOrValue)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                        <span style="color:#75715e">//  否则包装出一个redux action(type为UNHANDLED_LOGIC_ERROR), 在调用redux.dispatch
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                        (<span style="color:#a6e22e">actionOrValue</span>.<span style="color:#a6e22e">type</span>) <span style="color:#f92672">?</span> <span style="color:#a6e22e">actionOrValue</span> <span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>                        {
+</span></span><span style="display:flex;"><span>                            <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">UNHANDLED_LOGIC_ERROR</span>,
+</span></span><span style="display:flex;"><span>                            <span style="color:#a6e22e">payload</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">actionOrValue</span>,
+</span></span><span style="display:flex;"><span>                            <span style="color:#a6e22e">error</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>                        };
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">storeDispatch</span>(<span style="color:#a6e22e">act</span>);
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  actionOrValue是一个plain object或一个函数(action creator)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">typeOfValue</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">actionOrValue</span>;
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">actionOrValue</span> <span style="color:#f92672">&amp;&amp;</span> (<span style="color:#a6e22e">typeOfValue</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;object&#39;</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">typeOfValue</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;function&#39;</span>)) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">storeDispatch</span>(<span style="color:#a6e22e">actionOrValue</span>);
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  非异常/函数/plain object的情况
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#a6e22e">storeDispatch</span>({
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">UNHANDLED_LOGIC_ERROR</span>,
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">payload</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">actionOrValue</span>,
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">error</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>                });
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * 组装出一个有效的redux action并返回
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @param  {String|Function} type       redux action type
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @param  {Object} payload             redux payload
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @param  {Error|Unfdeined} err        error
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @return {Object}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             */</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">mapToAction</span>(<span style="color:#a6e22e">type</span>, <span style="color:#a6e22e">payload</span>, <span style="color:#a6e22e">err</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  action type本身是一个action creator, 直接执行type
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">type</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;function&#39;</span>) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">type</span>(<span style="color:#a6e22e">payload</span>);
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  包装出一个有效的redux action
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">act</span> <span style="color:#f92672">=</span> { <span style="color:#a6e22e">type</span>, <span style="color:#a6e22e">payload</span> };
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">err</span>) { <span style="color:#a6e22e">act</span>.<span style="color:#a6e22e">error</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>; }
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">act</span>;
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// allowMore is now deprecated in favor of variable process arity
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#75715e">// which sets processOptions.dispatchMultiple = true then
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#75715e">// expects done() cb to be called to end
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#75715e">// Might still be needed for internal use so keeping it for now
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">DispatchDefaults</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">allowMore</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>            };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * 触发
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @param  {[type]} act     [description]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @param  {[type]} options [description]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @return {[type]}         [description]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             */</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">dispatch</span>(<span style="color:#a6e22e">act</span>, <span style="color:#a6e22e">options</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">DispatchDefaults</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">allowMore</span> } <span style="color:#f92672">=</span> <span style="color:#a6e22e">applyDispatchDefaults</span>(<span style="color:#a6e22e">options</span>);
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  action !== undefined
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">act</span> <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#39;undefined&#39;</span>) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                        let action;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                        if (isObservable(act)) {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                            action = act;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                        } else if (isPromise(act)) {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                            action = Observable.fromPromise(act);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                        } else if (act instanceof Error) {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                            action = Observable.throw(act);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                        } else {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                            action = Observable.of(act);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                        }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                        dispatch$.next(action);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                        https://cn.rx.js.org/class/es6/MiscJSDoc.js~ObserverDoc.html#instance-method-next
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     **/</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">dispatch$</span>.<span style="color:#a6e22e">next</span>(
+</span></span><span style="display:flex;"><span>                        (<span style="color:#a6e22e">isObservable</span>(<span style="color:#a6e22e">act</span>)) <span style="color:#f92672">?</span> <span style="color:#a6e22e">act</span> <span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>                        (<span style="color:#a6e22e">isPromise</span>(<span style="color:#a6e22e">act</span>)) <span style="color:#f92672">?</span> <span style="color:#a6e22e">Observable</span>.<span style="color:#a6e22e">fromPromise</span>(<span style="color:#a6e22e">act</span>) <span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>                        (<span style="color:#a6e22e">act</span> <span style="color:#66d9ef">instanceof</span> Error) <span style="color:#f92672">?</span> <span style="color:#a6e22e">Observable</span>.<span style="color:#66d9ef">throw</span>(<span style="color:#a6e22e">act</span>) <span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">Observable</span>.<span style="color:#66d9ef">of</span>(<span style="color:#a6e22e">act</span>)
+</span></span><span style="display:flex;"><span>                    );
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>(<span style="color:#a6e22e">dispatchMultiple</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">allowMore</span>)) {
+</span></span><span style="display:flex;"><span>                   <span style="color:#a6e22e">dispatch$</span>.<span style="color:#a6e22e">complete</span>();
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">act</span>;
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">applyDispatchDefaults</span>(<span style="color:#a6e22e">options</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>                    ...<span style="color:#a6e22e">DispatchDefaults</span>,
+</span></span><span style="display:flex;"><span>                    ...<span style="color:#a6e22e">options</span>
+</span></span><span style="display:flex;"><span>                };
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//  拼装createLogic中相关钩子函数(validate/tranform/process)中的第一个参数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">depObj</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>                ...<span style="color:#a6e22e">deps</span>,
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">cancelled$</span>,
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">ctx</span><span style="color:#f92672">:</span> {}, <span style="color:#75715e">// 在不同钩子中共享数据
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#a6e22e">getState</span>,
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">action</span>
+</span></span><span style="display:flex;"><span>            };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">shouldDispatch</span>(<span style="color:#a6e22e">act</span>, <span style="color:#a6e22e">useDispatch</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  新的action为空
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">act</span>) { <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>; }
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  在触发另外一个action之前, 确保触发的是一个新的action
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">useDispatch</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;auto&#39;</span>) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">return</span> (<span style="color:#a6e22e">act</span>.<span style="color:#a6e22e">type</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">action</span>.<span style="color:#a6e22e">type</span>);
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  否则根据useDispatch是否为空, 返回
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">return</span> (<span style="color:#a6e22e">useDispatch</span>);
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">AllowRejectNextDefaults</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">useDispatch</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;auto&#39;</span>
+</span></span><span style="display:flex;"><span>            };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">applyAllowRejectNextDefaults</span>(<span style="color:#a6e22e">options</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>                    ...<span style="color:#a6e22e">AllowRejectNextDefaults</span>,
+</span></span><span style="display:flex;"><span>                    ...<span style="color:#a6e22e">options</span>
+</span></span><span style="display:flex;"><span>                };
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//  拦截器(validate/tranform)里的allow或next
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">allow</span>(<span style="color:#a6e22e">act</span>, <span style="color:#a6e22e">options</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">AllowRejectNextDefaults</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">handleNextOrDispatch</span>(<span style="color:#66d9ef">true</span>, <span style="color:#a6e22e">act</span>, <span style="color:#a6e22e">options</span>);
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">reject</span>(<span style="color:#a6e22e">act</span>, <span style="color:#a6e22e">options</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">AllowRejectNextDefaults</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">handleNextOrDispatch</span>(<span style="color:#66d9ef">false</span>, <span style="color:#a6e22e">act</span>, <span style="color:#a6e22e">options</span>);
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//  完成本次action, 在createLogic中的process最后调用
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">done</span>() {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">dispatch$</span>.<span style="color:#a6e22e">complete</span>();
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * 对当前拦截器类型action(validate/transform)做一次包装, 方便后面判断
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @param  {Object} act 当前action
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @return {Object}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             */</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">wrapActionForIntercept</span>(<span style="color:#a6e22e">act</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">act</span>) { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">act</span>; }
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">__interceptAction</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">act</span>
+</span></span><span style="display:flex;"><span>                };
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * 判断传入的action是否为拦截器类型的
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @param  {Object}  act 当前action
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @return {Boolean}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             */</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">isInterceptAction</span>(<span style="color:#a6e22e">act</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">act</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">act</span>.<span style="color:#a6e22e">__interceptAction</span>;
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * 对拦截器执行解包
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @param  {Object}  act 当前action
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @return {Object}      redux action
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             */</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">unwrapInterceptAction</span>(<span style="color:#a6e22e">act</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">act</span>.<span style="color:#a6e22e">__interceptAction</span>;
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * 拦截器(validate/tranform)里的allow、reject实现, 触发新的redux action
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @param  {Boolean} shouldProcess 是否执行process
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @param  {Object} act            新的redux action
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @param  {Object} options
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             */</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">handleNextOrDispatch</span>(<span style="color:#a6e22e">shouldProcess</span>, <span style="color:#a6e22e">act</span>, <span style="color:#a6e22e">options</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">useDispatch</span> } <span style="color:#f92672">=</span> <span style="color:#a6e22e">applyAllowRejectNextDefaults</span>(<span style="color:#a6e22e">options</span>);
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  判断是否应该触发传入的redux action
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">shouldDispatch</span>(<span style="color:#a6e22e">act</span>, <span style="color:#a6e22e">useDispatch</span>)) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">monitor$</span>.<span style="color:#a6e22e">next</span>({ <span style="color:#a6e22e">action</span>, <span style="color:#a6e22e">dispAction</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">act</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">shouldProcess</span>, <span style="color:#a6e22e">op</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;nextDisp&#39;</span> });
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">interceptComplete</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">dispatch</span>(<span style="color:#a6e22e">wrapActionForIntercept</span>(<span style="color:#a6e22e">act</span>), { <span style="color:#a6e22e">allowMore</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span> }); <span style="color:#75715e">// will be completed later
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                    <span style="color:#a6e22e">logicActionObs</span>.<span style="color:#a6e22e">complete</span>(); <span style="color:#75715e">// dispatched action, so no next(act)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                } <span style="color:#66d9ef">else</span> { <span style="color:#75715e">// normal next
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">act</span>) {
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">monitor$</span>.<span style="color:#a6e22e">next</span>({ <span style="color:#a6e22e">action</span>, <span style="color:#a6e22e">nextAction</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">act</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">shouldProcess</span>, <span style="color:#a6e22e">op</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;next&#39;</span> });
+</span></span><span style="display:flex;"><span>                    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>                        <span style="color:#75715e">//  无效的action, 直接结束本次拦截器
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                        <span style="color:#a6e22e">monitor$</span>.<span style="color:#a6e22e">next</span>({ <span style="color:#a6e22e">action</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">shouldProcess</span>, <span style="color:#a6e22e">op</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;filtered&#39;</span> });
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">interceptComplete</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+</span></span><span style="display:flex;"><span>                    }
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">postIfDefinedOrComplete</span>(<span style="color:#a6e22e">act</span>, <span style="color:#a6e22e">logicActionObs</span>);
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  执行Logic中的process回调
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">shouldProcess</span>) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e">//  组织depObj的action参数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                    <span style="color:#a6e22e">depObj</span>.<span style="color:#a6e22e">action</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">act</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">action</span>;
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>                        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">retValue</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">processFn</span>(<span style="color:#a6e22e">depObj</span>, <span style="color:#a6e22e">dispatch</span>, <span style="color:#a6e22e">done</span>);
+</span></span><span style="display:flex;"><span>                        <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                            如果在createLogic指定了processOption.dispatchReturn为true, 并且prcess执行完之后返回有效的值
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                            就再把返回值作为一个新的redux action进行触发
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                            否则直接结束dispatch$这个Rx.Subject
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                            
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                            执行process, 并且接收返回值
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                            判断processOption.dispatchReturn
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                                成立: 判断返回值是否有效
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                                    有效: dispatch -&gt; mapToActionAndDispatch
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                                        mapToActionAndDispatch返回一个有效的action:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                                            继续reduxStore.dispatch(mapToActionAndDispatch(retValue))
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                                    无效: dispatch$.complete -&gt; monitor$.next({ action, name, op: &#39;end&#39; }); cancelled$.complete(); cancelled$.unsubscribe();
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                        **/</span>
+</span></span><span style="display:flex;"><span>                        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">dispatchReturn</span>) {
+</span></span><span style="display:flex;"><span>                            <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">retValue</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;undefined&#39;</span>) {
+</span></span><span style="display:flex;"><span>                                <span style="color:#a6e22e">dispatch$</span>.<span style="color:#a6e22e">complete</span>();
+</span></span><span style="display:flex;"><span>                            } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>                                <span style="color:#a6e22e">dispatch</span>(<span style="color:#a6e22e">retValue</span>);
+</span></span><span style="display:flex;"><span>                            }
+</span></span><span style="display:flex;"><span>                        }
+</span></span><span style="display:flex;"><span>                    } <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">err</span>) {
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">error</span>(<span style="color:#e6db74">`unhandled exception in logic named: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">name</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, <span style="color:#a6e22e">err</span>);
+</span></span><span style="display:flex;"><span>                        <span style="color:#75715e">//  执行process的过程中发生异常
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                        <span style="color:#a6e22e">dispatch</span>(<span style="color:#a6e22e">Observable</span>.<span style="color:#66d9ef">throw</span>(<span style="color:#a6e22e">err</span>));
+</span></span><span style="display:flex;"><span>                    }
+</span></span><span style="display:flex;"><span>                } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e">//  传入的act是一个空值, 或者和当前的type相同, 或者useDispatch不成立
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                    <span style="color:#a6e22e">dispatch$</span>.<span style="color:#a6e22e">complete</span>();
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * 在本次拦截器之后执行
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @param  {Object} act       新的action
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @param  {Rx.Subject} act$  当前action对应的Observable对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             */</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">postIfDefinedOrComplete</span>(<span style="color:#a6e22e">act</span>, <span style="color:#a6e22e">act$</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  如果新的action存在, 执行新的action
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">act</span>) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">act$</span>.<span style="color:#a6e22e">next</span>(<span style="color:#a6e22e">act</span>);
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">interceptComplete</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">act$</span>.<span style="color:#a6e22e">complete</span>();
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//  开始本次action的执行
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">start</span>() {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">intercept</span>(<span style="color:#a6e22e">depObj</span>, <span style="color:#a6e22e">allow</span>, <span style="color:#a6e22e">reject</span>);
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">start</span>();
+</span></span><span style="display:flex;"><span>        })
+</span></span><span style="display:flex;"><span>        .<span style="color:#a6e22e">takeUntil</span>(<span style="color:#a6e22e">cancel$</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  规定logicAction$值发出一个值就完成
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        .<span style="color:#a6e22e">take</span>(<span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">logicAction$</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div></section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    <a
+      class="flex w-1/2 items-center rounded-l-md p-6 pr-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2019-09-28-react-binding-events-with-arguments/"
+      ><span class="mr-1.5">←</span><span>React事件绑定终极优化方案</span></a
+    >
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2017-11-09-vue-computed-watch/"
+      ><span>Vue中computed计算属性和watch观察者原理</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

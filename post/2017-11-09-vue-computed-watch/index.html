@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>Vue中computed计算属性和watch观察者原理 - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="在用Vue做开发中, 我们多多少少都会用到里面两个比较重要的东西: computed和watch, 接下来我们一起分析并简单实现下这两个属性。
+computed computed名为计算属性, 目的就是让我们在模板里面只关注简单的绑定, 不做复杂操作, 拿官网的代码做例子,下面就是一个相对复杂的操作:
+&lt;div id=&#34;example&#34;&gt;  {{ message.split(&#39;&#39;).reverse().join(&#39;&#39;) }} &lt;/div&gt; 先来看下用法:
+new Vue({  data() {  return {  firstName: &#34;rw&#34;,  lastName: &#34;son&#34;,  age: 25  };  },  computed: {  // 指定计算属性的getter  info() {  return `info content: my name is ${this.firstName}${this.lastName}, I&#39;m ${this.age}years old`;  },  // 同时提供getter和setter, setter中可以操作其他数据  fullName: {  get() {  return `my fullName is: ${this." />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">Vue中computed计算属性和watch观察者原理</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Nov 9, 2017</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p>在用<code>Vue</code>做开发中, 我们多多少少都会用到里面两个比较重要的东西: <code>computed</code>和<code>watch</code>, 接下来我们一起分析并简单实现下这两个属性。</p>
+<h4 id="computed">computed</h4>
+<p><code>computed</code>名为计算属性, 目的就是让我们在模板里面只关注简单的绑定, 不做复杂操作, 拿官网的代码做例子,下面就是一个相对复杂的操作:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>&lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;example&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>  {{ message.split(&#39;&#39;).reverse().join(&#39;&#39;) }}
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">div</span>&gt;
+</span></span></code></pre></div><p>先来看下用法:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Vue</span>({
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">data</span>() {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">firstName</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;rw&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">lastName</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;son&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">age</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">25</span>
+</span></span><span style="display:flex;"><span>      };
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">computed</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">//  指定计算属性的getter
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#a6e22e">info</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">`info content: my name is </span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">firstName</span><span style="color:#e6db74">}${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">lastName</span><span style="color:#e6db74">}</span><span style="color:#e6db74">, I&#39;m </span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">age</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> years old`</span>;
+</span></span><span style="display:flex;"><span>      },
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">//  同时提供getter和setter, setter中可以操作其他数据
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#a6e22e">fullName</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">get</span>() {
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">return</span> <span style="color:#e6db74">`my fullName is: </span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">firstName</span><span style="color:#e6db74">}${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">lastName</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>;
+</span></span><span style="display:flex;"><span>        },
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">set</span>(<span style="color:#a6e22e">value</span>) {
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">value</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">value</span>.<span style="color:#a6e22e">split</span>(<span style="color:#e6db74">&#34; &#34;</span>);
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">firstName</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">value</span>[<span style="color:#ae81ff">0</span>];
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">lastName</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">value</span>[<span style="color:#a6e22e">value</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>];
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>      },
+</span></span><span style="display:flex;"><span>	  <span style="color:#a6e22e">text</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;just a test case&#34;</span>
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">created</span>() {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">info</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">//  info content: my name is rwson, I&#39;m 25 years old
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">fullName</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;son rw&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">info</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">//  info content: my name is sonrw, I&#39;m 25 years old
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">fullName</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">//  my fullName is: sonrw
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    }
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div><p><code>computed</code>的用法就是上面例子中的两种, 下面我们一起来模拟实现下:</p>
+<p>首先我们模拟封装一个<code>Vm</code>函数作为构造器, 然后去调用它,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">vm</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Vm</span>({
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">data</span>() {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">firstName</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;rw&#34;</span>,
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">lastName</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;son&#34;</span>,
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">age</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">25</span>
+</span></span><span style="display:flex;"><span>		};
+</span></span><span style="display:flex;"><span>	},
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">computed</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">info</span>() {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> <span style="color:#e6db74">`info content: my name is </span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">firstName</span><span style="color:#e6db74">}${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">lastName</span><span style="color:#e6db74">}</span><span style="color:#e6db74">, I&#39;m </span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">age</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> years old`</span>;
+</span></span><span style="display:flex;"><span>		},
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fullName</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">get</span>() {
+</span></span><span style="display:flex;"><span>				<span style="color:#66d9ef">return</span> <span style="color:#e6db74">`my fullName is: </span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">firstName</span><span style="color:#e6db74">}${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">lastName</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>;
+</span></span><span style="display:flex;"><span>			},
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">set</span>(<span style="color:#a6e22e">value</span>) {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">value</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">value</span>.<span style="color:#a6e22e">split</span>(<span style="color:#e6db74">&#34; &#34;</span>);
+</span></span><span style="display:flex;"><span>				<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">firstName</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">value</span>[<span style="color:#ae81ff">0</span>];
+</span></span><span style="display:flex;"><span>				<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">lastName</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">value</span>[<span style="color:#a6e22e">value</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>];
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>		},
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">text</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;just a test case&#34;</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">vm</span>.<span style="color:#a6e22e">text</span>);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	just a test case
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">vm</span>.<span style="color:#a6e22e">info</span>);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	info content: my name is rwson, I&#39;m 25 years old
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">vm</span>.<span style="color:#a6e22e">fullName</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;song rw&#34;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">vm</span>.<span style="color:#a6e22e">info</span>);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	info content: my name is songrw, I&#39;m 25 years old
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">vm</span>.<span style="color:#a6e22e">firstName</span>);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	song
+</span></span></span></code></pre></div><p>上面是运行结果和调用, 下面我们一起实现下<code>Vm</code>这个函数:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">//	vm构造函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">Vm</span>(<span style="color:#a6e22e">obj</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">data</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">obj</span>.<span style="color:#a6e22e">data</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	处理data执行的返回结果
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">handleData</span>(<span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">data</span>);
+</span></span><span style="display:flex;"><span>	
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	处理compoted对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">handleComputed</span>(<span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">obj</span>.<span style="color:#a6e22e">computed</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	hasOwnProperty简写
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">hasOwnProp</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">obj</span>, <span style="color:#a6e22e">prop</span>) =&gt; <span style="color:#a6e22e">obj</span>.<span style="color:#a6e22e">hasOwnProperty</span>(<span style="color:#a6e22e">prop</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	获取prototype类名
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">typeOf</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">obj</span>) =&gt; {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> {}.<span style="color:#a6e22e">toString</span>.<span style="color:#a6e22e">call</span>(<span style="color:#a6e22e">obj</span>).<span style="color:#a6e22e">slice</span>(<span style="color:#ae81ff">8</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>).<span style="color:#a6e22e">toLowerCase</span>();
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	枚举对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">loopObj</span>(<span style="color:#a6e22e">obj</span>, <span style="color:#a6e22e">callback</span>) {
+</span></span><span style="display:flex;"><span>	 Object.<span style="color:#a6e22e">keys</span>(<span style="color:#a6e22e">obj</span>).<span style="color:#a6e22e">forEach</span>((<span style="color:#a6e22e">key</span>) =&gt; {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">callback</span>(<span style="color:#a6e22e">key</span>, <span style="color:#a6e22e">obj</span>[<span style="color:#a6e22e">key</span>], <span style="color:#a6e22e">obj</span>);
+</span></span><span style="display:flex;"><span>	});
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	给data用Object.defineProperty绑定
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">handleData</span>(<span style="color:#a6e22e">context</span>, <span style="color:#a6e22e">data</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">loopObj</span>(<span style="color:#a6e22e">data</span>, (<span style="color:#a6e22e">key</span>, <span style="color:#a6e22e">val</span>, <span style="color:#a6e22e">data</span>) =&gt; {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">defineProp</span>(<span style="color:#a6e22e">context</span>, <span style="color:#a6e22e">key</span>, <span style="color:#a6e22e">val</span>);
+</span></span><span style="display:flex;"><span>	});
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	处理computed属性
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">handleComputed</span>(<span style="color:#a6e22e">context</span>, <span style="color:#a6e22e">obj</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">let</span> <span style="color:#a6e22e">type</span>;
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">loopObj</span>(<span style="color:#a6e22e">obj</span>, (<span style="color:#a6e22e">key</span>, <span style="color:#a6e22e">val</span>, <span style="color:#a6e22e">obj</span>) =&gt; {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">defineProp</span>(<span style="color:#a6e22e">context</span>, <span style="color:#a6e22e">key</span>, <span style="color:#a6e22e">val</span>);
+</span></span><span style="display:flex;"><span>	});
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">defineProp</span>(<span style="color:#a6e22e">obj</span>, <span style="color:#a6e22e">key</span>, <span style="color:#a6e22e">val</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">_val</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">val</span>, <span style="color:#a6e22e">type</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> Object.<span style="color:#a6e22e">defineProperty</span>(<span style="color:#a6e22e">obj</span>, <span style="color:#a6e22e">key</span>, {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">enumerable</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">configable</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">get</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>() {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">type</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">typeOf</span>(<span style="color:#a6e22e">_val</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">switch</span> (<span style="color:#a6e22e">type</span>) {
+</span></span><span style="display:flex;"><span>            	<span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 属性值对应一个函数, 也就是computed里面只声明了getter
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * eg.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * computed: {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 		info() {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 			return `info content: my name is ${this.firstName}${this.lastName}, I&#39;m ${this.age} years old`;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 		}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 		...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 */</span>
+</span></span><span style="display:flex;"><span>            	<span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;function&#34;</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>            		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">_val</span>.<span style="color:#a6e22e">call</span>(<span style="color:#a6e22e">obj</span>);
+</span></span><span style="display:flex;"><span>            	<span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            	<span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 属性值对应一个对象, 也就是computed里面同时声明了getter/setter
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * eg.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * computed: {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 		fullName: {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 			get() {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 				return `my fullName is: ${this.firstName}${this.lastName}`;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 			},
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 			set() {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 				value = value.split(&#34; &#34;);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 				this.firstName = value[0];
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 				this.lastName = value[value.length - 1];
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 			}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 		}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 */</span>
+</span></span><span style="display:flex;"><span>            	<span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;object&#34;</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>            		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">_val</span>.<span style="color:#a6e22e">get</span>.<span style="color:#a6e22e">call</span>(<span style="color:#a6e22e">obj</span>);
+</span></span><span style="display:flex;"><span>            	<span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            	<span style="color:#75715e">//	其他类型默认
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            	<span style="color:#66d9ef">default</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>            		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">_val</span>;
+</span></span><span style="display:flex;"><span>            	<span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        },
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">set</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">newV</span>) {
+</span></span><span style="display:flex;"><span>        	<span style="color:#a6e22e">type</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">typeOf</span>(<span style="color:#a6e22e">_val</span>);
+</span></span><span style="display:flex;"><span>        	<span style="color:#66d9ef">switch</span> (<span style="color:#a6e22e">type</span>) {
+</span></span><span style="display:flex;"><span>        		<span style="color:#75715e">//	属性值对应一个对象, 也就是computed里面同时声明了getter/setter
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        		<span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;object&#34;</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>        			<span style="color:#a6e22e">_val</span>.<span style="color:#a6e22e">set</span>.<span style="color:#a6e22e">call</span>(<span style="color:#a6e22e">obj</span>, <span style="color:#a6e22e">newV</span>);
+</span></span><span style="display:flex;"><span>        		<span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        		<span style="color:#75715e">//	其他类型的默认
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        		<span style="color:#66d9ef">default</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>        			<span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">newV</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">_val</span>) {
+</span></span><span style="display:flex;"><span>        				<span style="color:#a6e22e">_val</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">newV</span>;
+</span></span><span style="display:flex;"><span>        			}
+</span></span><span style="display:flex;"><span>        		<span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>        	}
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>上面就是我们一个实现了, 其中<code>defineProp</code>这个函数中, 我们做了下面几步:</p>
+<ol>
+<li>缓存当前属性值</li>
+<li>调用Object.defineProperty方法在obj上定义属性key</li>
+<li>在<code>descriptor</code>中的<code>getter</code>/<code>setter</code>里面判断属性值类型(如果是函数或者对象, 那该属性就是在<code>computed</code>[先不谈<code>watch</code>]里面声明的, <code>getter</code>里面返回该函数的执行结果、<code>setter</code>里面执行<code>computed</code>中指定的<code>set</code>函数[如果有的话], 否则作为普通的<code>data</code>处理)</li>
+</ol>
+<h4 id="watch">watch</h4>
+<p><code>watch</code>名为观察者, 通过监听组件内某个属性来执行某些操作, 最常用的就是组件中某个属性值发生变化之后, 向后端发送一个异步请求, 比如一些商品网站上有顶部tab栏, 每个tab都是一个类目, 这时候我们可以给这些tab绑定<code>click</code>事件, 然后在事件处理中处理顶部tab栏绑定的属性值, watch中去监听它的变化来发送异步请求等等, 比如下面的例子:</p>
+<p>先来看模板部分:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>	...
+</span></span><span style="display:flex;"><span>	&lt;<span style="color:#f92672">ul</span>&gt;
+</span></span><span style="display:flex;"><span>		&lt;<span style="color:#f92672">li</span> <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">click</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;setFilter(&#39;1&#39;)&#34;</span>&gt;男装&lt;/<span style="color:#f92672">li</span>&gt;
+</span></span><span style="display:flex;"><span>		&lt;<span style="color:#f92672">li</span> <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">click</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;setFilter(&#39;2&#39;)&#34;</span>&gt;女装&lt;/<span style="color:#f92672">li</span>&gt;
+</span></span><span style="display:flex;"><span>		&lt;<span style="color:#f92672">li</span> <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">click</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;setFilter(&#39;3&#39;)&#34;</span>&gt;童装&lt;/<span style="color:#f92672">li</span>&gt;
+</span></span><span style="display:flex;"><span>		&lt;<span style="color:#f92672">li</span> <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">click</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;setFilter(&#39;4&#39;)&#34;</span>&gt;美食&lt;/<span style="color:#f92672">li</span>&gt;
+</span></span><span style="display:flex;"><span>	&lt;/<span style="color:#f92672">ul</span>&gt;
+</span></span><span style="display:flex;"><span>	...
+</span></span></code></pre></div><p>然后我们看看js部分实现:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">data</span>() {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">page</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">1</span>,
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">filter</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;1&#34;</span>,
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">goodsList</span><span style="color:#f92672">:</span> []
+</span></span><span style="display:flex;"><span>		};
+</span></span><span style="display:flex;"><span>	},
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">watch</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">async</span> <span style="color:#a6e22e">filter</span>() {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">filter</span>, <span style="color:#a6e22e">page</span> } <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>,
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">res</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">queryGoods</span>(<span style="color:#a6e22e">filter</span>, <span style="color:#a6e22e">page</span>);
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">success</span>) {
+</span></span><span style="display:flex;"><span>				<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">goodsList</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">goods</span>;
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	},
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">methods</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">setFilter</span>(<span style="color:#a6e22e">filter</span>) {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">filter</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">filter</span>;
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">page</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">goodsList</span> <span style="color:#f92672">=</span> [];
+</span></span><span style="display:flex;"><span>		},
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">async</span> <span style="color:#a6e22e">queryGoods</span>(<span style="color:#a6e22e">filter</span>, <span style="color:#a6e22e">page</span>) {
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">//	...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		}
+</span></span><span style="display:flex;"><span>	},
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p>当然这个例子可能有点极端, 因为<code>queryGoods</code>完全可以放在<code>setFilter</code>里面去调用, 但是为了演示效果, 只能这么做了😂</p>
+<p>下面一起看看看看<code>watch</code>部分的实现, 有了刚才的分析, 我们知道<code>watch</code>中声明的肯定是在<code>setter</code>部分进行调用的, 所以我们需要在处理<code>data</code>的时候就把<code>watch</code>对应的加上:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	首先我们需要在构造函数里面, 改下handleData这个函数的调用, 给它把obj.watch也传进去
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// handleData(this, data);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">handleData</span>(<span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">data</span>, <span style="color:#a6e22e">obj</span>.<span style="color:#a6e22e">watch</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	接下来我们改写handleData这个函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">handleData</span>(<span style="color:#a6e22e">context</span>, <span style="color:#a6e22e">data</span>, <span style="color:#a6e22e">watch</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">let</span> <span style="color:#a6e22e">inWatch</span>, <span style="color:#a6e22e">watchVal</span>;
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">loopObj</span>(<span style="color:#a6e22e">data</span>, (<span style="color:#a6e22e">key</span>, <span style="color:#a6e22e">val</span>, <span style="color:#a6e22e">data</span>) =&gt; {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">//	判断在watch中是否也声明了该属性值
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">inWatch</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">hasOwnProp</span>(<span style="color:#a6e22e">watch</span>, <span style="color:#a6e22e">key</span>);
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">//	如果有取出来, 作为defineProp的第五个参数给传进去
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">watchVal</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">inWatch</span> <span style="color:#f92672">?</span> <span style="color:#a6e22e">watch</span>[<span style="color:#a6e22e">key</span>] <span style="color:#f92672">:</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">defineProp</span>(<span style="color:#a6e22e">context</span>, <span style="color:#a6e22e">key</span>, <span style="color:#a6e22e">val</span>, <span style="color:#a6e22e">inWatch</span>, <span style="color:#a6e22e">watchVal</span>);
+</span></span><span style="display:flex;"><span>	});
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	下面就是我们说到的在setter部分调用声明的watch观察者
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">defineProp</span>(<span style="color:#a6e22e">obj</span>, <span style="color:#a6e22e">key</span>, <span style="color:#a6e22e">val</span>, <span style="color:#a6e22e">inWatch</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>, <span style="color:#a6e22e">watchVal</span> <span style="color:#f92672">=</span> () =&gt; {}) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">_val</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">val</span>, <span style="color:#a6e22e">type</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> Object.<span style="color:#a6e22e">defineProperty</span>(<span style="color:#a6e22e">obj</span>, <span style="color:#a6e22e">key</span>, {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">enumerable</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">configable</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">get</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>() {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">type</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">typeOf</span>(<span style="color:#a6e22e">_val</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">switch</span> (<span style="color:#a6e22e">type</span>) {
+</span></span><span style="display:flex;"><span>            	<span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 属性值对应一个函数, 也就是computed里面只声明了getter
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * eg.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * computed: {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 		info() {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 			return `info content: my name is ${this.firstName}${this.lastName}, I&#39;m ${this.age} years old`;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 		}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 		...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 */</span>
+</span></span><span style="display:flex;"><span>            	<span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;function&#34;</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>            		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">_val</span>.<span style="color:#a6e22e">call</span>(<span style="color:#a6e22e">obj</span>);
+</span></span><span style="display:flex;"><span>            	<span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            	<span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 属性值对应一个对象, 也就是computed里面同时声明了getter/setter
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * eg.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * computed: {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 		fullName: {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 			get() {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 				return `my fullName is: ${this.firstName}${this.lastName}`;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 			},
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 			set() {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 				value = value.split(&#34; &#34;);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 				this.firstName = value[0];
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 				this.lastName = value[value.length - 1];
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 			}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * 		}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 * ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            	 */</span>
+</span></span><span style="display:flex;"><span>            	<span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;object&#34;</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>            		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">_val</span>.<span style="color:#a6e22e">get</span>.<span style="color:#a6e22e">call</span>(<span style="color:#a6e22e">obj</span>);
+</span></span><span style="display:flex;"><span>            	<span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            	<span style="color:#75715e">//	其他类型默认
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            	<span style="color:#66d9ef">default</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>            		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">_val</span>;
+</span></span><span style="display:flex;"><span>            	<span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        },
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">set</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">newV</span>) {
+</span></span><span style="display:flex;"><span>        	<span style="color:#a6e22e">type</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">typeOf</span>(<span style="color:#a6e22e">_val</span>);
+</span></span><span style="display:flex;"><span>        	<span style="color:#66d9ef">switch</span> (<span style="color:#a6e22e">type</span>) {
+</span></span><span style="display:flex;"><span>        		<span style="color:#75715e">//	属性值对应一个对象, 也就是computed里面同时声明了getter/setter
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        		<span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;object&#34;</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>        			<span style="color:#a6e22e">_val</span>.<span style="color:#a6e22e">set</span>.<span style="color:#a6e22e">call</span>(<span style="color:#a6e22e">obj</span>, <span style="color:#a6e22e">newV</span>);
+</span></span><span style="display:flex;"><span>        		<span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        		<span style="color:#75715e">//	其他类型的默认
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        		<span style="color:#66d9ef">default</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>        			<span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">newV</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">_val</span>) {
+</span></span><span style="display:flex;"><span>        				<span style="color:#a6e22e">_val</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">newV</span>;
+</span></span><span style="display:flex;"><span>        			}
+</span></span><span style="display:flex;"><span>        		<span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>        	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">//	如果watch观察者存在, 并且对应一个回调函数, 在值发生改变的时候调用该回调, 并修改this指向到当前vm实例
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">inWatch</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">typeOf</span>(<span style="color:#a6e22e">watchVal</span>) <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;function&#34;</span>) {
+</span></span><span style="display:flex;"><span>            	<span style="color:#a6e22e">watchVal</span>.<span style="color:#a6e22e">call</span>(<span style="color:#a6e22e">obj</span>);
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>再来看下用法:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">vm</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Vm</span>({
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">data</span>() {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">firstName</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;rw&#34;</span>,
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">lastName</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;son&#34;</span>,
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">age</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">25</span>
+</span></span><span style="display:flex;"><span>		};
+</span></span><span style="display:flex;"><span>	},
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">computed</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">info</span>() {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> <span style="color:#e6db74">`info content: my name is </span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">firstName</span><span style="color:#e6db74">}${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">lastName</span><span style="color:#e6db74">}</span><span style="color:#e6db74">, I&#39;m </span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">age</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> years old`</span>;
+</span></span><span style="display:flex;"><span>		},
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fullName</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">get</span>() {
+</span></span><span style="display:flex;"><span>				<span style="color:#66d9ef">return</span> <span style="color:#e6db74">`my fullName is: </span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">firstName</span><span style="color:#e6db74">}${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">lastName</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>;
+</span></span><span style="display:flex;"><span>			},
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">set</span>(<span style="color:#a6e22e">value</span>) {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">value</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">value</span>.<span style="color:#a6e22e">split</span>(<span style="color:#e6db74">&#34; &#34;</span>);
+</span></span><span style="display:flex;"><span>				<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">firstName</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">value</span>[<span style="color:#ae81ff">0</span>];
+</span></span><span style="display:flex;"><span>				<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">lastName</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">value</span>[<span style="color:#a6e22e">value</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>];
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>		},
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">text</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;just a test case&#34;</span>
+</span></span><span style="display:flex;"><span>	},
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">watch</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">firstName</span>() {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`%c now firstName&#39;s value is: </span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">firstName</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, <span style="color:#e6db74">&#34;color: red&#34;</span>);
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">//	走到vm.fullName = &#34;song rw&#34;;就会输出
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		},
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">lastName</span>() {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`%c now lastName&#39;s value is: </span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">lastName</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, <span style="color:#e6db74">&#34;color: green&#34;</span>);
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">//	走到vm.fullName = &#34;song rw&#34;;就会输出
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		},
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">age</span>() {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`%c now age&#39;s value is: </span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">age</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, <span style="color:#e6db74">&#34;color: yellow&#34;</span>);
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">//	走到vm.fullName = &#34;song rw&#34;;就会输出
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">vm</span>.<span style="color:#a6e22e">text</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">vm</span>.<span style="color:#a6e22e">info</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">vm</span>.<span style="color:#a6e22e">fullName</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;song rw&#34;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">vm</span>.<span style="color:#a6e22e">info</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">vm</span>.<span style="color:#a6e22e">firstName</span>);
+</span></span></code></pre></div></section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    <a
+      class="flex w-1/2 items-center rounded-l-md p-6 pr-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2018-06-06-read-redux-logic/"
+      ><span class="mr-1.5">←</span><span>redux-logic源码阅读</span></a
+    >
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2017-10-24-write-a-sublime-plugin-by-python-nodejs/"
+      ><span>用NodeJs和Python开发一个Sublime插件</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

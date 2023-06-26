@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>React事件绑定终极优化方案 - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="React作为目前炙手可热的前端框架，里面有很多吸引人的地方，但是也有一些开发体验不太好的地方，比如我们平时做事件绑定的时候要显示的绑定this，否则就可能导致各种bug，关于事件this绑定也有很多种形式，各种方法都有优劣，下面我们将对照几种绑定方式来进行对比，最终实现一个适合自己的方案
+在构造函数中进行绑定 class App extends Component {  constructor (props) {  super(props)  this.state = {  t: &#39;t&#39;  }  // this.bind1 = this.bind1.bind(this) 无参写法  this.bind1 = this.bind1.bind(this, this.state.t)  }   // 无参写法  // bind1 () {  // console.log(&#39;bind1&#39;, this)  // }   bind1 (t, event) {  console.log(&#39;bind1&#39;, this, t, event)  }   render () {  return (  &lt;div&gt;  &lt;button onClick={this." />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">React事件绑定终极优化方案</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Sep 28, 2019</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p><code>React</code>作为目前炙手可热的前端框架，里面有很多吸引人的地方，但是也有一些开发体验不太好的地方，比如我们平时做事件绑定的时候要显示的绑定<code>this</code>，否则就可能导致各种<code>bug</code>，关于事件<code>this</code>绑定也有很多种形式，各种方法都有优劣，下面我们将对照几种绑定方式来进行对比，最终实现一个适合自己的方案</p>
+<h5 id="在构造函数中进行绑定">在构造函数中进行绑定</h5>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-jsx" data-lang="jsx"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">App</span> <span style="color:#66d9ef">extends</span> <span style="color:#a6e22e">Component</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">constructor</span> (<span style="color:#a6e22e">props</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">super</span>(<span style="color:#a6e22e">props</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">state</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">t</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;t&#39;</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// this.bind1 = this.bind1.bind(this) 无参写法
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">bind1</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">bind1</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#66d9ef">this</span>, <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">t</span>)
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 无参写法 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// bind1 () {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">//   console.log(&#39;bind1&#39;, this)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">bind1</span> (<span style="color:#a6e22e">t</span>, <span style="color:#a6e22e">event</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;bind1&#39;</span>, <span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">t</span>, <span style="color:#a6e22e">event</span>)
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">render</span> () {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> (
+</span></span><span style="display:flex;"><span>      &lt;<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#f92672">button</span> <span style="color:#a6e22e">onClick</span><span style="color:#f92672">=</span>{<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">bind1</span>}&gt;<span style="color:#a6e22e">打印1</span>&lt;/<span style="color:#f92672">button</span>&gt;
+</span></span><span style="display:flex;"><span>      &lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>这种方式的优点就是只会生成一个方法实例，并且绑定一次之后如果多次用到这个方法也不需要再绑定。缺点是如果我们直接在<code>constructor</code>中进行绑定的话，参数就无法动态化，只能固定死用<code>state</code>里的值，比如我们一个列表组件，  点击某一条某一个具体操作的时候，需要传入一个<code>id</code>之类的字段作为唯一标识，这种绑定形式就无法处理了，缺点二就是即使不用到<code>state</code>，也需要在构造器里做绑定</p>
+<h5 id="行内匿名函数">行内匿名函数</h5>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-jsx" data-lang="jsx"><span style="display:flex;"><span>  <span style="color:#a6e22e">bind3</span> (<span style="color:#a6e22e">t</span>, <span style="color:#a6e22e">event</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;bind3&#39;</span>, <span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">t</span>, <span style="color:#a6e22e">event</span>)
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">render</span> () {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> (
+</span></span><span style="display:flex;"><span>      &lt;<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// &lt;button onClick={() =&gt; this.bind3()}&gt;打印3&lt;/button&gt; 无参写法
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        &lt;<span style="color:#f92672">button</span> <span style="color:#a6e22e">onClick</span><span style="color:#f92672">=</span>{(<span style="color:#a6e22e">event</span>) =&gt; <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">bind3</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">t</span>, <span style="color:#a6e22e">event</span>)}&gt;<span style="color:#a6e22e">打印3</span>&lt;/<span style="color:#f92672">button</span>&gt;
+</span></span><span style="display:flex;"><span>      &lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>  }
+</span></span></code></pre></div><p>这种方式的优点就是比较简单，灵活，但是最大的缺点就是在每次<code>render</code>的时候都会执行这个匿名函数，当这个函数作为<code>props</code>传入低阶组件的时候，这些组件可能会进行额外的重新渲染，因为每一次都是新的方法实例作为的新的属性传递，带来了额外的性能开销</p>
+<h5 id="在render中显示bind">在<code>render</code>中显示<code>bind</code></h5>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-jsx" data-lang="jsx"><span style="display:flex;"><span>	<span style="color:#a6e22e">bind3</span> (<span style="color:#a6e22e">t</span>, <span style="color:#a6e22e">event</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;bind3&#39;</span>, <span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">t</span>, <span style="color:#a6e22e">event</span>)
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">render</span> () {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> (
+</span></span><span style="display:flex;"><span>      &lt;<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// &lt;button onClick={this.bind3.bind(this)}&gt;打印3&lt;/button&gt; 无参写法
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        &lt;<span style="color:#f92672">button</span> <span style="color:#a6e22e">onClick</span><span style="color:#f92672">=</span>{<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">bind3</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">xxx</span>)}&gt;<span style="color:#a6e22e">打印3</span>&lt;/<span style="color:#f92672">button</span>&gt;
+</span></span><span style="display:flex;"><span>      &lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>  }
+</span></span></code></pre></div><p>这种写法虽然和匿名函数写法上完全不一样，但是缺点基本上可以认为是一样的 😂，也会带来额外的性能开销</p>
+<h5 id="使用属性初始化器语法绑定this">使用属性初始化器语法绑定this</h5>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-jsx" data-lang="jsx"><span style="display:flex;"><span>	<span style="color:#a6e22e">bind3</span> <span style="color:#f92672">=</span> () =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">setState</span>({
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">xxx</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;xxx&#39;</span>
+</span></span><span style="display:flex;"><span>    })
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">render</span> () {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> (
+</span></span><span style="display:flex;"><span>      &lt;<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#f92672">button</span> <span style="color:#a6e22e">onClick</span><span style="color:#f92672">=</span>{<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">bind3</span>}&gt;<span style="color:#a6e22e">打印3</span>&lt;/<span style="color:#f92672">button</span>&gt;
+</span></span><span style="display:flex;"><span>      &lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>  }
+</span></span></code></pre></div><p>这种方法利用了箭头函数中<code>箭头函数内部的this是词法作用域，由上下文确定</code>的特点，写法上比较简单，且不会带来额外性能开销，并且不会像第一种那样带来多余代码，看似很完美，但是和在<code>constructor</code>一样，无法将参数动态化</p>
+<h5 id="thisxxx"><code>::this.xxx()</code></h5>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-jsx" data-lang="jsx"><span style="display:flex;"><span>  <span style="color:#a6e22e">bind5</span>(){
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;bind5&#39;</span>, <span style="color:#66d9ef">this</span>)
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">render</span>() {
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">return</span> (
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>       &lt;<span style="color:#f92672">button</span> <span style="color:#a6e22e">onClick</span><span style="color:#f92672">=</span>{<span style="color:#f92672">::</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">bind5</span>}&gt;&lt;/<span style="color:#f92672">button</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>  )
+</span></span><span style="display:flex;"><span> }
+</span></span></code></pre></div><p>这种方法我自己没用过，所以不知道具体有什么优缺点</p>
+<p>上面几种是目前我们写<code>React</code>组件时，基本上都会用到的几种<code>this</code>绑定方式，通过分析来看，多多少少都有一点缺点，目前也有很多开源比如[autobind](<a href="https://www.npmjs.com/package/auto-bind">https://www.npmjs.com/package/auto-bind</a>或者[memo-bind](<a href="https://www.npmjs.com/package/memo-bind">https://www.npmjs.com/package/memo-bind</a>，但是也会有部分不足，所以决定自己实现一个：</p>
+<h5 id="bind-with-arguments">bind-with-arguments</h5>
+<p>先来看看基础版本的:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">bindWithArguments</span>(<span style="color:#a6e22e">target</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">descriptor</span>) {
+</span></span><span style="display:flex;"><span>  	<span style="color:#75715e">//	缓存最终要执行的方法
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">excuter</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">target</span>[<span style="color:#a6e22e">name</span>];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">//	对该方法进行重新包装
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span> Object.<span style="color:#a6e22e">assign</span>(<span style="color:#a6e22e">target</span>, <span style="color:#a6e22e">descriptor</span>, {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">value</span><span style="color:#f92672">:</span> (...<span style="color:#a6e22e">args</span>) =&gt; {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> () =&gt; {
+</span></span><span style="display:flex;"><span>              	<span style="color:#75715e">//	用apply来绑定作用域以及传入外部参数, 并且把执行结果作为返回值
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">excuterType</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#a6e22e">target</span>, <span style="color:#a6e22e">args</span>);
+</span></span><span style="display:flex;"><span>            };
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>在测试的过程中发现，上述版本只能满足同步的回调函数，但是很多时候，我们会根据用户操作来发起某个具体的异步请求，所以仅仅上面那部分是不行的，根据[MDN](<a href="https://developer.mozilla.org/">https://developer.mozilla.org/</a>上对[async](<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncFunction">https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncFunction</a>的介绍，我们来完善代码:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">bindWithArguments</span>(<span style="color:#a6e22e">target</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">descriptor</span>) {
+</span></span><span style="display:flex;"><span>  	<span style="color:#75715e">//	缓存最终要执行的方法
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">excutor</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">target</span>[<span style="color:#a6e22e">name</span>];
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  	<span style="color:#75715e">//	普通方法: [object Function] async: [object AsyncFunction]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">excutorType</span> <span style="color:#f92672">=</span> {}.<span style="color:#a6e22e">toString</span>.<span style="color:#a6e22e">call</span>(<span style="color:#a6e22e">excutor</span>).<span style="color:#a6e22e">slice</span>(<span style="color:#ae81ff">8</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">isAsync</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">excutorType</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;AsyncFunction&#39;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> Object.<span style="color:#a6e22e">assign</span>(<span style="color:#a6e22e">target</span>, <span style="color:#a6e22e">descriptor</span>, {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">value</span><span style="color:#f92672">:</span> (...<span style="color:#a6e22e">args</span>) =&gt; {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">isAsync</span> <span style="color:#f92672">?</span> <span style="color:#66d9ef">async</span> () =&gt; {
+</span></span><span style="display:flex;"><span>              	<span style="color:#75715e">//	如果是异步方法，就用async/await包一层再返回出去
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">return</span> (<span style="color:#66d9ef">await</span> <span style="color:#a6e22e">excutor</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#a6e22e">target</span>, <span style="color:#a6e22e">args</span>));
+</span></span><span style="display:flex;"><span>            } <span style="color:#f92672">:</span> () =&gt; {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">excutor</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#a6e22e">target</span>, <span style="color:#a6e22e">args</span>);
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>现在异步方法已经支持了，看下具体用法</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-jsx" data-lang="jsx"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">deffer</span> <span style="color:#f92672">=</span> () =&gt; <span style="color:#66d9ef">new</span> Promise((<span style="color:#a6e22e">resolve</span>) =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">setTimeout</span>(<span style="color:#a6e22e">resolve</span>, <span style="color:#ae81ff">2000</span>);
+</span></span><span style="display:flex;"><span>});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">async</span> <span style="color:#a6e22e">asyncFn</span>(<span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">b</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">deffer</span>();
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;deffer&#39;</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">//	装饰同步方法
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">bindWithArg</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">async</span> <span style="color:#a6e22e">callAsync</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">time</span>();
+</span></span><span style="display:flex;"><span>      	<span style="color:#75715e">//	内部再调用异步方法
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">res</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">asyncFn</span>(<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">timeEnd</span>();
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  后续工作
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">//	装饰同步方法
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">bindWithArg</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">syncFn</span>(<span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">b</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">b</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">render</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> (
+</span></span><span style="display:flex;"><span>            &lt;<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>                &lt;<span style="color:#f92672">h3</span>&gt;<span style="color:#a6e22e">bindWithArguments</span>&lt;/<span style="color:#f92672">h3</span>&gt;
+</span></span><span style="display:flex;"><span>            		<span style="color:#75715e">//	调用同步方法
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                &lt;<span style="color:#f92672">p</span> <span style="color:#a6e22e">onClick</span><span style="color:#f92672">=</span>{<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">syncFn</span>(<span style="color:#e6db74">&#39;1&#39;</span>, {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">a</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;xxx&#39;</span>,
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">b</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;yyy&#39;</span>
+</span></span><span style="display:flex;"><span>                })}&gt;<span style="color:#a6e22e">sync</span> <span style="color:#a6e22e">fn</span>&lt;/<span style="color:#f92672">p</span>&gt;
+</span></span><span style="display:flex;"><span>            		<span style="color:#75715e">//	调用异步方法
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                &lt;<span style="color:#f92672">p</span> <span style="color:#a6e22e">onClick</span><span style="color:#f92672">=</span>{<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">callAsync</span>()}&gt; <span style="color:#66d9ef">async</span> <span style="color:#a6e22e">click</span> <span style="color:#a6e22e">fn</span>&lt;/<span style="color:#f92672">p</span>&gt;
+</span></span><span style="display:flex;"><span>            &lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>        )
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></div><p>看上面的例子已经很清楚，但是其实还有一点不太完美的地方，就是我们不需要传入任何参数的时候也是用<code>onClick={ this.xxx() }</code>来调用，对于用惯了<code>autobind</code>的我们可能不太习惯，所以我们继续完善：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">functionMap</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//	异步并且有参数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">AsyncWith</span><span style="color:#f92672">:</span> (<span style="color:#a6e22e">excutor</span>, <span style="color:#a6e22e">target</span>, ...<span style="color:#a6e22e">argus</span>) =&gt; {
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">return</span>  <span style="color:#66d9ef">async</span> () =&gt; (<span style="color:#66d9ef">await</span> <span style="color:#a6e22e">excutor</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#a6e22e">target</span>, <span style="color:#a6e22e">argus</span>))
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//	异步无参数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">AsyncEmpty</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">async</span> (<span style="color:#a6e22e">excutor</span>, <span style="color:#a6e22e">target</span>) =&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> (<span style="color:#66d9ef">await</span> <span style="color:#a6e22e">excutor</span>.<span style="color:#a6e22e">call</span>(<span style="color:#a6e22e">target</span>));
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//	同步并且有参数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">SyncWith</span><span style="color:#f92672">:</span> (<span style="color:#a6e22e">excutor</span>, <span style="color:#a6e22e">target</span>, ...<span style="color:#a6e22e">argus</span>) =&gt; {
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">return</span> () =&gt; <span style="color:#a6e22e">excutor</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#a6e22e">target</span>, <span style="color:#a6e22e">argus</span>);;
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//	同步无参数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">SyncEmpty</span><span style="color:#f92672">:</span> (<span style="color:#a6e22e">excutor</span>, <span style="color:#a6e22e">target</span>) =&gt; {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">excutor</span>.<span style="color:#a6e22e">call</span>(<span style="color:#a6e22e">target</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">bindWithArg</span>(<span style="color:#a6e22e">target</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">descriptor</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">excutor</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">target</span>[<span style="color:#a6e22e">name</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">excutorType</span> <span style="color:#f92672">=</span> {}.<span style="color:#a6e22e">toString</span>.<span style="color:#a6e22e">call</span>(<span style="color:#a6e22e">excutor</span>).<span style="color:#a6e22e">slice</span>(<span style="color:#ae81ff">8</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  	<span style="color:#75715e">//	判断是否异步
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">asyncCall</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">excutorType</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;AsyncFunction&#39;</span> <span style="color:#f92672">?</span> <span style="color:#e6db74">&#39;Async&#39;</span> <span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Sync&#39;</span>;
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  	<span style="color:#75715e">//	判断是否有参数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">emptyCall</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">excutor</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">===</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">?</span> <span style="color:#e6db74">&#39;Empty&#39;</span> <span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;With&#39;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">fnType</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">`</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">asyncCall</span><span style="color:#e6db74">}${</span><span style="color:#a6e22e">emptyCall</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> Object.<span style="color:#a6e22e">assign</span>(<span style="color:#a6e22e">target</span>, <span style="color:#a6e22e">descriptor</span>, {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">value</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">functionMap</span>[<span style="color:#a6e22e">fnType</span>].<span style="color:#a6e22e">bind</span>(<span style="color:#66d9ef">null</span>, <span style="color:#a6e22e">excutor</span>, <span style="color:#a6e22e">target</span>)
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>至此，就完成了所有功能，主要是用到闭包和函数形参的一些知识点，本项目已经开源到<a href="https://github.com/rwson/bind-with-arguments.git">github</a>，需要了解详细的请移步</p>
+<p>需要注意的是，此装饰器不支持<code>使用属性初始化器语法绑定this</code>的写法，因为这种写法在定义该函数时，已经做了绑定，所以无需做重复工作</p>
+</section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    <a
+      class="flex w-1/2 items-center rounded-l-md p-6 pr-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2020-07-22-read-sentry/"
+      ><span class="mr-1.5">←</span><span>Sentry源码阅读</span></a
+    >
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2018-06-06-read-redux-logic/"
+      ><span>redux-logic源码阅读</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

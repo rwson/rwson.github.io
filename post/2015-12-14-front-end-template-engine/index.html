@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>实现一个简单的模板引擎 - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="在最开始想要把数据显示到页面上,我们可以需要用到一些后端的模板引擎(比如java中的Freemarker等),随着技术的发展,前端会把数据从后端取回来,用拼接HTML或者模板引擎的方式来呈现页面,如果布局结构简单还好,但是如果碰到复杂结构的时候,前者可能显得比较吃力,且容易出错。
+比较著名的一些前端模板引擎有Handlebars、Underscore.js(一个javascript工具库的集合,带模板引擎)等等。各自也有各自的语法。
+前端模板引擎带来了很多嚎头,(预)编译、缓存、渲染等等,下面我们实现一个简单的模板引擎。
+首先想一下,在用模板引擎和拼接字符串时最大的区别是什么?就是一个是通过手动的绑定属性,一个是像写HTML一样把属性绑定好:
+// 比如有这么一段数据 var data = [ { name: &quot;foo&quot;, age: 23 }, { name: &quot;bar&quot;, age: 25 } ]; // 字符串拼接的写法 var html = &quot;&quot;; for(var i = 0, len = data.length; i &lt; len; i &#43;&#43;) { html &#43;= &quot;&lt;div class=&#39;item&#39;&gt;&lt;span class=&#39;name&#39;&gt;&quot; &#43; data[i].name &#43; &quot;&lt;/span&gt;&lt;span class=&#39;age&#39;&gt;&quot; &#43; data[i].age &#43; &quot;&lt;/span&gt;&lt;/div&gt;&quot;; } document.getElementById(&quot;target&quot;).innerHTML = html; // 模板引擎 &lt;script type=&quot;text/template&quot;&gt; &lt;% for(var i in obj) %&gt; &lt;div class=&quot;item&quot;&gt; &lt;span class=&quot;name&quot;&gt; &lt;%= obj[i]." />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">实现一个简单的模板引擎</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Dec 14, 2015</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p>在最开始想要把数据显示到页面上,我们可以需要用到一些后端的模板引擎(比如java中的Freemarker等),随着技术的发展,前端会把数据从后端取回来,用拼接HTML或者模板引擎的方式来呈现页面,如果布局结构简单还好,但是如果碰到复杂结构的时候,前者可能显得比较吃力,且容易出错。</p>
+<p>比较著名的一些前端模板引擎有Handlebars、Underscore.js(一个javascript工具库的集合,带模板引擎)等等。各自也有各自的语法。</p>
+<p>前端模板引擎带来了很多嚎头,(预)编译、缓存、渲染等等,下面我们实现一个简单的模板引擎。</p>
+<p>首先想一下,在用模板引擎和拼接字符串时最大的区别是什么?就是一个是通过手动的绑定属性,一个是像写HTML一样把属性绑定好:</p>
+<pre><code>//  比如有这么一段数据
+var data = [
+    {
+        name: &quot;foo&quot;,
+        age: 23
+    },
+    {
+        name: &quot;bar&quot;,
+        age: 25
+    }
+];
+
+//  字符串拼接的写法
+var html = &quot;&quot;;
+for(var i = 0, len = data.length; i &lt; len; i ++) {
+    html += &quot;&lt;div class='item'&gt;&lt;span class='name'&gt;&quot; + data[i].name + &quot;&lt;/span&gt;&lt;span class='age'&gt;&quot; + data[i].age + &quot;&lt;/span&gt;&lt;/div&gt;&quot;;
+}
+
+document.getElementById(&quot;target&quot;).innerHTML = html;
+
+//  模板引擎
+&lt;script type=&quot;text/template&quot;&gt;
+    &lt;% for(var i in obj) %&gt;
+        &lt;div class=&quot;item&quot;&gt;
+            &lt;span class=&quot;name&quot;&gt;
+                &lt;%= obj[i].name %&gt;
+            &lt;/span&gt;
+            &lt;span class=&quot;age&quot;&gt;
+                &lt;%= obj[i].age %&gt;
+            &lt;/span&gt;
+        &lt;/div&gt;
+    &lt;% } %&gt;
+&lt;/script&gt;
+</code></pre>
+<p>可以看到模板引擎的写法明显清楚了许多。</p>
+<p>要实现一个模板引擎,首先需要定义一个编译方法。我们先来定义一些变量:</p>
+<pre><code>//  缓存,调用编译方法的时候,先检测缓存中是否存在,如果有,直接取出来返回
+var _cache = {};
+
+//  取值表达式正则(&lt;%= obj[i].name %&gt;这种)
+var _valueReg = /&lt;%=(\s\S+?)%&gt;/;
+
+//  js可执行语句正则(&lt;% alert(123); %&gt;这种)
+var _evaluateReg = /&lt;%(\s\S+?)%&gt;/;
+
+//  匹配HTML特殊字符
+var _htmlReg = /&lt;|&gt;|&amp;/g;
+
+//  特殊转义正则(&lt;$ obj.htmlTag $&gt; 防止有些标签被当成普通文本来渲染,比如带链接的a标签,被渲染成了&quot;&lt;a href='xxxx'&gt;yyyy&lt;/a&gt;&quot;)
+var _escapeReg = /&lt;$(\s\S+?)$&gt;/;
+
+//  特殊字符
+var _charReg = /\\|'|\r|\n|\t|\u2028|\u2029/g;
+
+//  最终的匹配语句
+var _matcher = /&lt;%=([\s\S]+?)%&gt;|&lt;%([\s\S]+?)%&gt;|&lt;\$([\s\S]+?)\$&gt;|$/g;
+
+//  HTML转义
+var _escapeHtml = {
+
+    &quot;escapehash&quot;: {
+        &quot;&lt;&quot;: &quot;&amp;lt;&quot;,
+        &quot;&gt;&quot;: &quot;&amp;gt;&quot;,
+        &quot;&amp;&quot;: &quot;&amp;amp;&quot;
+    },
+
+    //  转义方法,取得escapehash中对应的转义符返回
+    &quot;escaping&quot;: function(char) {
+        return _escapeHtml.escapehash[char];
+    }
+};
+
+//  匹配特殊字符
+var _escapeCharater = {
+
+    &quot;escapehash&quot;: {
+        '&quot;': &quot;&amp;quot;&quot;,
+        &quot;'&quot;: &quot;&amp;#x27;&quot;,
+        &quot;/&quot;: &quot;&amp;#x2f;&quot;,
+        &quot;\\&quot;: &quot;\\\\&quot;,
+        &quot;\r&quot;: &quot;&quot;,
+        &quot;\n&quot;: &quot;&quot;,
+        &quot;\t&quot;: &quot;&quot;,
+        &quot;\u2028&quot;: &quot;\\u2028&quot;,
+        &quot;\u2029&quot;: &quot;\\u2029&quot;
+    },
+
+    //  转义方法,取得escapehash中对应的转义符返回
+    &quot;escaping&quot;: function(char) {
+        return _escapeCharater.escapehash[char];
+    }
+};
+</code></pre>
+<p>变量都定义完了,开始实现一个编译方法:</p>
+<pre><code>/**
+  * 编译方法
+  * @param  str String   需要被编译的字符串
+  * @return String
+  **/
+function complie(str) {
+
+    //  fnBody存储最后返回的函数体
+    var fnBody = &quot;&quot;;
+    
+    //  缓存上一次replace后的偏移
+    var index = 0;
+    
+    //  检测缓存
+    if (!_cache[str]) {
+        fnBody = &quot;var _temp = '';_temp += '&quot;;
+        
+        //  替换之前定义的匹配语句中的相关字符串,并做处理
+        str.replace(_matcher, function(match, value, evaluate, escapeStr, offset) {
+        
+            //  截取相关字符串拼接到函数体
+            fnBody += str.slice(index, offset).replace(_charReg, _escapeCharater.escaping);
+
+            //  可执行语句
+            if (evaluate) {
+                fnBody += &quot;';&quot; + evaluate + &quot;_temp += '&quot;;
+            }
+
+            //  &lt;%= xxx[.yyy] %&gt; -&gt; 普通的取值表达式
+            if (value) {
+                fnBody += &quot;' + &quot; + value + &quot; + '&quot;;
+            }
+
+            //  &lt;$ xxx $&gt; -&gt; HTML特殊字符转义
+            if (escapeStr) {
+                fnBody += &quot;' + &quot; + (&quot;obj.&quot; + escapeStr).replace(_htmlReg, _escapeHtml.escaping) + &quot; + '&quot;;
+            }
+
+            //  更新下一次截取字符串的偏移地址
+            index = offset + match.length;
+        });
+        fnBody += &quot;';return _temp;&quot;;
+
+        //  塞到缓存,方便下次有相同模板的时候,不用再去编译
+        _cache[str] = fnBody;
+    } else {
+    
+        //  从缓存区
+        fnBody = _cache[str];
+    }
+    
+    return fnBody;
+}
+</code></pre>
+<p>至此一个编译方法就实现好了。再来看render方法的实现:</p>
+<pre><code>/**
+  * 渲染方法
+  * @param  fnBody String   编译出来后的函数体
+  * @param  data            数据
+  * @return String
+  **/
+function render(fnBody, data) {
+    return new Function(&quot;obj&quot;, fnBody)(data);
+}
+
+//  挂载到全局对象
+window.Template = {
+    complie: complie,
+    render: render
+};
+</code></pre>
+<p>到这就完成了一个简单的模板引擎,需要注意的是在render方法中的</p>
+<pre><code>new Function(&quot;obj&quot;, fnBody)(data)
+</code></pre>
+<p>就意味着我们在用该模板引擎绑定相关数据的时候,必须用obj.xxx这种来读取,否则将不能被解析,很多模板利用with这个关键字动态的修改函数体内的this指向的方式,支持可以省略前面的&quot;obj.&quot;,而直接读取数据。</p>
+<p>具体代码请移步我的<a href="https://github.com/rwson/Template">GitHub</a></p>
+</section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    <a
+      class="flex w-1/2 items-center rounded-l-md p-6 pr-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2016-01-05-react-controlled-compoent/"
+      ><span class="mr-1.5">←</span><span>React中的受控组件</span></a
+    >
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2015-12-05-react-dom/"
+      ><span>React中的DOM操作</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

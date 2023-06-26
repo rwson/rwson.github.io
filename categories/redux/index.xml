@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Redux on rwson</title>
+    <link>/categories/redux/</link>
+    <description>Recent content in Redux on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Wed, 06 Jun 2018 00:00:00 +0000</lastBuildDate><atom:link href="/categories/redux/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>redux-logic源码阅读</title>
+      <link>/post/2018-06-06-read-redux-logic/</link>
+      <pubDate>Wed, 06 Jun 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2018-06-06-read-redux-logic/</guid>
+      <description>在用React和Redux做开发时, 都会用到异步的一些东西, 之前更多的用的是redux-thunk或者redux-saga之类的, 但是都有用的不顺的地方, 有一次突然发现redux-logic是一个很不错的解决方案, 用起来也感觉很顺手, 与市面上其他redux中间件不同的分析都在这里, 感兴趣的可以自己查看。
+首先我们来看下redux-logic的基本用法:
+ //	logic/index.js import { createLogic } from &amp;#39;redux-logic&amp;#39;;  const someLogic = createLogic({ 	//	当前logic监听的actionType 	type: &amp;#39;SOME_ACTION_TYPE&amp;#39;,  	//	取消当前logic执行的actionType 	cancelType: &amp;#39;CANCEL_TYPE&amp;#39;,  	//	是否获取最后一个返回 	latest: true,  	//	当前actionType的业务逻辑 	async process({ getState, action, cancelled }, dispatch, done) { 	const res = await asyncFn(); 	dispatch(newAction({ 	...res 	})); 	done(); 	} });  export someLogic;  //	store/index.</description>
+    </item>
+    
+  </channel>
+</rss>

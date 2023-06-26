@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>AngularJs on rwson</title>
+    <link>/categories/angularjs/</link>
+    <description>Recent content in AngularJs on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Wed, 02 Nov 2016 00:00:00 +0000</lastBuildDate><atom:link href="/categories/angularjs/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>IE下AngularJs中的ajax缓存</title>
+      <link>/post/2016-11-02-ie-ajax-cache/</link>
+      <pubDate>Wed, 02 Nov 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-11-02-ie-ajax-cache/</guid>
+      <description>在单页应用越来越普及的今天,越来越多的项目都会采用这种方案,这几天用AngularJs做了一个PC端应用,有登录注册的功能,登录注册的功能是通过ajax实现的,在登录注册以后页面不刷新,只修改$rootScope下的某些属性值,然后在页面里面通过ng-if之类的指令来控制相关元素的显示隐藏。
+之前的大概实现如下:
+// js  var app = angular.module(&amp;#34;app&amp;#34;, []);  app.run([&amp;#34;$rootScope&amp;#34;, &amp;#34;$http&amp;#34;, function($rootScope, $http) {  $rootScope.isLogin = false;  $rootScope.$on(&amp;#34;$routeChangeStart&amp;#34;, function (event, next, current) {  $http.get(&amp;#34;xxxx&amp;#34;)  .success(function(res) {  $rootScope.isLogin = !!(res.isLogin);  // ...  })  .error(function() {  // ...  });  });  }]); &amp;lt;div class=&amp;#34;container&amp;#34;&amp;gt;  &amp;lt;a href=&amp;#34;/user/center&amp;#34; ng-if=&amp;#34;isLogin&amp;#34;&amp;gt;用户中心&amp;lt;/a&amp;gt;  &amp;lt;a href=&amp;#34;javascript:;&amp;#34; ng-click=&amp;#34;logout()&amp;#34; ng-if=&amp;#34;isLogin&amp;#34;&amp;gt;登出&amp;lt;/a&amp;gt;  &amp;lt;a href=&amp;#34;/login&amp;#34; ng-if=&amp;#34;!isLogin&amp;#34;&amp;gt;登录&amp;lt;/a&amp;gt; &amp;lt;/div&amp;gt; 后来发现在Chrome/Firefox下都是好的,到了IE下登录以后不刷新就显示不对。原来以为是ng-if在IE下重新渲染过慢的问题,改成ng-show以后还是不行,然后看http状态码,发现是304,想到可能和缓存有关系,后来改了配置中关键ajax请求那边的东西,发现可以了,核心代码如下:</description>
+    </item>
+    
+  </channel>
+</rss>

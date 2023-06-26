@@ -1,0 +1,828 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on rwson</title>
+    <link>/post/</link>
+    <description>Recent content in Posts on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Thu, 26 Mar 2020 00:00:00 +0000</lastBuildDate><atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>npm之npx源码阅读</title>
+      <link>/post/2020-03-26-read-npx/</link>
+      <pubDate>Thu, 26 Mar 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2020-03-26-read-npx/</guid>
+      <description>npm是nodejs的模块管理器，功能及其强大。甚至随着前端模块化的兴起，在平时的工作中，也必不可少的会接触npm。在npm 5.2.0以及后面的版本, 新增了npx命令，该条命令主要有以下几个特点:
+  临时安装可执行依赖包，无需全局安装，不用担心长期的污染。(比如我们某个项目里用到nodemon这个nodejs启动器, 但是全局的node_modules中又没安装这个模块,然后通过npx nodemon xxx来安装并且执行。再比如我们项目里依赖的webpack 4.x，而系统全局安装的确是webkack 1.x，又不想把全局的替换掉，这时候我们可以通过npx webpack@4.x xxx来用我们项目里的版本编译相关代码)
+  可以执行依赖包中的命令，安装完成自动运行。
+  自动加载node_modules中依赖包，如果没找到，再去找全局，如果依然没找到，则会先安装，再执行。
+  可以指定node版本、包的版本，解决了不同项目使用不同版本的包的问题。
+  了解了这些特点，我们来分析下npx的具体实现。首先找到入口文件bin/index.js
+#!/usr/bin/env node  const path = require(&amp;#39;path&amp;#39;) const npx = require(&amp;#39;libnpx&amp;#39;)   const NPM_PATH = path.join(__dirname, &amp;#39;node_modules&amp;#39;, &amp;#39;npm&amp;#39;, &amp;#39;bin&amp;#39;, &amp;#39;npm-cli.js&amp;#39;)  // 解析参数 const parsed = npx.parseArgs(process.argv, NPM_PATH)  parsed.npxPkg = path.join(__dirname, &amp;#39;package.json&amp;#39;) npx(parsed) 入口文件中最后执行的是libnpx这个包，所以我们跟到libnpx/index.js这个文件，先看下刚才入口文件里面调用的npx.parseArgs：
+npx.parseArgs // parse-args.js  &amp;#39;use strict&amp;#39;  let npa const path = require(&amp;#39;path&amp;#39;)  module.</description>
+    </item>
+    
+    <item>
+      <title>Sentry源码阅读</title>
+      <link>/post/2020-07-22-read-sentry/</link>
+      <pubDate>Thu, 26 Mar 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2020-07-22-read-sentry/</guid>
+      <description>在平时做前端开发时，特别是互联网业务，我们需要及时知道发布后的项目，在运行时有哪些问题，在什么平台或者什么条件下会抛出异常，从而更精确的定位问题，及时修复线上bug。
+Sentry 做为一款开源的监控平台，对各大框架或者语言都有支持，今天我们一起来讨论下它的源码结构。本文分析的是打包完没有压缩的版本，完整地址在这里。
+捕获异常的几种方式 //	运行错误 //	https://developer.mozilla.org/zh-CN/docs/Web/API/GlobalEventHandlers/onerror try catch  window.onerror = xxx window.addEventListener(&amp;#39;error&amp;#39;, xxx) //	其中try catch只能捕获其包裹的代码段里的异常，我们不能对每一个代码段都用try catch包起来，这样可读性太差了 //	window.onerror能捕获所有运行时异常，但是对于资源加载异常无法捕获 //	window.addEventListener(&amp;#39;error&amp;#39;, xxx)较为完善，既能捕获运行时异常，也能捕获资源加载的异常   //	Promise异常 //	https://developer.mozilla.org/zh-CN/docs/Web/Events/unhandledrejection window.onunhandledrejection = xxx window.addEventListener(&amp;#39;unhandledrejection&amp;#39;, xxx) //	对于Promise来说，用捕获运行时错误的方式无法捕获到其抛出的异常，所以就需要用&amp;#39;unhandledrejection&amp;#39;来捕获  //	接口异常(XMLHttpRequest，fetch) //	代理内部方法，此处省略 错误上报的方案   ajax通信，向后台发送错误信息
+  new Image().src = &#39;xxxx&#39;上报，这也是主流方式
+  前面分析的都是异常原生里面捕获和上报的一些方式，现在我们看看Sentry是怎么处理的：
+Sentry.init 初始化 //	dsn是我们用Sentry部署的监控平台上新建项目时生成的， Sentry.init({  dsn: &amp;#39;https://xxxx&amp;#39; }); init 源码：
+function init(options) { 	//	如果options为undefined， 则把options赋值为空对象  if (options === void 0) { options = {}; }   //	如果没有指定集成哪些捕获钩子，则默认全部集成  if (options.</description>
+    </item>
+    
+    <item>
+      <title>React事件绑定终极优化方案</title>
+      <link>/post/2019-09-28-react-binding-events-with-arguments/</link>
+      <pubDate>Sat, 28 Sep 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2019-09-28-react-binding-events-with-arguments/</guid>
+      <description>React作为目前炙手可热的前端框架，里面有很多吸引人的地方，但是也有一些开发体验不太好的地方，比如我们平时做事件绑定的时候要显示的绑定this，否则就可能导致各种bug，关于事件this绑定也有很多种形式，各种方法都有优劣，下面我们将对照几种绑定方式来进行对比，最终实现一个适合自己的方案
+在构造函数中进行绑定 class App extends Component {  constructor (props) {  super(props)  this.state = {  t: &amp;#39;t&amp;#39;  }  // this.bind1 = this.bind1.bind(this) 无参写法  this.bind1 = this.bind1.bind(this, this.state.t)  }   // 无参写法  // bind1 () {  // console.log(&amp;#39;bind1&amp;#39;, this)  // }   bind1 (t, event) {  console.log(&amp;#39;bind1&amp;#39;, this, t, event)  }   render () {  return (  &amp;lt;div&amp;gt;  &amp;lt;button onClick={this.</description>
+    </item>
+    
+    <item>
+      <title>redux-logic源码阅读</title>
+      <link>/post/2018-06-06-read-redux-logic/</link>
+      <pubDate>Wed, 06 Jun 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2018-06-06-read-redux-logic/</guid>
+      <description>在用React和Redux做开发时, 都会用到异步的一些东西, 之前更多的用的是redux-thunk或者redux-saga之类的, 但是都有用的不顺的地方, 有一次突然发现redux-logic是一个很不错的解决方案, 用起来也感觉很顺手, 与市面上其他redux中间件不同的分析都在这里, 感兴趣的可以自己查看。
+首先我们来看下redux-logic的基本用法:
+ //	logic/index.js import { createLogic } from &amp;#39;redux-logic&amp;#39;;  const someLogic = createLogic({ 	//	当前logic监听的actionType 	type: &amp;#39;SOME_ACTION_TYPE&amp;#39;,  	//	取消当前logic执行的actionType 	cancelType: &amp;#39;CANCEL_TYPE&amp;#39;,  	//	是否获取最后一个返回 	latest: true,  	//	当前actionType的业务逻辑 	async process({ getState, action, cancelled }, dispatch, done) { 	const res = await asyncFn(); 	dispatch(newAction({ 	...res 	})); 	done(); 	} });  export someLogic;  //	store/index.</description>
+    </item>
+    
+    <item>
+      <title>Vue中computed计算属性和watch观察者原理</title>
+      <link>/post/2017-11-09-vue-computed-watch/</link>
+      <pubDate>Thu, 09 Nov 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2017-11-09-vue-computed-watch/</guid>
+      <description>在用Vue做开发中, 我们多多少少都会用到里面两个比较重要的东西: computed和watch, 接下来我们一起分析并简单实现下这两个属性。
+computed computed名为计算属性, 目的就是让我们在模板里面只关注简单的绑定, 不做复杂操作, 拿官网的代码做例子,下面就是一个相对复杂的操作:
+&amp;lt;div id=&amp;#34;example&amp;#34;&amp;gt;  {{ message.split(&amp;#39;&amp;#39;).reverse().join(&amp;#39;&amp;#39;) }} &amp;lt;/div&amp;gt; 先来看下用法:
+new Vue({  data() {  return {  firstName: &amp;#34;rw&amp;#34;,  lastName: &amp;#34;son&amp;#34;,  age: 25  };  },  computed: {  // 指定计算属性的getter  info() {  return `info content: my name is ${this.firstName}${this.lastName}, I&amp;#39;m ${this.age}years old`;  },  // 同时提供getter和setter, setter中可以操作其他数据  fullName: {  get() {  return `my fullName is: ${this.</description>
+    </item>
+    
+    <item>
+      <title>用NodeJs和Python开发一个Sublime插件</title>
+      <link>/post/2017-10-24-write-a-sublime-plugin-by-python-nodejs/</link>
+      <pubDate>Tue, 24 Oct 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2017-10-24-write-a-sublime-plugin-by-python-nodejs/</guid>
+      <description>Sublime Text著有最性感的编辑器之称,它轻量,易于拓展,通过插件的方式可使它变得很强大,而我更是把它作为自己的主要编辑器使用。
+有一次逛package control的时候,发现一个用NodeJs来写插件的脚手架: SublimeJS_Samples,才发现用NodeJs结合Python也可以来开发插件,这对于对Python不是特别了解的人可能很吃力,然后就研究了几个常用插件的源码,拿sublime-vue-formatter这个插件详细看了下,总结出原理大概是这样的:
+ 在Python中拿到当前正在编辑的文件或者选中的内容 用Python子进程subprocess去执行一段cmd命令并接受输出,Node路径为我们电脑上装的Node绝对路径(用户事先配置好), 再去执行一个NodeJs脚本, 以Mac为例, 最后要执行的命令大概是这样的/usr/local/bin/node script/run.js --arg1=argVal1 --arg2=argVal2(其实和我们平时在Terminal里运行的一样) Python接收到NodeJs的执行返回的时候, 替换文件中的相关内容  抱着试试看的心理,我也决定自己用这个模式写个图片压缩相关的插件,先简单介绍下我想写的插件的功能:
+ 用户在项目根目录下新建配置文件, 指定压缩目录和释放目录, 调用tinypng的开发者API进行压缩 当压缩完的图片小于多少字节时把css中的引用转换成Base64编码,也是通过配置项 用户可以通过一些快捷键或者命令(子命令)在项目根目录新建配置文件、修改全局NodeJs路径配置等等  现在知道了我们想做什么, 下一步就是根据这个需求开始写代码, 因为是图片压缩插件, 所以我把它命名成sublime-image-compressor
+命令、子命令 在插件配置中, 命令都是通过配置文件写入的, 下面贴下我们这个插件支持命令的一个配置并做介绍
+//	ImageCompressor.sublime-commands  [{  &amp;#34;caption&amp;#34;: &amp;#34;ImageCompress&amp;#34;,  &amp;#34;command&amp;#34;: &amp;#34;image_compress&amp;#34; }, {  &amp;#34;caption&amp;#34;: &amp;#34;ImageCompress: Init Project Config File&amp;#34;,  &amp;#34;command&amp;#34;: &amp;#34;imagecompress_config_project&amp;#34; }, {  &amp;#34;caption&amp;#34;: &amp;#34;ImageCompress: Set Global Config&amp;#34;,  &amp;#34;command&amp;#34;: &amp;#34;imagecompress_set_global_plugin_options&amp;#34; }] .sublime-commands是用来指定插件支持的命令的, 里面指定一个对象型数组, 数组有caption和command两项, 需要注意的是, command的值和Python的类是对应的, 且Python中用驼峰命名法来定义类名, 以第一项为例, 比如command的值为image_compress, 我们的Python中就需要像类似下面的样子定义一个类:</description>
+    </item>
+    
+    <item>
+      <title>webpack源码阅读</title>
+      <link>/post/2017-09-25-read-webpack-source/</link>
+      <pubDate>Mon, 25 Sep 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2017-09-25-read-webpack-source/</guid>
+      <description>在前端工程化越来越普及的今天，我们几乎每个项目都需要用到构建工具，从一开始的grunt，到gulp，再到现在的webpack。 我们在使用webpack时，可以通过配置一些命令行参数来让webpack完成一些编译打包的任务，那么当我们执行webpack这个命令的时候，webpack究竟做了哪些事情? 我们一起来读读webpack的相关源码。
+注：本文阅读的版本为webpack1.15.0，从入口开始分析再拿到我们的命令之后执行的的流程，所以有些个人认为不重要的可能会省略。
+通过package.json中的bin的指向可以知道首先会走到./bin/webpack.js这个文件：
+#!/usr/bin/env node  //	引入nodejs path模块 var path = require(&amp;#34;path&amp;#34;);  // require.resolve获取/bin/webpack.js的绝对路径(从项目根目录下的node_modules里面找) try { 	var localWebpack = require.resolve(path.join(process.cwd(), &amp;#34;node_modules&amp;#34;, &amp;#34;webpack&amp;#34;, &amp;#34;bin&amp;#34;, &amp;#34;webpack.js&amp;#34;)); 	if(__filename !== localWebpack) { 	return require(localWebpack); 	} } catch(e) {}  var optimist = require(&amp;#34;optimist&amp;#34;) 	.usage(&amp;#34;webpack &amp;#34; + require(&amp;#34;../package.json&amp;#34;).version + &amp;#34;\n&amp;#34; + 	&amp;#34;Usage: https://webpack.github.io/docs/cli.html&amp;#34;);  require(&amp;#34;./config-optimist&amp;#34;)(optimist);  //	对在命令行传入的参数进行解析 //	--colors、--json、 ... optimist 	.boolean(&amp;#34;json&amp;#34;).alias(&amp;#34;json&amp;#34;, &amp;#34;j&amp;#34;).describe(&amp;#34;json&amp;#34;) 	.</description>
+    </item>
+    
+    <item>
+      <title>从零开始写一个React - setState和生命周期</title>
+      <link>/post/2017-09-14-write-your-own-react-2/</link>
+      <pubDate>Thu, 14 Sep 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2017-09-14-write-your-own-react-2/</guid>
+      <description>在前面一篇中我们用instantiateReactComponent方法来根据node的不同来返回不同的组件实例，之前的分类可能有些问题，就是当该组件中JSX部分有返回null的情况，instantiateReactComponent就不能返回正确的组件，所以在这里加了一种新的组件类型：ReactEmptyComponent，作用就是返回一段空的注释，标记这是一个空组件：
+export function instantiateReactComponent(node) {  if (lodash.isNull(node) || lodash.isUndefined(node)) {  return new ReactEmptyComponent(null);  }   // ... }  // 空组件 export class ReactEmptyComponent {  constructor(node) {  this.type = &amp;#34;ReactEmptyComponent&amp;#34;;  this._currentElement = null;  this._rootNodeID = null;  }   /** * 空组件挂载直接返回一段空注释回去 */  mountComponent(rootID) {  this._rootNodeID = rootID;  return `&amp;lt;!-- empty component data-reactid=&amp;#34;${this._rootNodeID}&amp;#34; --&amp;gt;`;  } } 我们之前简单实现了一个初始化渲染的过程，现在我们一起实现一个setState方法以及组件后面的更新逻辑。setState是在组件中被调用的，所以我们需要在之前的Component类中加入一个setState方法：</description>
+    </item>
+    
+    <item>
+      <title>从零开始写一个React - 初始化渲染</title>
+      <link>/post/2017-09-04-write-your-own-react-1/</link>
+      <pubDate>Mon, 04 Sep 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2017-09-04-write-your-own-react-1/</guid>
+      <description>我们知道React组件返回的是JSX，而JSX将被babel转换，在React中是将JSX中转换成React.createElement(type, config, children)的形式。
+class App extends Component {  render() {  return &amp;lt;div className=&amp;#34;app-container&amp;#34;&amp;gt;App Component&amp;lt;/div&amp;gt;  } }  //	babel转换后输出的代码 var App = React.createClass({  render() {  return React.createElement(&amp;#34;div&amp;#34;, {  className: &amp;#34;app-container&amp;#34;  }, &amp;#34;App Component&amp;#34;)  } }); 我们可以在babel中把JSX的pragma转换改成自己的函数名:
+{  &amp;#34;presets&amp;#34;: [  &amp;#34;es2015&amp;#34;  ],  &amp;#34;plugins&amp;#34;: [  [&amp;#34;transform-react-jsx&amp;#34;, {  &amp;#34;pragma&amp;#34;: &amp;#34;createElement&amp;#34;	//	默认的是React.createElement, 这里我们还是用默认的  }]  ] } 下面一起看看createElement的实现</description>
+    </item>
+    
+    <item>
+      <title>实现你自己的Promise</title>
+      <link>/post/2017-08-04-write-your-promise/</link>
+      <pubDate>Fri, 04 Aug 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2017-08-04-write-your-promise/</guid>
+      <description>在现代化前端开发中，经常会用到Promise模式，Promise最大的好处就是可以使异步代码看起来如同步般清新易读，从而从回调地狱中解脱出来，ES6已经原生支持Promise对象，但在未支持的浏览器中还需要通过 polyfill 模拟实现。下面一起实现一个Promise。
+一般我们用Promise会写成类似下面的样子：
+const ins = new Promise((resolve, reject) =&amp;gt; {  //	... });  ins.then((res) =&amp;gt; {  // ... }, (ex) =&amp;gt; {}); 在Promise中一共存在三种状态，PENDING, FULFILLED,REJECTED，在实例化一个Promise后，它的状态会变成PENDING，执行resolve或者reject方法会把状态改成FULFILLED或者REJECTED，此过程不可逆，也就是说每个Promise只能调用一次resolve或者reject。
+先来搭个骨架:
+const PENDING = &amp;#34;PENDING&amp;#34;,  FULFILLED = &amp;#34;FULFILLED&amp;#34;,  REJECTED = &amp;#34;REJECTED&amp;#34;;  function Promise(resolver) {  if (!isFunction(resolver)) {  throw new TypeError(&amp;#34;TypeError: resolver must be a function&amp;#34;);  }   //	实例的值  this.value = null;   //	实例的状态  this.</description>
+    </item>
+    
+    <item>
+      <title>编写你自己的async.waterfall</title>
+      <link>/post/2017-05-14-write-your-async.waterfall/</link>
+      <pubDate>Sun, 14 May 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2017-05-14-write-your-async.waterfall/</guid>
+      <description>在早期的异步开发中，如果有一些异步任务需要处理，难免会遇到回调地狱，为了解决这种问题，也出现过很多第三方库来避免，其中async.js就是比较有名的一个，里面有个waterfall方法，本文我们一起来模拟实现一个类似的
+先来看下调用
+waterfall([ 	function(cb) { 	console.log(new Date); 	setTimeout(function() { 	cb(null, 123); 	}, 2000); 	}, 	function(arg, cb) { 	console.log(new Date); 	setTimeout(function() { 	console.log(arg); 	cb(null, 123, 456); 	}, 2000); 	}, 	function(arg1, arg2, cb) { 	console.log(new Date); 	console.log(arg1, arg2); 	} ], function(ex) { 	if (ex) { 	throw ex; 	} }); 下面我们一起来看下实现下waterfall这个方法 :
+/** * @param task 任务队列 * @param callback 最后的回调 **/ module.</description>
+    </item>
+    
+    <item>
+      <title>实现一个new函数</title>
+      <link>/post/2017-04-20-write-a-new-operator/</link>
+      <pubDate>Thu, 20 Apr 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2017-04-20-write-a-new-operator/</guid>
+      <description>在日常javaScript开发中，我们多多少少都会用到new，最常见的比如new Date等等，在一些js面向对象中，用到new的地方更多了，比如我们通过function来模拟声明一个类，需要实例化的时候就需要用new xxx():
+function Class() {  //	... }  var inst = new Class(); 在MDN上对在执行了new之后的介绍如下:
+ 一个新对象被创建。它继承自*foo*.prototype 构造函数 *foo* 被执行。执行的时候，相应的传参会被传入，同时上下文会被指定为这个新实例。new *foo* 等同于 new *foo*(), 只能用在不传递任何参数的情况。 如果构造函数返回了一个“对象”，那么这个对象会取代整个new出来的结果。如果构造函数没有返回对象，那么new出来的结果为步骤1创建的对象。(一般情况下构造函数不返回任何值，不过用户如果想覆盖这个返回值，可以自己选择返回一个普通对象来覆盖。当然，返回数组也会覆盖，因为数组也是对象。)  在知道了new之后发生的事情，我们的_new函数就可以按照上面的几个步骤来：
+function _new() {  //	获取到所有参数 	var args = [].slice.call(arguments),  //	创建一个空对象 	obj = Object.create({}),  //	把第一个参数作为构造器 	Constructor = args[0], 	res;  //	继承构造器下的原型 	obj.__proto__ = args[0].prototype;  //	执行构造器，并传入相关参数 	res = Constructor.</description>
+    </item>
+    
+    <item>
+      <title>NodeJs读取windows注册表来对软件进行卸载</title>
+      <link>/post/2017-03-29-node-read-regedit-uninstall-software/</link>
+      <pubDate>Wed, 29 Mar 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2017-03-29-node-read-regedit-uninstall-software/</guid>
+      <description>最近在基于node-webkit(以下简称NW)开发windows桌面app,里面有个类似于软件市场的功能,后台管理员提供一些软件,可以从该app上进行下载、安装、卸载、升级等等。
+安装或升级可以直接通过把下载好的zip包解压出来然后执行里面的exe程序安装就好,但是卸载相对来说比较麻烦,几乎每个第三方exe在安装后的目录里面都有一个uninstall.exe,但是我们不知道这个软件具体安装在哪,所以要卸载也无从下手,这时候就想到了注册表,通过注册表可以获取到某个软件的安装目录,所以可以先把当前注册表的目录取得,再去相应目录下找卸载该软件的那个exe并执行。
+由于NW是基于nodejs的,所以可以通过一些第三方的npm包来操作,在这里主要主要用到的包是winreg,首先我们先分析下注册表:
+可以看到根下面有5个大项(HKEY_CLASSES_ROOT、HKEY_CURRENT_USER、HKEY_LOCAL_MACHINE、HKEY_USERS、HKEY_CURRENT_CONFIG),第三方软件基本上都是在HKEY_LOCAL_MACHINE下面的,所以读取的时候就从HKEY_LOCAL_MACHINE下面开始找,这里以搜狗输入法为例:
+从上图中看到该项的全路径为&amp;quot;HKEY_LOCAL_MACHINE\SOFTWARE\SogouInput&amp;quot;,注册项里的第一项就是安装路径,对应的名称是默认,所以我们读取的时候从就可以读取刚才的那个路径,下面是主要的实现:
+const Registry = require(&amp;quot;winreg&amp;quot;),child_process = require(&amp;quot;child_process&amp;quot;),path = require(&amp;quot;path&amp;quot;),key = new Registry({// 打开HKEY_LOCAL_MACHINE这个大类// 一共有5个属性,分别是&#39;HKLM&#39;, &#39;HKCU&#39;, &#39;HKCR&#39;, &#39;HKU&#39;, &#39;HKCC&#39;// 就是上面那5大项的简称hive: Registry.HKLM,// 反斜杠前面需要加&amp;quot;\&amp;quot;进行转义key: &amp;quot;\\SOFTWARE\\SogouInput&amp;quot;});let pre, end, cur, target;// 获取到注册项中中所有配置项,以键值对的形式返回// 每一小项分别包含(host、hive、key、name、type、value、arch)这几个属性key.values((err, res) =&amp;gt; {if (err) {console.log(err);} else {for(var i in res) {cur = res[i];// 判断当前项的名称是否包含default或者versionif (/default/gi.test(cur.name)) {pre = cur.</description>
+    </item>
+    
+    <item>
+      <title>decorator的学习</title>
+      <link>/post/2017-02-17-es7-decorator-tourial/</link>
+      <pubDate>Fri, 17 Feb 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2017-02-17-es7-decorator-tourial/</guid>
+      <description>随着前端技术的发展,越来越多人把ES6、7用在日常开发中,在ES7中除了广为人知的async/await之外,还有一大特性 — decorator(装饰器)。
+在之前原生javascript设计模式中的一篇文章(javascript装饰者模式)中说道: js装饰者模式可以把一个对象(类/函数)透明地包装在另外一个对象上,完成对被装饰者添加一些新功能的作用。简单的说我们可以在不修改类/函数内部代码的情况下,来达到给类/函数加入一些新功能。
+装饰器可以作用于类或者类的成员属性/方法上,下面我们通过两段代码来分别解释:
+// 作用于类/*** 需求:* 封装4个方法,分别实现加减乘除四个功能* 通过装饰器给类添加这四个方法,并且可指定是否作为类的静态方法添加**/// 加减乘除的实现function add() {return [].slice.call(arguments).reduce((a, b) =&amp;gt; a + b);}function reduce() {return [].slice.call(arguments).reduce((a, b) =&amp;gt; a - b);}function mul() {return [].slice.call(arguments).reduce((a, b) =&amp;gt; a * b);}function div() {return [].slice.call(arguments).reduce((a, b) =&amp;gt; a / b);}@bindCal(add, true)@bindCal(reduce, true)@bindCal(mul, false)@bindCal(div, false)class MyMath {} 上面我们完成了需求中的四个函数的封装以及对MyMath类应用了装饰器,下面我们就来实现这个装饰器:</description>
+    </item>
+    
+    <item>
+      <title>实现一个webpack loader</title>
+      <link>/post/2017-01-18-wrire-a-webpack-loader/</link>
+      <pubDate>Wed, 18 Jan 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2017-01-18-wrire-a-webpack-loader/</guid>
+      <description>在React,ES6开发模式越来越普及的今天,webpack就成了前端构建的一个标配。webpack有两大重要部分组成: loader和plugin。loader是用在应用源码上的转换原件,比如最常用到的babel-loader/jsx-loader/file-loader/css-loader/url-loader等等。
+loader可链式执行,一种文件类型可以用多个loader(比如css文件,可能就需要用到css-loader和style-loader),loader之间用&amp;quot;!&amp;ldquo;分隔,当前loader处理完,把处理结果带到下一个loader,最后一个loader返回一个String或者String Buffer返回给compiler。
+loader调用方式大体有3种形式:
+  引用时调用
+ // a.js require(&amp;quot;style-loader/url!css-loader!./xxx.css&amp;quot;);    webpack直接调用
+ // webpack.config.js // ... module: { loaders: [ // ... { test: /\.css$/, loader: &amp;quot;style-loader!css-loader&amp;quot; } ] }    指定loaders数组
+ // webpack.config.js // ... module: { loaders: [ // ... { test: /\.css$/, loaders: [ &amp;quot;style-loader&amp;quot;, &amp;quot;css-loader&amp;quot; ] } ] }    webpack官网上说&amp;quot;A loader is a node module exporting a function&amp;rdquo;,也就是说一个loader就是一个暴露出去的node模块,既然是一个node module,也就基本可以写成下面的样子:</description>
+    </item>
+    
+    <item>
+      <title>Shadow DOM研究</title>
+      <link>/post/2016-12-12-chrome-shadow-dom-tourial/</link>
+      <pubDate>Mon, 12 Dec 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-12-12-chrome-shadow-dom-tourial/</guid>
+      <description>在Polymer中,提出了Web Component的概念,旨在让开发者可以封装出很多可复用的组件。现在,webkit添加了对该API支持,也就意味着我们不用借助框架,也可以自己封装出可复用的组件(通过自定义元素的形式),而不需要依赖其他框架来实现。
+假设我们这边需要封装一个进度条组件,实现代码大概是这样的:
+// javascriptclass CustomProgressBar extends HTMLElement {constructor(args) {super(args);// createShadowRoot用来创建一个shadowDOM实例const shadowRoot = this.createShadowRoot();// 设置组件内的布局结构和样式shadowRoot.innerHTML = `&amp;lt;style type=&amp;quot;text/css&amp;quot;&amp;gt;:host {display: inline-block;width: 200px;height: 30px;box-sizing: border-box;padding: 1px;}:host * {-webkit-touch-callout: none;-webkit-user-select: none;-khtml-user-select: none;-moz-user-select: none;-ms-user-select: none;user-select: none;}.progress {display: inline-block;width: 200px;height: 30px;position: relative;border: 1px solid #000;}.</description>
+    </item>
+    
+    <item>
+      <title>Gulp插件的研究</title>
+      <link>/post/2016-11-29-gulp-plugin-tourial/</link>
+      <pubDate>Tue, 29 Nov 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-11-29-gulp-plugin-tourial/</guid>
+      <description>在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。
+今天研究了下gulp插件,写点心得体会吧。看了两个gulp插件源码,发现里面都引入了through2这个包,官方的说法就是&amp;quot;Node Stream的简单封装，目的是让链式流操作更加简单;&amp;quot;,就也照葫芦画瓢,引用了这个包,简单实现一个gulp插件,功能就是压缩css,并且把css中的&amp;quot;background: url(xxxx.png)&amp;ldquo;中的&amp;quot;xxxx.png&amp;quot;转换成base64编码的形式,减少http请求数。
+ &amp;#34;use strict&amp;#34;;   const through = require(&amp;#34;through2&amp;#34;),  path = require(&amp;#34;path&amp;#34;),  fs = require(&amp;#34;fs&amp;#34;),   // 引用async/await,方便处理文件读写的异步操作  async = require(&amp;#34;asyncawait&amp;#34;).async,  await = require(&amp;#34;asyncawait&amp;#34;).await,   // 匹配url(../xxx.yyy)这种表达式  imgReg = /url\s*\((\s*[A-Za-z0-9\-\_\.\/\:]+\s*)\);?/gi,   // 将fs.readFile封装成Promise  readFile = (path) =&amp;gt; {  return new Promise((resolve, reject) =&amp;gt; {  fs.readFile(path, (ex, file) =&amp;gt; {  if (ex) {  reject(ex);  }  resolve(file);  });  });  };   let base, contents, match, tmp, url;   // 暴露出去的函数  module.</description>
+    </item>
+    
+    <item>
+      <title>javascript模块化编程-同步模式</title>
+      <link>/post/2016-11-23-js-sync-module-mode/</link>
+      <pubDate>Tue, 29 Nov 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-11-23-js-sync-module-mode/</guid>
+      <description>在日常开发中,为了便于多人协作开发,我们通常都会采用模块化开发的模式,今天看张荣铭的《javascript设计模式》的时候,看到同步模式这一章,结合自己之前的理解,也来实现一个简单的同步模块化模式。
+ const module = (() =&amp;gt; {   // 缓存之前声明的模块  let modules = {};   /** * [description] * @param deps 依赖列表 * @return Array */  let _loadDeps = (deps) =&amp;gt; {  return deps.map((dep) =&amp;gt; {  return modules[dep];  });  };   return {   /** * 声明一个模块 * @param id 模块id * @param deps 依赖数组(模块id) * @param factory 构造函数 */  define: (id, deps, factory) =&amp;gt; {   // 获取依赖,并且取得模块返回的对象  deps = _loadDeps(deps);   deps.</description>
+    </item>
+    
+    <item>
+      <title>一起写一个npm命令行工具</title>
+      <link>/post/2016-11-20-write-a-client/</link>
+      <pubDate>Sun, 20 Nov 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-11-20-write-a-client/</guid>
+      <description>自从nodejs问世之后，随着前端不断的发展，出现过很多的命令行工具，就比如前端构建工具，从最开始的grunt，再到gulp，然后到现在的webpack等等，它们都有自己的命令行，接下来我们一起分析并实现一个简单的命令行工具
+首先需要建一个目录，在这里我们暂且叫cli-starter
+mkdir cli-starter 然后我们需要去用npm初始化这个目录，这里我们用默认的就好
+npm init -y 普通的 node.js 脚本需要使用node 文件名的形式执行，在脚本首行加上#!/usr/bin/env node可以在linux环境中指定脚本的解释程序
+一切从hello world开始，我们现在新建一个bin目录，在下面用建一个hello.js，写入下面内容
+#!/usr/bin/env node console.log(&amp;#34;hello world&amp;#34;); 然后去node ./bin/hello，可以看到控制台会输出hello world
+当然这个只是在特定目录下去执行这个文件，如果想和其他命令行工具做到无处不在，可以在package.json中做如下指定
+{  &amp;#34;name&amp;#34;: &amp;#34;hello&amp;#34;,  &amp;#34;bin&amp;#34;: {  &amp;#34;hello&amp;#34;: &amp;#34;./bin/hello&amp;#34;  } } 然后再通过npm link去添加到系统PATH，不要担心会污染系统，既然有npm link，肯定就有npm unlink，就是把我们添加的删除，这样，我们就可以在任何一个目录下使用这个hello命令了
+上面就是一个最简单的命令行了，接下来我们需要对它进行完善，最常见的就是参数，有很多npm模块可以解析我们传入的参数，常用的有commander、minimist等
+在这里我用的minimist这个模块，用法npm上已经有了这里不再赘述，下面我们一起完成一个翻译小工具，调用谷歌的翻译接口，这里我直接用的translate-api这个npm包,一起看下实现：
+#!/usr/bin/env node  var minimist = require(&amp;#34;minimist&amp;#34;),  translate = require(&amp;#34;translate-api&amp;#34;);  //	获取参数 var args = minimist((process.argv.slice(2)), {  /** * 参数别名 * hello --target=abc &amp;lt;=&amp;gt; hello -t=abc */  alias: {  t: &amp;#34;target&amp;#34;,  i: &amp;#34;input&amp;#34;  } });  //	存储输入的参数 var target = args.</description>
+    </item>
+    
+    <item>
+      <title>async/await学习</title>
+      <link>/post/2016-11-09-asyncawait-tourial/</link>
+      <pubDate>Wed, 09 Nov 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-11-09-asyncawait-tourial/</guid>
+      <description>在处理javascript中异步的时候,回调往往是最让人恶心的,之前介绍过用Promise来处理异步的问题,但是即使用上了Promise,在处理回调上还是会有各种嵌套,今天来介绍下ES7中的async/await,由于在Nodejs中还未得到支持,所以需要借助一些npm包来实践,在这里用的是asyncawait。
+先来个原生文件读取的例子:
+ const fs = require(&amp;#34;fs&amp;#34;);  fs.readFile(&amp;#34;test.txt&amp;#34;, (ex, res) =&amp;gt; {  console.log(res.toString());   // do something...   fs.readFile(&amp;#34;test2.txt&amp;#34;, (ex, res) =&amp;gt; {  console.log(res.toString());   // do something  });  });   // 控制台输出  xxxxx  yyyyy 下面我们再用async/await实现一遍:
+ const async = require(&amp;#34;asyncawait&amp;#34;).async;  const await = require(&amp;#34;asyncawait&amp;#34;).await;  let readFile = function(path) {  return new Promise((resolve, reject) =&amp;gt; {  fs.</description>
+    </item>
+    
+    <item>
+      <title>IE下AngularJs中的ajax缓存</title>
+      <link>/post/2016-11-02-ie-ajax-cache/</link>
+      <pubDate>Wed, 02 Nov 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-11-02-ie-ajax-cache/</guid>
+      <description>在单页应用越来越普及的今天,越来越多的项目都会采用这种方案,这几天用AngularJs做了一个PC端应用,有登录注册的功能,登录注册的功能是通过ajax实现的,在登录注册以后页面不刷新,只修改$rootScope下的某些属性值,然后在页面里面通过ng-if之类的指令来控制相关元素的显示隐藏。
+之前的大概实现如下:
+// js  var app = angular.module(&amp;#34;app&amp;#34;, []);  app.run([&amp;#34;$rootScope&amp;#34;, &amp;#34;$http&amp;#34;, function($rootScope, $http) {  $rootScope.isLogin = false;  $rootScope.$on(&amp;#34;$routeChangeStart&amp;#34;, function (event, next, current) {  $http.get(&amp;#34;xxxx&amp;#34;)  .success(function(res) {  $rootScope.isLogin = !!(res.isLogin);  // ...  })  .error(function() {  // ...  });  });  }]); &amp;lt;div class=&amp;#34;container&amp;#34;&amp;gt;  &amp;lt;a href=&amp;#34;/user/center&amp;#34; ng-if=&amp;#34;isLogin&amp;#34;&amp;gt;用户中心&amp;lt;/a&amp;gt;  &amp;lt;a href=&amp;#34;javascript:;&amp;#34; ng-click=&amp;#34;logout()&amp;#34; ng-if=&amp;#34;isLogin&amp;#34;&amp;gt;登出&amp;lt;/a&amp;gt;  &amp;lt;a href=&amp;#34;/login&amp;#34; ng-if=&amp;#34;!isLogin&amp;#34;&amp;gt;登录&amp;lt;/a&amp;gt; &amp;lt;/div&amp;gt; 后来发现在Chrome/Firefox下都是好的,到了IE下登录以后不刷新就显示不对。原来以为是ng-if在IE下重新渲染过慢的问题,改成ng-show以后还是不行,然后看http状态码,发现是304,想到可能和缓存有关系,后来改了配置中关键ajax请求那边的东西,发现可以了,核心代码如下:</description>
+    </item>
+    
+    <item>
+      <title>javascript中的序列化</title>
+      <link>/post/2016-09-17-javascript-serialize/</link>
+      <pubDate>Sat, 17 Sep 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-09-17-javascript-serialize/</guid>
+      <description>在用jQuery发送ajax(POST)请求的时候,最常见的提交方式就是&amp;quot;application/x-www-form-urlencoded&amp;quot;,通常都会传入一个data属性作为传输给后端的数据,在ajax发送之前,那么我们直接如果直接传入把这个对象传递给后端,后端就不能对该对象进行解析,因为对象会被转成字符串&amp;quot;[object Object]&amp;quot;,所以就需要我们对该对象进行url编码,并且转换成字符串,再传给后端。
+假设我们先传递一个简单的对象(所有的key对应的value都不是引用类型[Array、Object]),就像下面这样:
+{ string: &amp;quot;string&amp;quot;, number: 1 }  用jQuery中的$.ajax方法,POST提交,打开请求面板,在form data那边,点击view source,可以看到下面这一串字符串,就像下面的样子:
+string=string&amp;amp;number=1  在jQuery中,$.param这个方法可以实现进行url编码的作用。
+现在可以自己实现一个:
+// 获取对象上的类名 function _typeOf(obj) { return {}.toString.call(obj).slice(8, -1); } // encodeURIComponent简写 function _encode(data) { data = data || &amp;quot;&amp;quot;; return encodeURIComponent(data); } // 序列化主函数 function _serializenData(data) { var res = data, typeIn; // 判断传入的是否是一个Object类型的数据 if (_typeOf(data) === &amp;quot;Object&amp;quot;) { res = []; for (var i in data) { typeIn = _typeOf(data[i]); switch (typeIn) { // 遇到Object、Array时需要进行遍历或者枚举,对其内部元素、属性做处理后再放到结果集数组中 case &amp;quot;Object&amp;quot;: res.</description>
+    </item>
+    
+    <item>
+      <title>javascript中Date细节</title>
+      <link>/post/2016-08-30-something-about-javascript-date/</link>
+      <pubDate>Tue, 30 Aug 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-08-30-something-about-javascript-date/</guid>
+      <description>Safri浏览器new Date(&amp;ldquo;yyyy-mm-dd&amp;rdquo;)返回invalid Date 许多时候我们需要初始化一个具体某天的日期对象的时候,会用到new Date(),这个方法,我们可以传入一个字符串作为参数来指定具体的日期,而一般我们会传入一个&amp;quot;yyyy-mm-dd hh:ii:ss&amp;quot;这种格式作为一个初始日期,但到了Safri浏览器下,就会返回一个invalid Date,调用该Date实例下的所有方法都会返回NaN值,原因是Safri不能正常解析中间的&amp;quot;-&amp;ldquo;分隔符,解决办法也很简单,有两种:
+直接
+var myDate1 = Date.parseExact(&amp;quot;29-11-2010&amp;quot;, &amp;quot;dd-MM-yyyy&amp;quot;); var myDate2 = Date.parseExact(&amp;quot;11-29-2010&amp;quot;, &amp;quot;MM-dd-yyyy&amp;quot;); var myDate3 = Date.parseExact(&amp;quot;2010-11-29&amp;quot;, &amp;quot;yyyy-MM-dd&amp;quot;); var myDate4 = Date.parseExact(&amp;quot;2010-29-11&amp;quot;, &amp;quot;yyyy-dd-MM&amp;quot;);  或者
+new Date(&amp;quot;2011-04-12&amp;quot;.replace(/-/g, &amp;quot;/&amp;quot;));  setMonth溢出问题 实例化一个Date对象,通过如下的方式,然后调用该实例的setMonth方法,把当前月份加1,就像下面这样
+var date = new Date(&amp;quot;2016/01/30&amp;quot;); date.setMonth(date.getMonth() + 1); console.log(date.getMonth()); // Tue Mar 01 2016 00:00:00 GMT+0800 (CST)  或者
+var date = new Date(&amp;quot;2016/10/31&amp;quot;); date.setMonth(date.getMonth() + 1); console.log(date); // Thu Dec 01 2016 00:00:00 GMT+0800 (CST)  上面两段我们都希望是返回的是2月和11月,但是真正返回了3月和12月</description>
+    </item>
+    
+    <item>
+      <title>javascript函数节流和函数去抖</title>
+      <link>/post/2016-07-20-javascript-function-throttle-debounce/</link>
+      <pubDate>Wed, 20 Jul 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-07-20-javascript-function-throttle-debounce/</guid>
+      <description>在underscore这个库中提供了两个关于控制函数执行频率的方法, throttle和debounce。
+throttle和debounce是解决请求和响应速度不匹配问题的两个方案。差异在于选择不同的策略。
+比如生活中的最常见的电梯, 分别用这两种策略解释下:
+ throttle: 开门按钮按下 -&amp;gt; 有人进来 -(等10秒, 不管有没有人进来)-&amp;gt; 准时关门运行 debounce: 开门按钮按下 -&amp;gt; 有人进来, 关门按钮按下 -(开始计时10秒)-&amp;gt; 开门按钮按下, 又有人进来, 关门按钮按下 -&amp;gt; 重新计时 -(开始计时10秒) -&amp;gt; 10秒时间到, 关门运行  如果我们需要做一个过滤的功能,类似于下面这个效果
+throttle 我们需要给input绑定一个keyup事件,然后根据它的value操作页面或者过滤数据重新渲染页面,但是在数据比较多的时候, 如果在keyup里面不做一定限制的话, 在性能方面就会有一些影响, 这时候, 就需要&amp;quot;函数节流&amp;quot;这个东西, 限制在多少秒内触发一次某个函数。
+就拿我们上面的效果来说:
+	// HTML &amp;lt;input type=&amp;#34;text&amp;#34; id=&amp;#34;input&amp;#34; /&amp;gt; &amp;lt;ul id=&amp;#34;ul&amp;#34;&amp;gt; &amp;lt;li&amp;gt;111111111&amp;lt;/li&amp;gt; &amp;lt;li&amp;gt;22222222&amp;lt;/li&amp;gt; &amp;lt;li&amp;gt;333333&amp;lt;/li&amp;gt; &amp;lt;li&amp;gt;4444&amp;lt;/li&amp;gt; &amp;lt;li&amp;gt;1234&amp;lt;/li&amp;gt; &amp;lt;li&amp;gt;5678&amp;lt;/li&amp;gt; &amp;lt;li&amp;gt;9999&amp;lt;/li&amp;gt; &amp;lt;li&amp;gt;6789&amp;lt;/li&amp;gt; &amp;lt;li&amp;gt;01234&amp;lt;/li&amp;gt; &amp;lt;/ul&amp;gt; // javascript window.onload = function() { var input = document.getElementById(&amp;#34;input&amp;#34;); var ul = document.</description>
+    </item>
+    
+    <item>
+      <title>fetch中的Timeout</title>
+      <link>/post/2016-07-10-fetch-timeout/</link>
+      <pubDate>Sun, 10 Jul 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-07-10-fetch-timeout/</guid>
+      <description>随着ES6的普及,fetch已经渐渐取代了普通ajax在异步请求中的位置,以前在用jQuery中的ajax时,可以指定一个timeout属性,设置该请求的超时时间,但是原生的fetch并不支持该属性,如果遇到遇到一个请求一直pedding状态,就只能干等着,什么也干不了。由于fetch本身在被初始化后返回一个Promise对象,我们就可以对其再包一层Promise来实现在fetch请求中加入timeout的功能。
+先来看下fetch的基本用法:
+fetch(&amp;quot;some url&amp;quot;, { &amp;quot;method&amp;quot;: &amp;quot;POST&amp;quot;, &amp;quot;body&amp;quot;: JSON.stringify({ &amp;quot;key&amp;quot;: &amp;quot;value&amp;quot;, &amp;quot;arr&amp;quot;: [1,2,3] }), ... }) // parse response to JSON object .then((res) =&amp;gt; res.json()) .then((res) =&amp;gt; { // success dome something }) .catch((ex) =&amp;gt; { // exception occurded });  在Promise中有个静态方法,叫Promise.race(),该方法接受一个数组作为参数,数组中的每个元素都是一个Promise的实例,大致用法如下:
+let promise1 = new Promise((resoleve, reject) =&amp;gt; { // do something }); let promise2 = new Promise((resoleve, reject) =&amp;gt; { // do something }); // ... let race = Promise.</description>
+    </item>
+    
+    <item>
+      <title>实现一个迷你MVVM</title>
+      <link>/post/2016-06-23-mvvm-tourial/</link>
+      <pubDate>Thu, 23 Jun 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-06-23-mvvm-tourial/</guid>
+      <description>在近几年,MVVM模式一直很火热,其全称为&amp;quot;Model-View-ViewModel&amp;quot;,MVVM火的主要原因就是在用这种模式开发的,更多的只需要关注数据层的东西,不需要花额外的时间去维护视图,包括angular/Vue都是这种开发模式,但是两者的原理是截然不同的,现在参考Vue的实现原理,简单实现一个MVVM框架,支持的指令有&amp;quot;vm-modle&amp;quot;、&amp;ldquo;vm-click&amp;rdquo;、&amp;ldquo;vm-bind&amp;rdquo;,代码量大概在300行左右,先来看下用法:
+// HTML ... &amp;lt;div id=&amp;quot;app&amp;quot;&amp;gt; &amp;lt;input type=&amp;quot;text&amp;quot; class=&amp;quot;text-filed&amp;quot; vm-model=&amp;quot;text&amp;quot; /&amp;gt; &amp;lt;p class=&amp;quot;bind-text&amp;quot; vm-bind=&amp;quot;text&amp;quot;&amp;gt;&amp;lt;/p&amp;gt; &amp;lt;div class=&amp;quot;click-area&amp;quot; vm-click=&amp;quot;clicked()&amp;quot;&amp;gt;点我&amp;lt;/div&amp;gt; &amp;lt;div class=&amp;quot;click-area&amp;quot; vm-click=&amp;quot;clickWitharguments(text)&amp;quot;&amp;gt;点我(带参数)&amp;lt;/div&amp;gt; &amp;lt;/div&amp;gt; ... // javascript window.onload = function() { var clickTimes = 0, e; // 调用MVVM MVVM({ el: document.querySelector(&amp;quot;#app&amp;quot;), data: { text: &amp;quot;I&#39;m an attribute named &#39;text&#39; under data&amp;quot; }, methods: { clicked: function () { e = event; clickTimes ++; e.target.innerHTML += &amp;quot;&amp;lt;p&amp;gt;第&amp;quot; + clickTimes + &amp;quot;次点击 - &amp;quot; + Date.</description>
+    </item>
+    
+    <item>
+      <title>ES6中的Promise</title>
+      <link>/post/2016-05-04-es6-promise/</link>
+      <pubDate>Wed, 04 May 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-05-04-es6-promise/</guid>
+      <description>在执行一些异步操作(典型的有JavaScript中的ajax/NodeJs中读取文件等等)的时候,我们不知道该操作什么时候完成,所以就需要在不同的时候写上回调,等到有返回的时候,再执行下一步操作,下面就用jQuery中的一个ajax来做示例:
+$.ajax({ &amp;quot;url&amp;quot;: &amp;quot;xxx&amp;quot;, &amp;quot;type&amp;quot;: &amp;quot;GET&amp;quot;, &amp;quot;dataType&amp;quot;: &amp;quot;&amp;quot;JSON, &amp;quot;success&amp;quot;: function(res){}, &amp;quot;error&amp;quot;: function(ex){ // do some thing } });  最基础的一个ajax示例,当我们有多个ajax嵌套请求的时候,就中了所谓的&amp;quot;回调地狱&amp;quot;,类似于下面的写法:
+$.ajax({ // some configs &amp;quot;success&amp;quot;: function(res){ $.ajax({ // ... &amp;quot;success&amp;quot;: function(res){ $.ajax({ // ... &amp;quot;success&amp;quot;:function(res){ . . . } }); } }); } });  一层套着一层,代码可读性很差,且不容易后期的维护
+这时候就需要一个比前者好的解决方案来解决该问题,ES6中的Promise一定程度上解决了该问题:
+我们可以利用Promise对ajax进行一层封装
+function _ajax(url, method, args) { let promise = new Promise((resolve, reject) =&amp;gt; { let client = new XMLHttpRequest(); let uri = url; if (args &amp;amp;&amp;amp; (method == &amp;quot;POST&amp;quot; || method == &amp;quot;PUT&amp;quot;)) { let argcount = 0; uri += &amp;quot;?</description>
+    </item>
+    
+    <item>
+      <title>javascript中事件代理和取消</title>
+      <link>/post/2016-04-05-javascript-event-delegate/</link>
+      <pubDate>Tue, 05 Apr 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-04-05-javascript-event-delegate/</guid>
+      <description>在日常前端开发中，事件是必不可少的一部分，有时候我们需要根据后端接口的返回来动态输出HTML，这时候直接用jQuery中的click之类的方法已经不能达到目的，需要重新绑定或者用事件代理来实现事件绑定。
+事件代理的原理很简单: 事件冒泡会触发容器 dom 的相关事件并执行监听函数。
+比如我们有这样一段HTML:
+ &amp;lt;div class=&amp;#34;container&amp;#34;&amp;gt;  &amp;lt;div class=&amp;#34;block1&amp;#34;&amp;gt;&amp;lt;/div&amp;gt;  &amp;lt;div class=&amp;#34;block2&amp;#34;&amp;gt;&amp;lt;/div&amp;gt;  &amp;lt;div class=&amp;#34;block3&amp;#34;&amp;gt;&amp;lt;/div&amp;gt;  &amp;lt;div class=&amp;#34;block4&amp;#34;&amp;gt;&amp;lt;/div&amp;gt;  &amp;lt;/div&amp;gt; 我们想给class中带有block的元素绑定一个点击事件：
+window.onload = function() {  var container = document.querySelector(&amp;#34;.selector&amp;#34;);   container.addEventListener(&amp;#34;click&amp;#34;, function(e) {  var ev = e || window.event,  target = ev.target,  classList = target.classList;  if (classList.contains(&amp;#34;block1&amp;#34;) || classList.contains(&amp;#34;block2&amp;#34;) || classList.contains(&amp;#34;block3&amp;#34;) || classList.contains(&amp;#34;block4&amp;#34;)) {  console.log(&amp;#34;target clicked,&amp;#34; + classList[0]);  }  }); }; 如上我们就实现一个事件代理。</description>
+    </item>
+    
+    <item>
+      <title>实现模块化编程</title>
+      <link>/post/2016-03-24-javascript-self-loader/</link>
+      <pubDate>Thu, 24 Mar 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-03-24-javascript-self-loader/</guid>
+      <description>先上个小例子(工资计算器):
+  传统
+ // 绩效奖金 function performanceCoefficient(salary) { return salary * 0.2; } // 住房公积金 function companyReserve(salary) { return salary * 0.2; } // 个人所得税、五险一金 function incomeTax(remain) { return (remain - 3500) * 0.2; } // 基本工资 var salary = 10000; // 最后税前工资 var finalSalary = salary + performanceCoefficient(salary); finalSalary = finalSalary - incomeTax(finalSalary - companyReserve(finalSalary)); console.log(finalSalary);    类模块化
+ // 全局变量,存储已经声明的模块 var modules = {}; // 先来实现几个工具函数 var define = (function() { // 根据depArrs中的模块名称找出modules中的相关对象 var _require = function(depArrs) { return depArrs.</description>
+    </item>
+    
+    <item>
+      <title>javascript实现继承之2</title>
+      <link>/post/2016-03-10-js-object-extend2/</link>
+      <pubDate>Thu, 10 Mar 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-03-10-js-object-extend2/</guid>
+      <description>在前面的一篇文章JavaScript实现继承介绍过js中通过原型来继承的两种方法
+ 伪造对象继承:通过把父类的实例赋值给子类的prototype，然后在子类的构造函数中调用父类的构造方法； 类式继承(原型式继承):通过一个空函数中转，把父类的示例赋值给该空函数的原型，然后再把该空函数的prototype赋值给子类的prototype，再在子类的构造方法中调用父类的构造器，实现继承。  综合上面两个方法，其实都通过两次调用父类的构造器来实现，第二种方法相对于第一种只是在子类原型上少了些父类的实例属性。
+在《javaScript高级程序》中，介绍了另外一种继承的实现方式，名为&amp;quot;寄生式组合继承&amp;quot;。所谓的寄生式组合继承，不必为了子类的原型而调用超类型的构造函数，要实现继承只需要父类原型的一个副本。下面的具体的代码:
+/** * 寄生式组合继承 * @param subType 子类 * @param superType 父类 **/ function inheritPrototype(subType,subperType){ var prototype = Object(superType.prototype); prototype.constructor = subType; subType.prototype = prototype; } /** * 父类 * @param name name属性 **/ function superClass(name) { this.name = name; } superClass.prototype.sayName = function() { alert(this.name); }; /** * 子类 * @param name name属性 * @param age age属性 **/ function subClass(name,age) { superClass.call(this,name); this.age = age; } // 实现继承 inheritPrototype(subClass,superClass);  这样就只调用了一次父类的构造方法，在性能上更优秀。</description>
+    </item>
+    
+    <item>
+      <title>javascript的高阶函数</title>
+      <link>/post/2016-01-16-javascript-higher-order-functions/</link>
+      <pubDate>Sat, 16 Jan 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-01-16-javascript-higher-order-functions/</guid>
+      <description>高阶函数:听到高阶感觉很高大上的一个词,但是实现起来并不是那么难。
+记得有一次在看js面试题相关资料时,看到类似于下面一个题目,实现一个函数,能有如下写法,实现两个值相加并返回,写法大概是这样的:
+add(10)(5);  以前没见过这种写法,相信大家对下面的写法肯定不陌生:
+function add(){ return function(a,b){ return a + b; }; } // 然后调用的时候写成下面的样子 add()(10,5); // 最后返回15  仔细观察这两种写法,发现它们在写法上差别很小,第一种写法是一个括号里放一个参数,而第二种写法是把两个参数放在同一个括号里,既然写法类似,实现起来肯定区别也不是特别大,且看下面的实现:
+function add(a){ return function(b){ return a + b; } }  这样我们就实现了一个高阶函数。在上面两个例子中,调用add并没有立即返回一个计算后的值,而是返回了一个函数,调用该返回的函数后,才会返回具体计算后的值,这样就有了第二对括号。
+再来看个例子:
+function func(p1){ var self = this; function fd(p2) { this.add1 = function (p3) { return p1 + &amp;quot;,&amp;quot; + p2 + &amp;quot; &amp;quot; + p3; }; } self.add = function (p2){ fd.call(this, p2); return this.add1; }; return self.</description>
+    </item>
+    
+    <item>
+      <title>React Native自定义原生模块</title>
+      <link>/post/2016-01-12-expend-objectc/</link>
+      <pubDate>Tue, 12 Jan 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-01-12-expend-objectc/</guid>
+      <description>现如今，越来越多的移动开发者选择用React Native来开发他们的app。虽然React Native提供了强大的API供我们调用，但是对于一些功能(比如第三方支付、文件上传之类的)，原生模块中并没有提供给我们相关的API，这时候就需要我们来自己封装一些东西来给js端调用。这边以ios端的为例来介绍。
+ 模块配置表 在RN加载的时候，所有注册并且符合规范的模块都会被导出并且生成相应的模块数据类RCTModuleData，而模块数据中缓存了模块的对象实例，以及模块索引id。
+最后大概生成一个如下的模块配置表:
+{ &amp;quot;remoteModuleConfig&amp;quot;: { &amp;quot;className&amp;quot;: { &amp;quot;methods&amp;quot;: { &amp;quot;method&amp;quot;: { &amp;quot;type&amp;quot;: &amp;quot;remote&amp;quot;, &amp;quot;methodID&amp;quot;: 0 }, ... }, &amp;quot;moduleID&amp;quot;: 4 }, ... }, }  通信流程 先看一个js调用OC的下的方法走了哪些步骤:
+1.JS端调用某个OC模块暴露出来的方法。
+2.把上一步的调用分解为ModuleName,MethodName,arguments，再扔给MessageQueue处理。
+3.在这一步把JS的callback函数缓存在MessageQueue的一个成员变量里，用CallbackID代表callback。在通过保存在MessageQueue的模块配置表把上一步传进来的ModuleName和MethodName转为ModuleID和MethodID。
+4.把上述步骤得到的ModuleID,MethodId,CallbackID和其他参数argus传给OC。至于具体是怎么传的，后面再说。
+5.OC接收到消息，通过模块配置表拿到对应的模块和方法。
+6.RCTModuleMethod对JS传过来的每一个参数进行处理。
+7.OC模块方法调用完，执行block回调。
+8.调用到第6步说明的RCTModuleMethod生成的block。
+9.block里带着CallbackID和block传过来的参数去调JS里MessageQueue的方法invokeCallbackAndReturnFlushedQueue。
+10.MessageQueue通过CallbackID找到相应的JS callback方法。
+11.调用callback方法，并把OC带过来的参数一起传过去，完成回调。
+整个流程就是这样，简单概括下，差不多就是：JS函数调用转ModuleID/MethodID -&amp;gt; callback转CallbackID -&amp;gt; OC根据ID拿到方法 -&amp;gt; 处理参数 -&amp;gt; 调用OC方法 -&amp;gt; 回调CallbackID -&amp;gt; JS通过CallbackID拿到callback执行
+下面就简单分享一个从OC暴露方法到JS端调用的例子：
+// OC(RCTDeviceExtension.m) #import &amp;quot;RCTBridgeModule.h&amp;quot; #import &amp;quot;RCTUtils.h&amp;quot; // RCTScreenSize用到 @interface RCTDeviceExtension : NSObject &amp;lt;RCTBridgeModule&amp;gt; @end @implementation RCTDeviceExtension RCT_EXPORT_MODULE(); // 暴露一个模块 /** 获取设备的相关信息 **/ static NSDictionary *DynamicDimesions(){ CGFloat width = MIN(RCTScreenSize().</description>
+    </item>
+    
+    <item>
+      <title>React中的受控组件</title>
+      <link>/post/2016-01-05-react-controlled-compoent/</link>
+      <pubDate>Tue, 05 Jan 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-01-05-react-controlled-compoent/</guid>
+      <description>表单是web应用中不可缺少的一部分,不同于其他元素,表单需要响应用户输入,根据输入值的不同响应不同的状态,React基于props和state的渲染机制,可以很好的处理表单。在React中表单分为受控组件和非受控组件两种。
+受控组件 - 受React控制的值 </description>
+    </item>
+    
+    <item>
+      <title>实现一个简单的模板引擎</title>
+      <link>/post/2015-12-14-front-end-template-engine/</link>
+      <pubDate>Mon, 14 Dec 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-12-14-front-end-template-engine/</guid>
+      <description>在最开始想要把数据显示到页面上,我们可以需要用到一些后端的模板引擎(比如java中的Freemarker等),随着技术的发展,前端会把数据从后端取回来,用拼接HTML或者模板引擎的方式来呈现页面,如果布局结构简单还好,但是如果碰到复杂结构的时候,前者可能显得比较吃力,且容易出错。
+比较著名的一些前端模板引擎有Handlebars、Underscore.js(一个javascript工具库的集合,带模板引擎)等等。各自也有各自的语法。
+前端模板引擎带来了很多嚎头,(预)编译、缓存、渲染等等,下面我们实现一个简单的模板引擎。
+首先想一下,在用模板引擎和拼接字符串时最大的区别是什么?就是一个是通过手动的绑定属性,一个是像写HTML一样把属性绑定好:
+// 比如有这么一段数据 var data = [ { name: &amp;quot;foo&amp;quot;, age: 23 }, { name: &amp;quot;bar&amp;quot;, age: 25 } ]; // 字符串拼接的写法 var html = &amp;quot;&amp;quot;; for(var i = 0, len = data.length; i &amp;lt; len; i ++) { html += &amp;quot;&amp;lt;div class=&#39;item&#39;&amp;gt;&amp;lt;span class=&#39;name&#39;&amp;gt;&amp;quot; + data[i].name + &amp;quot;&amp;lt;/span&amp;gt;&amp;lt;span class=&#39;age&#39;&amp;gt;&amp;quot; + data[i].age + &amp;quot;&amp;lt;/span&amp;gt;&amp;lt;/div&amp;gt;&amp;quot;; } document.getElementById(&amp;quot;target&amp;quot;).innerHTML = html; // 模板引擎 &amp;lt;script type=&amp;quot;text/template&amp;quot;&amp;gt; &amp;lt;% for(var i in obj) %&amp;gt; &amp;lt;div class=&amp;quot;item&amp;quot;&amp;gt; &amp;lt;span class=&amp;quot;name&amp;quot;&amp;gt; &amp;lt;%= obj[i].</description>
+    </item>
+    
+    <item>
+      <title>React中的DOM操作</title>
+      <link>/post/2015-12-05-react-dom/</link>
+      <pubDate>Sat, 05 Dec 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-12-05-react-dom/</guid>
+      <description>大多数情况下，React的虚拟DOM已经可以创建我们想要的用户体验，而根本不需要直接操作底层真实的DOM，通过组件的复合，把负责的交互聚合为呈现给用户的连贯整体。
+但是在某些情况下，比如与一个没有使用React的第三类库的整合，或者执行一个React没有原生支持的操作等等，我们就不得不去操作底层DOM来达到我们的目的。
+DOM操作  访问受控制的DOM节点  React提供了一个受其自身控制的方法，这些方法只有在生命周期的相关方法里才有效。我们可以给组件的相关元素添加一个ref属性来实现。
+var CanvasComponent = React.createClass({ render:function(){ return ( &amp;lt;canvas ref=&amp;quot;canvasEle&amp;quot; /&amp;gt; ); } });  这样就可以通过this.refs.canvasEle来访问到这个canvas节点了，需要注意的是这里的ref属性必须是唯一的，如果定义了相同的ref也是&amp;quot;canvasEle&amp;quot;，那么操作将无效。
+一旦访问到了该元素，那么就可以通过getDOMNode()方法来访问底层的DOM节点，需要注意的是，不要在render方法中尝试用该方法，因为在render方法执行完之前，组件还未挂载，该DOM节点不是最有效的，所以可能会报异常。
+所以要在组件被挂载后使用，比如componentDidMount或者一些用户操作后的事件处理函数，就像下面这样：
+var CanvasComponent = React.createClass({ render:function(){ return ( &amp;lt;canvas ref=&amp;quot;canvasEle&amp;quot; /&amp;gt; ); }, componentDidMount:function(){ var oCanvas = this.refs.canvasEle.getNode(); // 现在oCanvas就是我们的canvas节点，可以调用canvas下的相关方法来进行操作 } });  React的refs和getDOMNode很强大，但是使用它们可能会导致React在性能上的一些问题，所以我们不到在没有其他方式的时候，尽量不要用它们来解决问题。
+ #####整合非React类库
+ 很多成熟的javaScript类库并没有使用React构建，此时就需要我们自己来进行整合。
+比如现在要使用一个autocomplete插件，包含下面的基础代码：
+autocomplete({ target:document.getElementById(&amp;quot;select&amp;quot;), data:[ &amp;quot;option1&amp;quot;,&amp;quot;option2&amp;quot;,&amp;quot;option2&amp;quot; ], events:{ select:function(item){ alert(&amp;quot;你选择了&amp;quot; + item); } } });  这个类库需要一个DOM节点，一个数组，一个事件的相关对象，所以，这里就用到了DOM操作，刚才提到，在React中使用DOM操作要在组件挂载完成后或一些事件处理函数中完成。
+var SelectComponent = React.</description>
+    </item>
+    
+    <item>
+      <title>React组件的复合和mixin</title>
+      <link>/post/2015-12-04-react-component-mixin/</link>
+      <pubDate>Fri, 04 Dec 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-12-04-react-component-mixin/</guid>
+      <description>在传统的HTML中，元素是构成页面的基础单元。但在React中，组件是构建页面的基础单元。我们可以把React中的组件理解成混入了javaScript表达能力的HTML元素。在React中，一个组件就相当于一个javaScript函数，它接收props和state作为参数，并且输入渲染好的DOM，组件的意义在于用来呈现和表达应用中的某一部分数据。
+组件的复合 我们都知道，在React中声明一个组件用React.createClass的方法，但是React并没有给我们提供一个叫React.extendClass的方法让我们来拓展或继承已经声明好的组件。我们可以通过组件复合的方法来构造一个新的组件。
+下面是一个组件复用的例子：
+我们现在要渲染一个选择题组件MultipeChoice，包含多个选项RadioInput。
+ 选项组件  先来组装HTML：
+var RadioInput = React.createClass({ render:function(){ return ( &amp;lt;div className=&amp;quot;redio&amp;quot;&amp;gt; &amp;lt;label&amp;gt; &amp;lt;input type=&amp;quot;radio&amp;quot; value=&amp;quot;1&amp;quot; /&amp;gt; 选项说明 &amp;lt;/label&amp;gt; &amp;lt;/div&amp;gt; ); } });  现在一个选项的HTML就组件完成了，但是现在内容和选项的值都是写死的，所以我们需要给这个组件添加一些属性，下面继续完善这个组件：
+var RadioInput = React.createClass({ // propTypes给组件增加一个说明,标明每个prop属性的类型和是否必填 propTypes:{ id:React.PropTypes.string, name:React.PropTypes.string.isRequired, label:React.PropTypes.string.isRequired, value:React.PropTypes.string.isRequired, checkd:React.PropTypes.bool }, // getDefauleProps可以给一些非必填属性指定默认值 getDefauleProps:function(){ return { id:null, checked:false }; } });  现在组件有了相应的props了，我们的组件需要随着时间而变化的数据，id对于每个实例来说相当重要，以及用户能随时更新的checked值，现在需要定义一些初始状态。
+var RadioInput = React.createClass({ ... getInitialState:function(){ var id = this.props.id || (new Date().getTime()).toString(32); // 如果没传id,就拿当前时间戳生成一个 return { id:id, name:id, checked:!</description>
+    </item>
+    
+    <item>
+      <title>React中的事件</title>
+      <link>/post/2015-12-03-react-events/</link>
+      <pubDate>Thu, 03 Dec 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-12-03-react-events/</guid>
+      <description>对于用户界面来说，展示最多只占整体因素的一半，另一半则是用户输入，即通过javaScript来完成人机交互。
+在React中，通过将事件绑定到组件上到形式来对事件进行处理。在触发事件的同时，相关处理函数对组件对状态进行修改，再调用render方法重绘，达到响应用户输入的目的。
+绑定事件处理器 React的事件本质上和原生的javaScript类似，比如MouseEvent用来处理用户鼠标点击，Change用来处理表单元素的变化等，所有事件在命名上和JavaScript规范一致，并且会在相同的情况下被触发。
+React绑定事件的写法和在HTML上绑定事件的写法很像，比如我们下面将绑定一个click事件:
+... handleClick:function(){ ... }, render:function(){ return ( &amp;lt;button onClick={this.handleClick}&amp;gt;click&amp;lt;/button&amp;gt; ); }, ...  这样，我们就完成了一个click事件的绑定，当用户点击这个按钮，handleClick将被调用，完成一些逻辑。
+就拿刚才上面的代码举例,我们在handleClick中用this,此时发现this指向了window对象,所以如果要在里面读取state/prop就比较麻烦,这时可以通过ES5中的bind方法来修改this的指向,就像下面这样:
+... handleClick: function(){ // ... }, render: function(){ return ( &amp;lt;button onClick={this.handleClick.bind(this, [....argus])}&amp;gt;click&amp;lt;/button&amp;gt; ); }, ...  后面还可以传入参数,还可以在getInitialState(或者ES6语法的constructor里)手动指定一个新属性,来达到修改this指向的目的:
+  ES5
+// &amp;hellip;
+var Comp = React.createClass({
+ getInitialState: function() { this.handleClick = this._handleClick.bind(this); }, _handleClick: function() { // 事件的处理逻辑 }, render: function() { return ( &amp;lt;button onClick={this.handleClick}&amp;gt;click&amp;lt;/button&amp;gt; ); }  });</description>
+    </item>
+    
+    <item>
+      <title>React中的数据流</title>
+      <link>/post/2015-12-02-react-data-flow/</link>
+      <pubDate>Wed, 02 Dec 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-12-02-react-data-flow/</guid>
+      <description>昨天学习完组件的生命周期，今天学习学习React中的数据流。
+在React中，数据流是单向的(由父节点传递到子节点)，因此组件变得简单且易于把握，它们只需要从父节点中获取props来渲染即可，某个组件顶层的props发生改变，React会递归遍历整个组件树，并且重新渲染使用这个属性的组件。
+在React组件内部，还具有自己的状态，但是只能在组件内部进行修改。
+React中的props: props就是properties的缩写，接收任意类型的数据。
+设置组件的props有两种方法:
+  可以在挂载组件的时候设置
+ var surveys = [ { &amp;quot;title&amp;quot;:&amp;quot;some value&amp;quot; } ]; &amp;lt;ListSurveys surveys={surveys} /&amp;gt;    或者调用组件实例的setProps方法
+var surveys = [ { &amp;quot;title&amp;quot;:&amp;quot;some value&amp;quot; } ]; var listSurveys = React.render(&amp;lt;ListSurveys/&amp;gt;,document.body); listSurveys.setProps({&amp;quot;surveys&amp;quot;:surveys});    需要注意的是，只能在子组件或者组件树外面调用setProps方法，但是不能用this.setProps，如果非要这样，可以用state来代替。
+可以通过this.props来访问props，但是不能修改，组件不能对自己的props进行修改。
+JSX中props的几种使用
+  把props设置成字符串
+ &amp;lt;a href=&amp;quot;/a/b&amp;quot;&amp;gt;&amp;lt;/a&amp;gt;    用JSX中的展开语法({&amp;hellip;obj})把props设置成一个对象
+ var aComponent = React.createClass({ render:function(){ var props = { &amp;quot;a&amp;quot;:&amp;quot;foo&amp;quot;, &amp;quot;b&amp;quot;:&amp;quot;bar&amp;quot; }; return ( &amp;lt;aComponent {.</description>
+    </item>
+    
+    <item>
+      <title>React组件生命周期</title>
+      <link>/post/2015-12-01-react-component-life-time/</link>
+      <pubDate>Tue, 01 Dec 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-12-01-react-component-life-time/</guid>
+      <description>在React的组件生命周期中，随着该组件的props活着state发生改变，对应的DOM也随着变换，一个组件对于特定的输入，它将返回一致的输出。
+在React中，对于每个组件都提供了相应的钩子去响应：
+ 创建时(实例化) 存在期(活动期) 销毁期   实例化 在React的一个组件被实例化时，将依次调用以下一些方法
+getDefaultProps:  对于某个组件类，该方法只会被调用一次。对于那些没有被父组件指定props属性的组件来说，该方法返回默认的props
+getInitialState  对于该组件的每个实例来说，该方法有且只能被调用一次，在这里，我们可以对每个组件的状态进行初始化，和getDefaultProps不同的是，getInitialState在每次被实例化时都会被调用(个人感觉这一点感觉和js面向对象中的构造方法和原型类似，getDefaultProps相当于一个原型，getInitialState相当于构造方法，然后所有实例都享有同一个原型)，由于getDefaultProps在该方法之前被调用，所以此时我们已经可以访问到this.props了
+componentWillMount  该方法在首次完成渲染之前被渲染，在这个方法里面，我们可以修改组件的一些state，需要注意的是，这是该组件完成实例化之前的最后一次修改
+render  渲染虚拟DOM，对应一个组件来说，render方法是唯一一个必须实现的，并且遵循以下特殊的几个规则：
+  只能通过this.props和this.state来访问数据
+  可以返回null，boolean值或者任何形式的组件
+  只能出现一个顶级组件(不能返回多个一级标签并列)
+componentDidMount 组件被实例化完成(render执行成功)后调用，可以在该方法中用this.getDOMNode()来访问到该组件，在这个方法中，比如我们要运行我们自定义的一个jQuery插件时，就可以直接写在里面，但是如果React运行在服务端，该方法将不会被调用
+  活动期 随着组件的一些状态(比如鼠标点击、键盘输入等)发生改变，将依次调用以下一些方法
+componentWillReciveProps  在任意时刻，组件的props都可以通过父辈组件来修改，此时将调用该方法，我们可以在该方法对组件的state进行更新
+showComponentUpdate  当props或者state发生改变，我们可以在该方法中进行比较修改前和修改后的数据，返回一个boolean值，React会根据这个来判断是否需要重新进行渲染
+componentWillUpdate  和上一阶段的componentWillMount类似，只不过该方法是在重新进行渲染之前被调用
+render  重新渲染虚拟DOM
+componentDidUpdate  也和componentDidMount类似，只不过是在完成重新渲染之后被调用
+销毁期 最后该组件被使用完成，下面的方法将会给这个组件提供自身清理的机会
+componentWillUnmount  比如我们在该组件中设置了一个定时器，添加了某些事件绑定等等，该方法就负责把定时器清除，移除事件监听的
+以上就是React中一个组件的生命周期
+ 反模式:把计算后的值赋值给state 在getInitialState方法中，我们可以访问到this.props，通过this.props来创建state就是一种反模式。 比如:在组件中,把当前事件转换成字符串格式，就只能在渲染时进行 反模式的写法是不恰当的
+反模式中的写法:
+... getDefault:function(){ return { &amp;quot;date&amp;quot;:new Date() }; }, getInitialState:function(){ return { &amp;quot;day&amp;quot;:this.</description>
+    </item>
+    
+    <item>
+      <title>第一个React Native App</title>
+      <link>/post/2015-11-20-my-first-react-demo/</link>
+      <pubDate>Fri, 20 Nov 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-11-20-my-first-react-demo/</guid>
+      <description>这几天在学习React Native,觉得很屌,做了个&amp;quot;Hello World&amp;quot;,拿出来和大家分享下
+先说环境搭建把,大致可分为下面几步:
+1.首先必备一台Mac 2.然后在App store上下载最新的Xcode 3.Nodejs安装,可以去NodeJs官网下载安装包安装 4.Node也可采用homebrew安装,没有的自行百度,brew安装完成就可以在terminal中运行&#39;brew install node&#39;,改命令执行完成就自动安装了node和npm包管理器 5.安装watchman,一个来自Facebook 的观察程序,终端命令:&#39;brew install watchman&#39; 6也可以有选择的安装flow  到这里环境大致安装完成,下面我们开始安装react-native命令行工具,执行&amp;rsquo;sudo npm install -g react-native-cli&amp;rsquo;,输入密码等待安装完成,我们就可以在命令行用&amp;rsquo;react-native init &amp;rsquo; + 项目名创建一个React Native项目,由于某些原因,初始化过程可能会比较慢,耐心等待几个,这里我创建一个项目,完成一个输入框,在输入完成,请求Github提供的api接口,过滤出符合搜索关键字的项目。
+1、首先,我在命令行运行&amp;rsquo;react-native init githubFinder&amp;rsquo;,经过漫长等待,项目创建完成,到项目目录下,打开ios目录,打开githubFinder.xcodeproj,就可以在Xcode中打开ios版本的项目了,然后打开index.ios.js文件,编写相关逻辑。
+&amp;quot;use strict&amp;quot;; var React = require(&amp;quot;react-native&amp;quot;); var baseURI = &amp;quot;https://api.github.com/search/repositories?q=&amp;quot;; // 请求参数的url前缀 var { AppRegistry, Image, ListView, StyleSheet, Text, TextInput, View, } = React; // 注入相关组件到React中 var githubFinder = React.createClass({ /** 定义组件初始状态值,也就是一个对象 */ &amp;quot;getInitialState&amp;quot;:function(){ return { &amp;quot;dataSource&amp;quot;:new ListView.DataSource({ &amp;quot;rowHasChanged&amp;quot;:(r1,r2) =&amp;gt; r1 !</description>
+    </item>
+    
+    <item>
+      <title>NodeJs处理excel返回json</title>
+      <link>/post/2015-11-17-node-deal-excel/</link>
+      <pubDate>Tue, 17 Nov 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-11-17-node-deal-excel/</guid>
+      <description>快3个月没写博客了，感觉好生疏。
+由于最近在做一个乐队投票活动，每个乐队都有几个预览图片，但是运营上传图片的时候没有考虑顺序问题，后端也没做类似于拖拽排序的功能，为了快速改出来，乐队预览图的url格式是&amp;quot;http://api.juhuaba.com/api/file/z2/图片id&amp;quot;, 然后一想，前端可以根据指定的id的顺序来显示，然后运营那边就给了我一个excel表格，每个乐队的id和图片，然后，看了一眼excel表格，好几百条数据，感觉手动处理太烦，而且容易出错，所以就想搞个办法让程序来处理。
+先上一张excel的图
+然后开始从网上找办法，很多都是说用一个&amp;quot;node-xlsx&amp;quot;的插件，但是我试了下，可能是excel表格的问题吧，报了个很奇怪的错，就放弃了。后来去npm上找到一个&amp;quot;xlsx-json&amp;quot;的插件，试了下，确实可以取得表格里的数据做为一个数组，每一项都有，只不过如果是空单元格或者被合并的单元格都会显示null,所以还是得自己处理下。
+首先肯定是执行&amp;quot;npm install xlsx-json&amp;quot;啦
+然后这个插件需要有个配置文件，暂且叫task.json吧，下面是task.json中的内容。
+[ { &amp;quot;input&amp;quot;: &amp;quot;data.xlsx&amp;quot;, &amp;quot;sheet&amp;quot;: &amp;quot;Sheet1&amp;quot;, &amp;quot;range&amp;quot;: &amp;quot;A1:C240&amp;quot;, &amp;quot;raw&amp;quot;: true, &amp;quot;output&amp;quot;: &amp;quot;data.json&amp;quot; } ] //	该数组接受多个对象，每个对象的基本格式是上面那种 //	input代表是哪个文件 //	sheet代表一个工作簿 //	range代表要转换的一个区域 //	row代表逐行读取 //	output代表输出到哪个文件  下面是调用代码
+var xlsx2json = require(&#39;xlsx-json&#39;); xlsx2json(task, function(err, jsonArr) { if (err) { console.error(err); return; } });  虽然配置了这些参数，但是读取出来的不如人意，就像下面这样：
+然后就对转换出来数组的进行了处理，下面是完整代码，前台浏览器访问http://localhost:3000,直接返回json给前台
+var xlsx2json = require(&#39;xlsx-json&#39;), // 加载xlsx-json模块 task = require(&#39;./task.json&#39;), // 配置文件 express = require(&amp;quot;express&amp;quot;), app = express(), jsonData, // 临时变量,存储转转出来的数据 tmpObj = {}, // 对象,循环时用 lastTmp = {}, // 对象,循环用,存储每个乐队的完整对象 result = []; // 由完整乐队对象构成的数组 xlsx2json(task, function (err, jsonArr) { if (err) { console.</description>
+    </item>
+    
+    <item>
+      <title>NodeJs中redis窜库插入</title>
+      <link>/post/2015-08-20-node-redis-across-database-insert/</link>
+      <pubDate>Thu, 20 Aug 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-08-20-node-redis-across-database-insert/</guid>
+      <description>最近在用NodeJs+redis搭建一个类似漂流瓶的服务器,有个需求如下:根据漂流瓶的类型来将数据用hash的方式插入到数据库中,这边类型主要根据性别(male/female)来区分,当类型为male时插入到0号数据库,female时插入到1号数据库。
+先贴代码:
+var redis = require(&#39;redis&#39;), client = redis.createClient(); /** * 扔一个漂流瓶,随机分配一个id当存入redis的建,然后根据不同的类型存放到不同的数据库 * @param {[type]} bottle [description] * @param {Function} callback [description] * @return {[type]} [description] */ exports.throw = function (bottle, callback) { bottle.time = bottle.time || Date.now(); var bottleId = Math.random().toString(16), //	为每个瓶子随机生成一个id type = { &#39;male&#39;: 0, &#39;female&#39;: 1 }; //	根据不同类型将不同漂流瓶保存到不同的数据库 console.log(&#39;现在应该选择&#39; + type[bottle.type] + &#39;号数据库进行插入&#39;); client.SELECT(type[bottle.type], function () { client.HMSET(bottleId, bottle, function (err, res) { //	以hash类型保存漂流瓶对象 if (err) { return callback({ &#39;code&#39;: 0, &#39;msg&#39;: &#39;过会再试吧!</description>
+    </item>
+    
+    <item>
+      <title>javascript变量提升</title>
+      <link>/post/2015-07-20-javascript-variable-promotion/</link>
+      <pubDate>Mon, 20 Jul 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-07-20-javascript-variable-promotion/</guid>
+      <description>在日常开发中有时候可能会遇到下面的情况:
+var var1 = 1; function fn() { console.log(var1); var var1 = 2; console.log(var1); } fn(); // undefined // 2  第一次遇到的人可能会觉得很奇怪(因为外面定义了同名变量,所以第一次应该打印出1),为什么会有这种情况出现呢？我们把代码改成下面的样子就方便理解了:
+var var1 = 1; function fn() { var var1; // 如果不给变量赋初值,它的值就是undefined console.log(var1); var1 = 2; console.log(var1); }  这就是javascript中的变量提升。 MDN上的解释是&amp;quot;变量提升是JavaScript将声明移至作用域scope (全局域或者当前函数作用域) 顶部的行为&amp;quot;。
+除了变量,函数也存在变量提升的情况,但是如果用函数直接量法定义一个函数,会报类型异常:
+function fn() { fnInner(); var fnInner = function() { console.log(&amp;quot;inner fn&amp;quot;); } } fn(); // 类型异常(undefined is not a function)  就像刚才说的,fnInner会被放到函数体的第一行,但是没有赋初值,所以就成了undefined。
+但是如果用正常函数声明的方法就可以被正确调用,就像下面的样子:
+function fn() { fnInner(); function fnInner() { console.</description>
+    </item>
+    
+    <item>
+      <title>javascript闭包</title>
+      <link>/post/2015-07-18-javascript-closure/</link>
+      <pubDate>Sat, 18 Jul 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-07-18-javascript-closure/</guid>
+      <description>本文讨论的javascript不包含ES6标准。
+javascript在作用域和其他大多数语言不同, 没有局部变量的的概念,一个变量的作用范围就是它所在的函数,且没有块级作用域的概念。
+我们可以通过下面的代码理解下上面的话:
+var variable1 = 1; function A() { console.log(variable1); if(true) { var variable2 = &amp;quot;variable2&amp;quot;; } console.log(variable2); } A(); // 最终打印出1和variable2这个字符串  可能类似的代码放到其他语言中,我们在if外面访问variable2时,就会报错,但在javascript中不会。
+刚才说&amp;quot;一个变量的作用范围就是它所在的函数&amp;quot;,可以通过下面的代码验证下:
+function A() { var variable1 = &amp;quot;variable1&amp;quot;; } A(); console.log(variable1); // Uncaught ReferenceError: variable1 is not defined  此时在函数外部就无法访问函数内定义的变量。
+但是如果不用var关键字的话,情况就不一样了
+function A() { variable1 = &amp;quot;variable1&amp;quot;; } A(); console.log(variable1); // 最终打印出variable1这个字符串  因为不用var的话,就相当于声明了一个全局变量。
+但是有时候,我们就是想读取函数内部变量,该怎么做呢?可以像下面这样:
+function A() { var variable1 = &amp;quot;variable1&amp;quot;; return function() { console.</description>
+    </item>
+    
+    <item>
+      <title>javascript装饰者模式</title>
+      <link>/post/2015-07-15-js-design-mode-decorator/</link>
+      <pubDate>Wed, 15 Jul 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-07-15-js-design-mode-decorator/</guid>
+      <description>js装饰者模式可以把一个对象(类/函数)透明地包装在另外一个对象上,完成对被装饰者添加一些新功能的作用。
+装饰者模式的特点:
+ 不修改原对象的原本结构来进行功能添加; 装饰对象和原对象具有相同的接口，可以使客户以与原对象相同的方式使用装饰对象; 装饰对象中包含原对象的引用，即装饰对象为真正的原对象在此包装的对象。  先看个小例子:
+ function getDate(){ var date = new Date(); return date.toString(); } function toUpperCaseDecorator(fn){ return (function(f){ return f.apply(this,arguments).toUpperCase(); })(fn); } console.log(getDate()); // Thu Jun 25 2015 23:05:04 GMT+0800 (CST) console.log(toUpperCaseDecorator(getDate)); // THU JUN 25 2015 23:05:04 GMT+0800 (CST)  在上面的例子中,getDate作为一个被装饰者(完成获取当前时间的字符串形式),toUpperCaseDecorator作为一个装饰者,在原来的基础上把原来的小写字母改成了大小,在这里就相当于添加了一个新功能。
+下面我们就还是拿汽车来模拟一个具体的场景:
+需求:现在要造一辆车,既然是车嘛,肯定有很多的零部件,这里就拿车载冰箱和车灯来说吧;比如我的车主结构20000元,车载冰箱10000元,车灯10000元,那我肯定在组装的时候就把价格给它加上去,来看具体的代码。
+ var CarInterface = new commonUtil.Interface(&amp;quot;CarInterface&amp;quot;,[&amp;quot;getPrice&amp;quot;,&amp;quot;assenble&amp;quot;]); // 定义 function Car(car){ this.car = car; // 为了让子类继承(让子类多一个父类的引用) commonUtil.Interface.ensureImplement(this,CarInterface); // 检测接口 } commonUtil.wrap(Car.prototype,{ &amp;quot;constructor&amp;quot;:Car, &amp;quot;getPrice&amp;quot;:function(){ return 200000; }, &amp;quot;assenble&amp;quot;:function(){ console.</description>
+    </item>
+    
+    <item>
+      <title>javascript门面模式</title>
+      <link>/post/2015-06-21-js-design-mode-facade/</link>
+      <pubDate>Sun, 21 Jun 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-06-21-js-design-mode-facade/</guid>
+      <description>在javascript中，门面模式常常是开发人员最亲密的朋友。它是几乎所有javascript库的核心原则。通过创建一些使得方法让复杂系统变得更加简单易用,门面模式可以使库提供的工具更容易理解。
+先来看看门面模式的写法:
+function a(x){ // do something... } function b(y){ // do something... } /** * 把a和b封装成一个方法(在一个方法里同时调用a、b) * @param x * @param y */ function facadeAB(x,y){ a(x); b(y); }  在我们平时开发中,可能就用到了门面模式,比如我们现在封装一个绑定事件的方法:
+function bindEvent(el,ev,fn){ if(el.addEventListner){ el.addEventListener(ev,fn,false); }else if(el.attachEvent){ el.attachEvent(&amp;quot;on&amp;quot; + ev,fn); }else{ el[&amp;quot;on&amp;quot; + ev] = fn; } };  这个就是一个门面模式,里面对于事件的绑定是隐蔽的,只提供bindEvent给其他地方调用。
+再来看个例子,这次我们给一个dom元素给些css样式,就可以用下面的方法实现:
+window.onload = function(){ setStyle([&amp;quot;div1&amp;quot;,&amp;quot;div2&amp;quot;,&amp;quot;div3&amp;quot;],{ &amp;quot;width&amp;quot;:&amp;quot;300px&amp;quot;, &amp;quot;height&amp;quot;:&amp;quot;300px&amp;quot;, &amp;quot;backgroundColor&amp;quot;:&amp;quot;red&amp;quot;, &amp;quot;font-size&amp;quot;:&amp;quot;70px&amp;quot; }); }; /** * 简单的门面模式 * @param ele * @param css */ function setStyle(ele,css){ for(var i = 0;i &amp;lt; ele.</description>
+    </item>
+    
+    <item>
+      <title>javascript适配器模式</title>
+      <link>/post/2015-06-13-js-design-mode-adoptor/</link>
+      <pubDate>Sat, 13 Jun 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-06-13-js-design-mode-adoptor/</guid>
+      <description>适配器模式:
+适配器,顾名思义,我们生活中能见到很多这样的例子,举个最简单的例子吧: 我现在有一台老台式机电脑和刚买的新式电脑,我们都知道,老台式机上的插口都是圆口(F32型插口),而新式电脑上的都是USB插口,假如我现在想在新式电脑上用老式电脑上的那个鼠标,但是插口又不一样,那怎么办呢？我们现在就需要一个转换器来中转,这个转换器就完成了完成由老到新的转换功能。
+再举个实际开发中可能会遇到情况:比如公司新进一批前端,然后公司急于做一个项目,需要这几个前端一起参与才能按时交工,但是这几个前端里面有的会prototype.js不会YUI,然后有的会YUI不会prototype.js,而产品经理最后说采取YUI,由于项目时间比较紧,所以没那么大的成本来给他们把这两个库都培训一遍,这时候问题来了,怎么样让这些人都参与到开发中来呢？且看下面的模拟:
+我们来模拟一个最简单的选择器
+// 模拟prototype $ function(不需要传递任何的形参,直接通过arguments对象取得传入的实参) function $(){ var ele = []; for(var i = 0;i &amp;lt; arguments.length;i ++){ var el = arguments[i]; if(typeof el === &amp;quot;string&amp;quot;){ el = document.getElementById(el); } if(el.length == 1){ return el; } ele.push(el); } return ele; } // 模拟YUI中的get (必须传递一个参数,不是字符串就是数组) var YAHOO = {}; YAHOO.get = function(el){ if(typeof el === &amp;quot;string&amp;quot;){ return document.getElementById(el); }else if(el instanceof Array){ var ele = []; for(var i = 0;i &amp;lt; el.</description>
+    </item>
+    
+    <item>
+      <title>javascript组合模式</title>
+      <link>/post/2015-06-09-js-design-mode-composite/</link>
+      <pubDate>Tue, 09 Jun 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-06-09-js-design-mode-composite/</guid>
+      <description>组合模式:
+在组合模式中，对象有两种形式，一种是叶子对象，一种是组合对象，其中组合对象是叶子对象的组成，有时候我们需要通过简单的控制来完成工作，组合模式就派上了用场。
+下面我们模拟一个场景，模拟公司内部的一个，上级(组合对象)只要交代给部门领导(组合对象)，再由部门领导交付具体的指令给具体的员工(叶子对象)来完成具体的工作。
+先来看看传统的做法：
+/** * * 公司类 **/ function Org(name){ this.name = name; this.depts = []; } Org.prototype = { &amp;quot;constructor&amp;quot;:Org, &amp;quot;addDepts&amp;quot;:function(child){ this.depts.push(child); return this; // 添加部门,return this 提供链式调用 }, &amp;quot;getDepts&amp;quot;:function(){ return this.depts; // 获取部门 } }; /** * * 部门类 **/ function Dept(name){ this.name = name; this.persons = []; } Dept.prototype = { &amp;quot;constructor&amp;quot;:Dept, &amp;quot;addPersons&amp;quot;:function(child){ this.persons.push(child); return this; // 添加部门员工 }, &amp;quot;getPersons&amp;quot;:function(){ return this.persons; // 获取部门员工 } }; /** * * 员工类 **/ function Person(name){ this.</description>
+    </item>
+    
+    <item>
+      <title>javascript桥梁模式</title>
+      <link>/post/2015-06-03-js-design-mode-bridge/</link>
+      <pubDate>Wed, 03 Jun 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-06-03-js-design-mode-bridge/</guid>
+      <description>桥模式:
+桥梁模式可以用来弱化它与使用它的类和对象之间的耦合，就是将抽象与其实现隔离开来，以便二者独立变化；这种模式对于JavaScript中常见的时间驱动的编程有很大益处，桥梁模式最常见和实际的应用场合之一是时间监听器回调函数。
+可能我们平时写代码就用到了桥模式，比如看下面的例子：
+var btn = document.getElementById(&amp;quot;btn&amp;quot;); btn.onclick = function(){ bridgeHandle(); } function bridgeHandle(){ var msg = btn.value; sendRequest(msg); } // 这里情况，比如ajax请求 function sendRequest(msg){ console.log(msg); }  在上面的代码中，bridgeHandle就是一个桥梁，原来的sendRequest应该可以写在onclick事件里面，那么这样的写法有什么好处呢？个人认为有以下几点。
+1、 实现解耦：把原来要通过点击来触发的逻辑代码抽离出来，成为一个单独的部分； 2、方便做单元测试：我们可以单独调用sendRequest方法来测试ajax请求(假设)的返回等是否是我们预期的；
+3、功能模块化，符合现在前端发展的趋势，便于自己和他人维护。
+在桥模式中，还有一个概念叫“特权函数”，我们都知道在面向对象程序设计中，类的私有成员变量或者私有方法是不能被外部访问或者调用的，但是特权函数给我们提供了这一方便的接口。
+function PublicClass(){ var name = &amp;quot;张三&amp;quot;; // 私有属性 this.getter = function(){ return name; }; // 访问私有属性getter,特权函数 function _privateMethod(){ return &amp;quot;我是私有方法！&amp;quot;; } this.bridgeMethod = function(){ return privateMethod(); }; } var class = new PublicClass(); console.log(class.getter());	//	张三 console.log(class.bridgeMethod());	//	我是私有方法！  在上面的例子中，PublicClass中有name这个私有成员变量和_privateMethod这个私有方法，如果在没有特权函数的情况下我们是不能访问和调用的的，但是通过模式，我们就完成了对私有成员变量和私有方法的访问和调用。</description>
+    </item>
+    
+    <item>
+      <title>javascript工厂模式</title>
+      <link>/post/2015-05-31-js-design-mode-factory/</link>
+      <pubDate>Sun, 31 May 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-05-31-js-design-mode-factory/</guid>
+      <description>工厂模式:
+创建一个对象常常需要复杂的过程，所以不适合在一个复杂的对象中。创建对象可能会导致大量的重复代码，也可能提供不了足够级别的抽象。工厂方法模式通过定义一个单独的创建对象的方法来解决这些问题，由子类实现这个方法来创建具体类型的对象。
+简单工厂： 类本身实现了所有功能代码，通过实例化调用其方法来完成某些功能。
+抽象工厂： 类本身定一些抽象方法，通过给子类继承的方式，来重写父类的抽象方法，该类不能被实例化，只能通过实例化它的子类来完成某些功能。
+ /** * 注： * commonUtil.wrap(xxx.prototype,{})和xxx.prototype = {}功能相同 * commonUtil.extend()是实现继承那边类式继承的代码功能 * commonUtil.Interface和commonUtil.Interface.ensureImplement是实现接口那边鸭式辨型的代码功能 * * */   这是简单工厂的一个示例：
+/* 功能描述： 有三种类型的车(奔驰,宝马,奥迪),现在要买车,定义一个汽车4店类卖车 逻辑流程： */ /** * 汽车商店构造器 * @constructor */ function CarShop() {} commonUtil.wrap(CarShop.prototype, { &amp;quot;constructor&amp;quot;: CarShop, &amp;quot;sellCar&amp;quot;: function (type) { var car; switch (type) { case &amp;quot;Benz&amp;quot;: car = new Benz(); break; case &amp;quot;Bmw&amp;quot;: car = new Bmw(); break; case &amp;quot;Audi&amp;quot;: car = new Audi(); break; default: &amp;quot;not to buy!</description>
+    </item>
+    
+    <item>
+      <title>javascript接口</title>
+      <link>/post/2015-05-27-js-design-mode-interface/</link>
+      <pubDate>Wed, 27 May 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-05-27-js-design-mode-interface/</guid>
+      <description>接口:
+接口是提供了一种用以说明一个对象应该具有哪些方法的手段，但它并不规定这些方法应该如何实现。在JS中，没有像其他面向对象程序语言的interface关键字，所以实现的方法也语言不同；JS实现接口的主要方式主要为定义描述法、属性检测法和鸭式辨型法，其中鸭式辨型法是目前用的最多的。
+1、定义描述法
+/** * interface CompsiteImpl{ * function add(); * function remove(); * function update(); * } */ /** * 实现接口 * @constructor */ function CompsiteImpl(){ } CompsiteImpl.prototype = { &amp;quot;constructor&amp;quot;:CompsiteImpl, &amp;quot;add&amp;quot;:function(){ console.log(&amp;quot;我是add方法！&amp;quot;); }, &amp;quot;remove&amp;quot;:function(){ console.log(&amp;quot;我是remove方法！&amp;quot;); }, &amp;quot;update&amp;quot;:function(){ console.log(&amp;quot;我是update方法！&amp;quot;); } };  此方法也称注释法，顾名思义，就是通过一系列的注释来定义该类需要实现哪些接口方法，这是最简单定义接口的一种方法。但是此方法缺点实在太明显了，比如一个人代码写完了，他只能通过肉眼来判断是不是都把刚才注释里面的方法都实现了；他哪天代码做修改了，是否和注释一致等等的。只是属于一个类似于帮助文档的范畴，太死板。
+2、属性检测法
+/** * interface Compsite{ * function add(); * function remove(); * function update(); * } * * interface FormItem{ * function select(); * } * */ // 实现接口 // 需要实现 Compsite FormItem function CompsiteImpl(){ // 在类的内部定义一个变量 this.</description>
+    </item>
+    
+    <item>
+      <title>javascript实现继承</title>
+      <link>/post/2015-05-26-js-object-extend/</link>
+      <pubDate>Tue, 26 May 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-05-26-js-object-extend/</guid>
+      <description>继承:
+继承是指一个对象拥有另外一个对象一些公共方法或属性。在大多数其他面向对象语言中，继承一个类只需使用一个关键字即可；但是在JS中想要达到继承公用成员的目的，需要采取一系列措施。JS属于原型式继承，得益于这种灵活性，我们既可以使用标准的基于类的继承，也可以使用更微妙一些的原型式继承。在JS中应该要明确一点，一切继承都是通过prototype来进行的，JS是基于对象来继承的，且不止一种继承方式。
+第一种：
+/** * 父类SuperClass的构造器 * @param name * @constructor */ function SpuerClass(name){ this.name = name;	} SuperClass.prototype = { &amp;quot;constructor&amp;quot;:SpuerClass, //	修正构造器 &amp;quot;getName&amp;quot;:function(){ return this.name; } //	父类原型对象下的getName方法 }; /** * 子类SubClass的构造器 * @param name * @param age * @constructor */ function SubClass(name,age){ SuperClass.call(this,name); //	SuperClass.apply(this,[name]); //	继承父类构造器 } SubClass.prototype = new SuperClass(); //	继承父类的原型 SubClass.prototype.constructor = SubClass; //	修正子类的构造器 SubClass.prototype.getAge = function(){ return this.age; } //	子类原型对象下的getAge方法  这种继承方式就是最简单的JS继承：伪造对象法。不足之处在于实例化SubClass时会调用两次父类的构造方法，且需要额外的保存原型链中实例化父类的对象，如果在属性和方法比较多的情况下，这样一来性能方面就大打折扣了，效果是达到了，但是执行速率受到了一定的影响。且耦合性较大，于是就有了下面的继承方式。</description>
+    </item>
+    
+    <item>
+      <title>javascript原型</title>
+      <link>/post/2015-05-23-js-object-prototype/</link>
+      <pubDate>Sat, 23 May 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-05-23-js-object-prototype/</guid>
+      <description>javaScript原型:
+定义：每一个方法被创建时都有一个prototype属性,改属性是一个指针,总是指向一个对象。该对象可以将特定的属性和方法包含在内,起到一个被所有实例所共享的作用。
+ function Person(){ } var obj = Person.prototype; obj.name = &amp;quot;小宋&amp;quot;; obj.age = 20; obj.sayName = function(){ console.log(this.name); }; //	定义一个变量来引用原型,修改这个变量的属性达到修改原型的目的  原型对象、构造方法、实例对象三者的关系
+1、构造方法.prototype = 原型对象
+2、原型对象的constructor = 构造方法
+3、实例对象.prototype = 原型对象
+原型中的常用方法
+1、isPrototypeOf	(判断一个对象是不是另一个对象的原型) 示例:
+function Person(){} var obj = Person.prototype; obj.name = &amp;quot;小宋&amp;quot;; obj.age = 20; obj.sayName = function(){ console.log(this.name); }; var p = new Person(); console.log(obj.isPrototypeOf(p1));	//	true  2、Object.getPrototypeOf	(根据实例对象获取原型对象) 示例:
+function Person(){} Person.prototype.name = &amp;quot;张三&amp;quot;; Person.</description>
+    </item>
+    
+    <item>
+      <title>javascript创建类的常用模式</title>
+      <link>/post/2015-03-10-js-object-create-class-mode/</link>
+      <pubDate>Tue, 10 Mar 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-03-10-js-object-create-class-mode/</guid>
+      <description>javaScript创建类的常用模式: 严格意义上,在ECMAScript6出来之前,js中是没有类的概念的,但是聪明的人类想到了用方法和原型类模拟类的一些特性,比如一个对象经过new关键字实例化以后就具有了某些属性,方法。
+下面我们就看下常用的创建类的一些常用模式:
+1.工厂模式
+function Person(name,sex,age){ var obj = { &amp;quot;name&amp;quot;:name, &amp;quot;sex&amp;quot;:sex, &amp;quot;age&amp;quot;:age, &amp;quot;say&amp;quot;:function(){ console.log(&amp;quot;hello world!&amp;quot;); } }; return obj; } //	工厂模式就是在构造方法里面定义一个对象,给这个对象赋予相应的属性、方法,最后返回这个对象  2.构造方法模式
+function CrearePerson(name,sex,age){ this.name = name; this.age = sex; this.age = age; this.say = function(){ console.log(&amp;quot;你好！我是:&amp;quot; + this.name); }; } //	构造方法,就是给当前对象指定一些属性,方法  3.构造方法 + 原型模式
+function Person(name){ this.name = name; } Person.prototype = { &amp;quot;constructor&amp;quot;:Person, // 指定原型对象的构造器 &amp;quot;name&amp;quot;:&amp;quot;小宋&amp;quot;, &amp;quot;age&amp;quot;:20, &amp;quot;job&amp;quot;:&amp;quot;程序员&amp;quot;, &amp;quot;say&amp;quot;:function(){ console.log(&amp;quot;我是原型的函数&amp;quot;); } };  在前面2种创建类的模式中，我们每次实例化一个对象都会重新声明出一些东西,对象个数少可能没什么关系,但是当对象个数达到一定数量时,就会对性能造成一定的影响。所以,就出来了第三种&amp;quot;构造方法 + 原型模式&amp;quot;,构造方法的作用是为实例化出来的对象定义一些私有属性,原型的作用就是绑定一些公共属性方法,让所有实例化出来的对象都可以共,只有在第一次实例化的时候进行初始化,往后就不会再初始化了。这样,当在写大型Web程序时,性能会相对较好。</description>
+    </item>
+    
+    <item>
+      <title>javascript中arguments对象</title>
+      <link>/post/2015-03-07-arguments/</link>
+      <pubDate>Sat, 07 Mar 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-03-07-arguments/</guid>
+      <description>arguments对象 定义：
+arguments是传进实参的集合,可理解为数组类型,但是又不是数组类型
+常用属性arguments.callee,该属性像一个指针,指向函数自己,但是该属性在严格模式下被禁用了,意味着在严格模式下无法在匿名函数内部调用自身。
+在js中,允许函数的实参和形参个数不同,即使这样,在函数运行时也不会报错,看下面的例子：
+function test(a,b,c,d){ return a + b + c + d; } console.log(test(1,2,3,4,5)); //	打印出10,因为接收到的参数为(1,2,3,4) console.log(test(1,2,3)); //	打印出NaN,因为接收到的参数为(1,2,3,undefuned)  所以,为了避免上面的情况,我们有必要在函数运行之前对函数的实参和形参个数是否相等进行判断,这里就可以用到我们的arguments对象。
+首先我们取得函数形参个数,有两种方法(函数名.length/arguments.callee.length),然后我们可以取得函数的实参个数,具体为arguments.length。下面用一个累加实现一下对函数实参和形参个数的验证,如果两种不相等,则抛出异常;如果验证通过,则执行正确的函数体。
+function test1(a,b,c,d){ if(arguments.callee.length !== arguments.length){ //	前者也可写为test1.length,不过建议写为arguments.callee.length,具体原因下文解释 throw &amp;quot;参数个数不正确!&amp;quot;; }else{ return function(a){ var res = 0; for(var i = 0;i &amp;lt; a.length;i ++){ res += a[i]; } return res; }(arguments); //	验证通过,执行函数体 } } console.log(test1(1,2)); //	抛出&amp;quot;参数个数不正确！&amp;quot;的异常 console.log(test1(1,2,3,4)); //	验证通过,打印出10  在实际js中,arguments对象用的最多的可能就是递归操作了,下面用一个阶乘实现简单的递归操作。
+function test3(num){ if(num &amp;lt;= 1){ return 1; }else{ // return num * test3(num -1); //	如果我们把test3置空,在进行递归操作时,会报&amp;quot;object is not a function&amp;quot;的错误 return num * arguments.</description>
+    </item>
+    
+    <item>
+      <title>javascript中的短路语法</title>
+      <link>/post/2015-02-24-short-circuit-gramar/</link>
+      <pubDate>Thu, 26 Feb 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-02-24-short-circuit-gramar/</guid>
+      <description>在js代码中，以前写判断都是通过最简单的&amp;quot;if&amp;hellip;else&amp;hellip;&amp;ldquo;来判断,最近无意中改了个写法,发现也可以用,而且相对于的判断方法,省去了&amp;quot;if&amp;hellip;else&amp;hellip;&amp;quot;,取而代之的是&amp;rdquo;&amp;amp;&amp;amp;&amp;ldquo;或者&amp;rdquo;||&amp;quot;,下面我们一起看下关于短路语法。
+与或非语法中，有一种经典的短路语法：
+var a = boolean || function(){ do some thing }(); //	这种情况下,只有当前面的boolean值为false时,才会执行后面的匿名方法 //	当前面的boolean值为true时,出于性能优化机制,后面的匿名方法就不会继续执行 var b = boolean &amp;amp;&amp;amp; function(){ do some thing }(); //	这种情况则与上面相反,只有boolean值为true时,才会执行后的匿名方法  再看一个例子：
+if(typeof obj === &amp;quot;undefined&amp;quot;) obj = {}; 可以改写成这样 obj === undefined &amp;amp;&amp;amp; (obj = {}); //	需要注意的是,当判断依据后面的为赋值语句的时候,该语句需加括号，否则会报&amp;quot;无效左值&amp;quot;的错  下面看看传统判断和	短路语法的性能对比：
+var i = 1; console.time(&amp;quot;普通的if else判断&amp;quot;); for (var j = 0; j &amp;lt; 100000; j++) { if (i === 1) { i = 2; } else { i = 1; } } console.</description>
+    </item>
+    
+    <item>
+      <title>我理解的apply和call</title>
+      <link>/post/2015-02-24-apply-call/</link>
+      <pubDate>Tue, 24 Feb 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-02-24-apply-call/</guid>
+      <description>方法定义:
+语法：call([this[,arg1[, arg2[, [,.argN]]]]])
+定义：调用一个对象的一个方法，以另一个对象替换当前对象。
+说明：call 方法可以用来代替另一个对象调用一个方法。call 方法可将一个函数的对象上下文从初始的上下文改变为由 this 指定的新对象。如果没有提供 this 参数，那么 Global 对象被用作 this。
+语法：apply([this[,argArray]])
+定义：应用某一对象的一个方法，用另一个对象替换当前对象。
+说明：如果 argArray 不是一个有效的数组或者不是 arguments 对象，那么将导致一个 TypeError。如果没有提供 argArray 和 this 任何一个参数，那么 Global 对象将被用作 this， 并且无法被传递任何参数。
+两者区别微乎其微(除了调用对象传的参数一致，apply传入的参数是逐个传入，而apply是通过一个数组传的)
+示例:
+// 做绑定参数之用
+function sum(x,y){ return x + y; } function call1(num1,num2){ return sum.call(this,num1,num2); } // call调用sum function apply1(num1,num2){ return sum.apply(this,[num1,num2]); } // apply调用sum console.log(call1(10,20)); console.log(apply1(16,20));  // 扩充作用域，对象和方法不需要有任何关系
+window.color = &amp;quot;red&amp;quot;; var obj = { &amp;quot;color&amp;quot;:&amp;quot;blue&amp;quot; }; function showColor(){ console.</description>
+    </item>
+    
+  </channel>
+</rss>
