@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Python on rwson</title>
+    <link>/categories/python/</link>
+    <description>Recent content in Python on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Tue, 24 Oct 2017 00:00:00 +0000</lastBuildDate><atom:link href="/categories/python/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>用NodeJs和Python开发一个Sublime插件</title>
+      <link>/post/2017-10-24-write-a-sublime-plugin-by-python-nodejs/</link>
+      <pubDate>Tue, 24 Oct 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2017-10-24-write-a-sublime-plugin-by-python-nodejs/</guid>
+      <description>Sublime Text著有最性感的编辑器之称,它轻量,易于拓展,通过插件的方式可使它变得很强大,而我更是把它作为自己的主要编辑器使用。
+有一次逛package control的时候,发现一个用NodeJs来写插件的脚手架: SublimeJS_Samples,才发现用NodeJs结合Python也可以来开发插件,这对于对Python不是特别了解的人可能很吃力,然后就研究了几个常用插件的源码,拿sublime-vue-formatter这个插件详细看了下,总结出原理大概是这样的:
+ 在Python中拿到当前正在编辑的文件或者选中的内容 用Python子进程subprocess去执行一段cmd命令并接受输出,Node路径为我们电脑上装的Node绝对路径(用户事先配置好), 再去执行一个NodeJs脚本, 以Mac为例, 最后要执行的命令大概是这样的/usr/local/bin/node script/run.js --arg1=argVal1 --arg2=argVal2(其实和我们平时在Terminal里运行的一样) Python接收到NodeJs的执行返回的时候, 替换文件中的相关内容  抱着试试看的心理,我也决定自己用这个模式写个图片压缩相关的插件,先简单介绍下我想写的插件的功能:
+ 用户在项目根目录下新建配置文件, 指定压缩目录和释放目录, 调用tinypng的开发者API进行压缩 当压缩完的图片小于多少字节时把css中的引用转换成Base64编码,也是通过配置项 用户可以通过一些快捷键或者命令(子命令)在项目根目录新建配置文件、修改全局NodeJs路径配置等等  现在知道了我们想做什么, 下一步就是根据这个需求开始写代码, 因为是图片压缩插件, 所以我把它命名成sublime-image-compressor
+命令、子命令 在插件配置中, 命令都是通过配置文件写入的, 下面贴下我们这个插件支持命令的一个配置并做介绍
+//	ImageCompressor.sublime-commands  [{  &amp;#34;caption&amp;#34;: &amp;#34;ImageCompress&amp;#34;,  &amp;#34;command&amp;#34;: &amp;#34;image_compress&amp;#34; }, {  &amp;#34;caption&amp;#34;: &amp;#34;ImageCompress: Init Project Config File&amp;#34;,  &amp;#34;command&amp;#34;: &amp;#34;imagecompress_config_project&amp;#34; }, {  &amp;#34;caption&amp;#34;: &amp;#34;ImageCompress: Set Global Config&amp;#34;,  &amp;#34;command&amp;#34;: &amp;#34;imagecompress_set_global_plugin_options&amp;#34; }] .sublime-commands是用来指定插件支持的命令的, 里面指定一个对象型数组, 数组有caption和command两项, 需要注意的是, command的值和Python的类是对应的, 且Python中用驼峰命名法来定义类名, 以第一项为例, 比如command的值为image_compress, 我们的Python中就需要像类似下面的样子定义一个类:</description>
+    </item>
+    
+  </channel>
+</rss>

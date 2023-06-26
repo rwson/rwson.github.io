@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>Shadow DOM研究 - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="在Polymer中,提出了Web Component的概念,旨在让开发者可以封装出很多可复用的组件。现在,webkit添加了对该API支持,也就意味着我们不用借助框架,也可以自己封装出可复用的组件(通过自定义元素的形式),而不需要依赖其他框架来实现。
+假设我们这边需要封装一个进度条组件,实现代码大概是这样的:
+// javascriptclass CustomProgressBar extends HTMLElement {constructor(args) {super(args);// createShadowRoot用来创建一个shadowDOM实例const shadowRoot = this.createShadowRoot();// 设置组件内的布局结构和样式shadowRoot.innerHTML = `&lt;style type=&quot;text/css&quot;&gt;:host {display: inline-block;width: 200px;height: 30px;box-sizing: border-box;padding: 1px;}:host * {-webkit-touch-callout: none;-webkit-user-select: none;-khtml-user-select: none;-moz-user-select: none;-ms-user-select: none;user-select: none;}.progress {display: inline-block;width: 200px;height: 30px;position: relative;border: 1px solid #000;}." />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">Shadow DOM研究</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Dec 12, 2016</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p>在<a href="https://github.com/Polymer/polymer">Polymer</a>中,提出了<a href="https://developer.mozilla.org/zh-CN/docs/Web/Web_Components">Web Component</a>的概念,旨在让开发者可以封装出很多可复用的组件。现在,webkit添加了对该API支持,也就意味着我们不用借助框架,也可以自己封装出可复用的组件(通过自定义元素的形式),而不需要依赖其他框架来实现。</p>
+<p>假设我们这边需要封装一个进度条组件,实现代码大概是这样的:</p>
+<pre><code>//  javascript
+
+class CustomProgressBar extends HTMLElement {
+
+	constructor(args) {
+		super(args);
+
+        //  createShadowRoot用来创建一个shadowDOM实例
+		const shadowRoot = this.createShadowRoot();
+
+        //  设置组件内的布局结构和样式
+        shadowRoot.innerHTML = `
+            &lt;style type=&quot;text/css&quot;&gt;
+                :host {
+                    display: inline-block;
+                    width: 200px;
+                    height: 30px;
+                    box-sizing: border-box;
+                    padding: 1px;
+                }
+                :host * {
+                    -webkit-touch-callout: none;
+                    -webkit-user-select: none;
+                    -khtml-user-select: none;
+                    -moz-user-select: none;
+                    -ms-user-select: none;
+                    user-select: none;
+                }
+                .progress {
+                    display: inline-block;
+                    width: 200px;
+                    height: 30px;
+                    position: relative;
+                    border: 1px solid #000;
+                }
+                .progress &gt; .bar {
+                    background: red;
+                    height: 100%;
+                    width: 0;
+                    transition: all 0.2s;
+                }
+                
+                .progress .label {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    text-align: center;
+                    font-size: 14px;
+                    line-height: 30px;
+                    color: #000;
+                }
+            &lt;/style&gt;
+            &lt;div class=&quot;progress&quot; aria-valuenow=&quot;0&quot; aria-valuemin=&quot;0&quot; aria-valuemax=&quot;100&quot;&gt;
+                &lt;div class=&quot;bar&quot;&gt;&lt;/div&gt;
+                &lt;div class=&quot;label&quot;&gt;0%&lt;/div&gt;
+            &lt;/div&gt;
+        `;
+
+        //  将相关元素存储到成员变量中
+        this._progressElement = shadowRoot.querySelector(&quot;.progress&quot;);
+        this._bar = shadowRoot.querySelector(&quot;.bar&quot;);
+        this._label = shadowRoot.querySelector(&quot;.label&quot;);
+	}
+
+    /**
+     * 取得当前进度
+     * @return {string}
+     */
+    get progress() {
+        return Number(this._progressElement.getAttribute(&quot;aria-valuenow&quot;));
+    }
+
+    /**
+     * 设置进度
+     * @param value
+     */
+    set progress(value) {
+        //  最大值值最小值
+        const max = this._progressElement.getAttribute(&quot;aria-valuemax&quot;),
+              min = this._progressElement.getAttribute(&quot;aria-valuemin&quot;);
+
+        //  类型判断
+        if(Number.isNaN(Number(value))) {
+            throw new Error(`value must be an number type, you specified ${value} which is ${{}.toString.call(value).slice(8, -1).toLowerCase()}!`);
+        }
+
+        //  范围检测
+        if(value &gt; max || value &lt; min) {
+            throw new Error(`value must between ${min} to ${max} , you specified ${value}!`);
+        }
+
+        //  设置相关属性
+        this._progressElement.setAttribute(&quot;aria-valuenow&quot;, value);
+        this._bar.style.width = `${value}%`;
+        this._label.textContent = `${value}%`;
+    }
+
+    /**
+     * 提供可以绑定onclick的接口
+     * @param callback
+     */
+    set onclick(callback) {
+        if(typeof callback === &quot;function&quot;) {
+            this._progressElement.addEventListener(&quot;click&quot;, e =&gt; {
+                callback.call(this, e);
+            }, false);
+        }
+    }
+
+}
+
+//  调用 customElements.define定义自定义元素,第一个参数自定义元素名,第二个参数是HTMLElement的一个子类
+customElements.define(&quot;custom-progress-bar&quot;, CustomProgressBar);
+
+window.onload = () =&gt; {
+
+    let customProgressBar = document.querySelector(&quot;custom-progress-bar&quot;),
+        progress;
+
+    /**
+     * 给进度条组件绑定onclick事件,每次点击进度加10
+     * @param e
+     */
+    customProgressBar.onclick = (e) =&gt; {
+        progress = Number(this.progress);
+        if(progress &gt;= 100) {
+            progress = 0;
+        } else {
+            progress += 10;
+        }
+        this.progress = progress;
+    };
+
+};
+
+//  HTML
+//  现在我们可以通过new CustomProgressBar()或者custom-progress-bar来使用自定义元素了
+
+&lt;custom-progress-bar&gt;&lt;/custom-progress-bar&gt;
+</code></pre>
+<p>至此我们的一个进度条组件就算封装完成了,需要注意的是,customElements.define方法对第一个参数有一些要求:</p>
+<ul>
+<li>必须以小写字母 a-z 开头</li>
+<li>不能包含大写字母 A-Z</li>
+<li>必须包含&quot;-&quot;</li>
+</ul>
+<p>最后渲染出来是如下的布局结构:</p>
+<p><img src="/imgs/shadow-dom-rendered.png" alt=""></p>
+<p>一起看看实际的效果:</p>
+<p><img src="/imgs/shadow-dom-gif.gif" alt=""></p>
+</section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    <a
+      class="flex w-1/2 items-center rounded-l-md p-6 pr-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2017-01-18-wrire-a-webpack-loader/"
+      ><span class="mr-1.5">←</span><span>实现一个webpack loader</span></a
+    >
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2016-11-29-gulp-plugin-tourial/"
+      ><span>Gulp插件的研究</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

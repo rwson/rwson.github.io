@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>React中的事件 - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="对于用户界面来说，展示最多只占整体因素的一半，另一半则是用户输入，即通过javaScript来完成人机交互。
+在React中，通过将事件绑定到组件上到形式来对事件进行处理。在触发事件的同时，相关处理函数对组件对状态进行修改，再调用render方法重绘，达到响应用户输入的目的。
+绑定事件处理器 React的事件本质上和原生的javaScript类似，比如MouseEvent用来处理用户鼠标点击，Change用来处理表单元素的变化等，所有事件在命名上和JavaScript规范一致，并且会在相同的情况下被触发。
+React绑定事件的写法和在HTML上绑定事件的写法很像，比如我们下面将绑定一个click事件:
+... handleClick:function(){ ... }, render:function(){ return ( &lt;button onClick={this.handleClick}&gt;click&lt;/button&gt; ); }, ...  这样，我们就完成了一个click事件的绑定，当用户点击这个按钮，handleClick将被调用，完成一些逻辑。
+就拿刚才上面的代码举例,我们在handleClick中用this,此时发现this指向了window对象,所以如果要在里面读取state/prop就比较麻烦,这时可以通过ES5中的bind方法来修改this的指向,就像下面这样:
+... handleClick: function(){ // ... }, render: function(){ return ( &lt;button onClick={this.handleClick.bind(this, [....argus])}&gt;click&lt;/button&gt; ); }, ...  后面还可以传入参数,还可以在getInitialState(或者ES6语法的constructor里)手动指定一个新属性,来达到修改this指向的目的:
+  ES5
+// &hellip;
+var Comp = React.createClass({
+ getInitialState: function() { this.handleClick = this._handleClick.bind(this); }, _handleClick: function() { // 事件的处理逻辑 }, render: function() { return ( &lt;button onClick={this.handleClick}&gt;click&lt;/button&gt; ); }  });" />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">React中的事件</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Dec 3, 2015</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p>对于用户界面来说，展示最多只占整体因素的一半，另一半则是用户输入，即通过javaScript来完成人机交互。</p>
+<p>在React中，通过将事件绑定到组件上到形式来对事件进行处理。在触发事件的同时，相关处理函数对组件对状态进行修改，再调用render方法重绘，达到响应用户输入的目的。</p>
+<h4 id="绑定事件处理器">绑定事件处理器</h4>
+<p>React的事件本质上和原生的javaScript类似，比如MouseEvent用来处理用户鼠标点击，Change用来处理表单元素的变化等，所有事件在命名上和JavaScript规范一致，并且会在相同的情况下被触发。</p>
+<p>React绑定事件的写法和在HTML上绑定事件的写法很像，比如我们下面将绑定一个click事件:</p>
+<pre><code>...
+handleClick:function(){
+    ...
+},
+render:function(){
+    return (
+        &lt;button onClick={this.handleClick}&gt;click&lt;/button&gt;
+    );
+},
+...
+</code></pre>
+<p>这样，我们就完成了一个click事件的绑定，当用户点击这个按钮，handleClick将被调用，完成一些逻辑。</p>
+<p>就拿刚才上面的代码举例,我们在handleClick中用this,此时发现this指向了window对象,所以如果要在里面读取state/prop就比较麻烦,这时可以通过ES5中的bind方法来修改this的指向,就像下面这样:</p>
+<pre><code>...
+handleClick: function(){
+    //  ...
+},
+render: function(){
+    return (
+        &lt;button onClick={this.handleClick.bind(this, [....argus])}&gt;click&lt;/button&gt;
+    );
+},
+...
+</code></pre>
+<p>后面还可以传入参数,还可以在getInitialState(或者ES6语法的constructor里)手动指定一个新属性,来达到修改this指向的目的:</p>
+<ul>
+<li>
+<p>ES5</p>
+<p>//  &hellip;</p>
+<p>var Comp = React.createClass({</p>
+<pre><code>  getInitialState: function() {
+      this.handleClick = this._handleClick.bind(this);
+  },
+
+  _handleClick: function() {
+      //  事件的处理逻辑
+  },
+
+  render: function() {
+      return (
+          &lt;button onClick={this.handleClick}&gt;click&lt;/button&gt;
+      );
+  }
+</code></pre>
+<p>});</p>
+</li>
+<li>
+<p>ES6</p>
+<p>//  &hellip;</p>
+<p>class Comp extends Component {</p>
+<pre><code>  constructor(props) {
+      super(props);
+
+      this.handleClick = this._handleClick.bind(this);
+  }
+
+  _handleClick() {
+      //  事件的处理逻辑
+  }
+
+  render() {
+      const {handleClick} = this;
+      return  (
+          &lt;button onClick={handleClick}&gt;click&lt;/button&gt;
+      );
+  }
+</code></pre>
+<p>}</p>
+</li>
+</ul>
+<p>刚才是在JSX语法上绑定的事件，如果不用JSX，我们就需要换成下面的绑定方法:</p>
+<pre><code>React.DOM.button({
+    &quot;className&quot;:&quot;btn-click&quot;,
+    &quot;onClick&quot;:this.handleClick
+},&quot;click&quot;);
+
+//  从React 0.12.x版本开始，推荐使用React.createElement的写法
+</code></pre>
+<p>此外，如果需要支持移动端触碰事件，建议加上下面的代码:</p>
+<pre><code>React.initializeTouchEvents(true);
+</code></pre>
+<h4 id="事件和状态">事件和状态</h4>
+<p>如果想让一个组件随着用户的输入而改变，我们就要在事件处理函数中对这个组件的某些状态进行修改。</p>
+<p>比如我们下面讲完成一个类似于angularJs中双向数据绑定的效果。</p>
+<pre><code>var Component = React.createClass({
+  handleChange: function(ev) {
+    this.setState({
+        value:ev.target.value
+    });
+  },
+  render: function() {
+    var value = this.state.value;
+    return (
+      &lt;div&gt;
+        &lt;input type=&quot;text&quot; onChange={this.handleChange} /&gt;
+        &lt;span&gt;{value}&lt;/span&gt;
+      &lt;/div&gt;
+    );
+  }
+});
+
+ReactDOM.render(
+  &lt;Component /&gt;,
+  document.getElementById(&quot;div&quot;)
+);
+</code></pre>
+<p>此时我们的输入会在两个地方显示，一个是在输入框里面，一个在输入框后面，且值都相同。</p>
+<h4 id="更新组件的状态">更新组件的状态</h4>
+<p>更新状态完成之后组件会调用render方法进行重绘。</p>
+<p>在React中，有两种更新组件状态的方法，一种是调用this.setState，一种是调用this.replaceState，第一种只是重新设置组件的状态，第二种会把组件原来所以的状态清除，然后用一个全新的对象来替换组件当前的状态对象，这种用起来一定要小心，因为如果替换的对象少了一个属性值或者属性值类型不同而render方法就正好用到这个属性值，那render方法就不会往下继续走了，所以很少地方使用。大多情况还是使用第一种this.setState来修改组件的状态。</p>
+</section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    <a
+      class="flex w-1/2 items-center rounded-l-md p-6 pr-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2015-12-04-react-component-mixin/"
+      ><span class="mr-1.5">←</span><span>React组件的复合和mixin</span></a
+    >
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2015-12-02-react-data-flow/"
+      ><span>React中的数据流</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

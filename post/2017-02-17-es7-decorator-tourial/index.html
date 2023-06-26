@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>decorator的学习 - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="随着前端技术的发展,越来越多人把ES6、7用在日常开发中,在ES7中除了广为人知的async/await之外,还有一大特性 — decorator(装饰器)。
+在之前原生javascript设计模式中的一篇文章(javascript装饰者模式)中说道: js装饰者模式可以把一个对象(类/函数)透明地包装在另外一个对象上,完成对被装饰者添加一些新功能的作用。简单的说我们可以在不修改类/函数内部代码的情况下,来达到给类/函数加入一些新功能。
+装饰器可以作用于类或者类的成员属性/方法上,下面我们通过两段代码来分别解释:
+// 作用于类/*** 需求:* 封装4个方法,分别实现加减乘除四个功能* 通过装饰器给类添加这四个方法,并且可指定是否作为类的静态方法添加**/// 加减乘除的实现function add() {return [].slice.call(arguments).reduce((a, b) =&gt; a &#43; b);}function reduce() {return [].slice.call(arguments).reduce((a, b) =&gt; a - b);}function mul() {return [].slice.call(arguments).reduce((a, b) =&gt; a * b);}function div() {return [].slice.call(arguments).reduce((a, b) =&gt; a / b);}@bindCal(add, true)@bindCal(reduce, true)@bindCal(mul, false)@bindCal(div, false)class MyMath {} 上面我们完成了需求中的四个函数的封装以及对MyMath类应用了装饰器,下面我们就来实现这个装饰器:" />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">decorator的学习</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Feb 17, 2017</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p>随着前端技术的发展,越来越多人把ES6、7用在日常开发中,在ES7中除了广为人知的async/await之外,还有一大特性 — decorator(装饰器)。</p>
+<p>在之前原生javascript设计模式中的一篇文章(<a href="http://rwson.github.io/2015/07/15/2015-07-15-js-design-mode-decorator/">javascript装饰者模式</a>)中说道: js装饰者模式可以把一个对象(类/函数)透明地包装在另外一个对象上,完成对被装饰者添加一些新功能的作用。简单的说我们可以在不修改类/函数内部代码的情况下,来达到给类/函数加入一些新功能。</p>
+<p>装饰器可以作用于类或者类的成员属性/方法上,下面我们通过两段代码来分别解释:</p>
+<pre><code>//  作用于类
+
+/**
+ * 需求:
+ * 封装4个方法,分别实现加减乘除四个功能
+ * 通过装饰器给类添加这四个方法,并且可指定是否作为类的静态方法添加
+ **/
+ 
+//  加减乘除的实现
+
+function add() {
+    return [].slice.call(arguments).reduce((a, b) =&gt; a + b);
+}
+
+function reduce() {
+    return [].slice.call(arguments).reduce((a, b) =&gt; a - b);
+}
+
+function mul() {
+    return [].slice.call(arguments).reduce((a, b) =&gt; a * b);
+}
+
+function div() {
+    return [].slice.call(arguments).reduce((a, b) =&gt; a / b);
+}
+
+
+@bindCal(add, true)
+@bindCal(reduce, true)
+@bindCal(mul, false)
+@bindCal(div, false)
+class MyMath {
+
+}
+</code></pre>
+<p>上面我们完成了需求中的四个函数的封装以及对MyMath类应用了装饰器,下面我们就来实现这个装饰器:</p>
+<pre><code>/**
+ * @param    {Function}   method    指向需要被添加方法的指针
+ * @param    {String}     isStatic  是否添加为静态属性,默认为true
+ * @return   {Function}
+ */
+function bindCal(method, isStatic = true) {
+    //  获取到方法名
+    const {name} = method;
+    //  当作用于类上时,会返回一个匿名函数,将类的构造函数作为第一个参数
+    return function(target) {
+        //  获取类的原型
+        const {prototype} = target;
+        //  添加为原型属性(非静态属性)
+        if (!isStatic) {
+            //  检测要添加的属性是否存在
+            if (prototype[name]) {
+                throw `${prototype.name}.${name} already exits!`;
+            } else {
+                //  利用ES5中的Object.defineProperty来添加相关属性
+                Object.defineProperty(target.prototype, name, {
+                    value: method
+                });
+            }
+        } else {
+            //  添加为静态属性
+            //  检测要添加的属性是否存在
+            if (target[name]) {
+                throw `${target}.${name} already exits!`;
+            }
+            //  利用ES5中的Object.defineProperty来添加相关属性
+            Object.defineProperty(target, name, {
+                value: method
+            });
+        }
+        //  返回类的构造器
+        return target;
+    }
+}
+</code></pre>
+<p>我们把add和reduce作为静态方法添加给MyMath类,把mul和div作为原型方法给了MyMath类,所以调用应该看起来像下面的样子:</p>
+<pre><code>const math = new MyMath();
+
+console.log(MyMath.add(1, 2, 3, 4));        //  10
+console.log(MyMath.reduce(1, 2, 3, 4));     //  -8
+
+
+console.log(math.mul(1, 2, 3, 4));          //  24
+console.log(math.div(10000, 1000, 10, 5));  //  0.2
+</code></pre>
+<p>上面就是我们在类上应用装饰器的一个例子,下面再一起看下如果在成员属性/方法上应用构造器的例子:</p>
+<pre><code>/**
+ * 需求:
+ * 实现在类中可以冻结成员属性(外部无法修改,只读)
+ * 实现修改类中成员方法中的this指向
+ **/
+
+
+//  实现一个类,并且对其成员属性/方法应用装饰器、定义一个对象,作为成员方法中的this指向
+
+
+const obj = {
+    name: &quot;rwson&quot;,
+    age: 24,
+    sex: &quot;male&quot;,
+    job: &quot;web developer&quot;
+};
+
+class Context {
+
+    constructor() {
+    
+    }
+    
+    @readonly
+    version = &quot;1.0.0&quot;;
+    
+    @bindContext(obj)
+    showContext() {
+        console.log(this);
+    }
+
+} 
+</code></pre>
+<p>上面我们完成了对装饰器应用过程,下面一起看下readonly和bindContext两个装饰器的实现:</p>
+<pre><code>/**
+ * @param    {Object}   target    当前类的prototype
+ * @param    {String}   key       将要被装饰的属性名
+ * @param    {Object}   decorator ES5中Object.defineProperty的最后一个参数
+ * @return   {Object}   decorator
+ */
+function readonly(target, key, decorator) {
+	decorator.configurable = false;
+	decorator.enumerable = false;
+	decorator.writable = false;
+	decorator.value = decorator.value;
+	return decorator;
+}
+
+/**
+ * @param    {Object}   context    需要绑定成this的对象
+ * @return   {Function}
+ */
+function bindContext(context) {
+	/**
+	 * @param    {Object}   target    当前类的prototype
+	 * @param    {String}   key       将要被装饰的属性名
+	 * @param    {Object}   decorator ES5中Object.defineProperty的最后一个参数
+	 * @return   {Object}   decorator
+	 */
+    return function(target, key, decorator) {
+    	if (typeof context === &quot;undefined&quot;) {
+    		context = target;
+    	}
+        decorator.value = decorator.value.bind(context);
+        return decorator;
+    }
+}
+</code></pre>
+<p>好了上面就是我们的两个作用于成员属性/方法上的装饰器,下面一起来看下简单的调用吧:</p>
+<pre><code>const context = new Context();
+
+context.showContext();          //  打印出刚才定义的obj对象
+context.version = &quot;1.1.0&quot;;      //  抛出异常 Uncaught TypeError: Cannot assign to read only property 'version' of object '#&lt;Context&gt;'
+</code></pre>
+<p>好了,上面就装饰器的几种用法和实现,我们可能会发现刚才在定义装饰器函数的时候,当该装饰器作用于类上的时候返回出的匿名函数都是一个参数;而作用于成员属性或者成员方法上的,都是三个参数,这又是为啥呢?</p>
+<p>一起来分析下编译后的代码:</p>
+<pre><code>/**
+ * @param    {Object}   			target     当前类的prototype
+ * @param    {String}   			property   将要被装饰的属性名
+ * @param    {Array.&lt;Function&gt;}   	decorators 装饰器函数列表
+ * @param    {Object}   			descriptor ES5中Object.defineProperty的最后一个参数
+ * @param    {[type]}   context    [description]
+ * @return   {[type]}              [description]
+ * @private
+ */
+function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) {
+
+	//	属性对象
+	var desc = {};
+
+	//	Object[&quot;keys&quot;]	-&gt; [&quot;value&quot;, &quot;writable&quot;, &quot;enumerable&quot;, &quot;configurable&quot;]
+	//	把ES5中Object.defineProperty的最后一个参数的属性变成外部指定的
+	Object['ke' + 'ys'](descriptor).forEach(function (key) {
+		desc[key] = descriptor[key];
+	});
+	desc.enumerable = !!desc.enumerable;
+	desc.configurable = !!desc.configurable;
+
+	if ('value' in desc || desc.initializer) {
+		desc.writable = true;
+	}
+
+	desc = decorators.slice().reverse().reduce(function (desc, decorator) {
+		return decorator(target, property, desc) || desc;
+	}, desc);
+
+	if (context &amp;&amp; desc.initializer !== void 0) {
+		desc.value = desc.initializer ? desc.initializer.call(context) : void 0;
+		desc.initializer = undefined;
+	}
+
+	//	利用Object.defineProperty定义属性
+	if (desc.initializer === void 0) {
+		Object['define' + 'Property'](target, property, desc);
+		desc = null;
+	}
+
+	//	返回当前属性对象
+	return desc;
+}
+</code></pre>
+<p>可以看出其实decorator最后也是通过Object.defineProperty实现的,所以参数和Object.defineProperty是一致的。</p>
+<p>那日常开发中,我们可能需要借助babel来对带有decorator的代码进行编译,首先我们需要安装babel:</p>
+<pre><code>npm install babel -g
+</code></pre>
+<p>然后切换到项目目录运行:</p>
+<pre><code>npm install babel-plugin-transform-decorators-legacy --save-dev
+</code></pre>
+<p>然后创建.babelrc配置文件,在plugins选项中添加以下配置:</p>
+<pre><code>//  ...
+&quot;plugins&quot;: [
+    &quot;transform-decorators-legacy&quot;
+]
+//  ...
+</code></pre>
+<p>最后我们就可以编译之前写的代码了:</p>
+<pre><code>babel decorator.js &gt; decorator.es5.js
+</code></pre>
+</section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    <a
+      class="flex w-1/2 items-center rounded-l-md p-6 pr-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2017-03-29-node-read-regedit-uninstall-software/"
+      ><span class="mr-1.5">←</span><span>NodeJs读取windows注册表来对软件进行卸载</span></a
+    >
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2017-01-18-wrire-a-webpack-loader/"
+      ><span>实现一个webpack loader</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

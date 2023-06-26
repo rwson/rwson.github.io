@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>decorator on rwson</title>
+    <link>/categories/decorator/</link>
+    <description>Recent content in decorator on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Sat, 28 Sep 2019 00:00:00 +0000</lastBuildDate><atom:link href="/categories/decorator/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>React事件绑定终极优化方案</title>
+      <link>/post/2019-09-28-react-binding-events-with-arguments/</link>
+      <pubDate>Sat, 28 Sep 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2019-09-28-react-binding-events-with-arguments/</guid>
+      <description>React作为目前炙手可热的前端框架，里面有很多吸引人的地方，但是也有一些开发体验不太好的地方，比如我们平时做事件绑定的时候要显示的绑定this，否则就可能导致各种bug，关于事件this绑定也有很多种形式，各种方法都有优劣，下面我们将对照几种绑定方式来进行对比，最终实现一个适合自己的方案
+在构造函数中进行绑定 class App extends Component {  constructor (props) {  super(props)  this.state = {  t: &amp;#39;t&amp;#39;  }  // this.bind1 = this.bind1.bind(this) 无参写法  this.bind1 = this.bind1.bind(this, this.state.t)  }   // 无参写法  // bind1 () {  // console.log(&amp;#39;bind1&amp;#39;, this)  // }   bind1 (t, event) {  console.log(&amp;#39;bind1&amp;#39;, this, t, event)  }   render () {  return (  &amp;lt;div&amp;gt;  &amp;lt;button onClick={this.</description>
+    </item>
+    
+    <item>
+      <title>decorator的学习</title>
+      <link>/post/2017-02-17-es7-decorator-tourial/</link>
+      <pubDate>Fri, 17 Feb 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2017-02-17-es7-decorator-tourial/</guid>
+      <description>随着前端技术的发展,越来越多人把ES6、7用在日常开发中,在ES7中除了广为人知的async/await之外,还有一大特性 — decorator(装饰器)。
+在之前原生javascript设计模式中的一篇文章(javascript装饰者模式)中说道: js装饰者模式可以把一个对象(类/函数)透明地包装在另外一个对象上,完成对被装饰者添加一些新功能的作用。简单的说我们可以在不修改类/函数内部代码的情况下,来达到给类/函数加入一些新功能。
+装饰器可以作用于类或者类的成员属性/方法上,下面我们通过两段代码来分别解释:
+// 作用于类/*** 需求:* 封装4个方法,分别实现加减乘除四个功能* 通过装饰器给类添加这四个方法,并且可指定是否作为类的静态方法添加**/// 加减乘除的实现function add() {return [].slice.call(arguments).reduce((a, b) =&amp;gt; a + b);}function reduce() {return [].slice.call(arguments).reduce((a, b) =&amp;gt; a - b);}function mul() {return [].slice.call(arguments).reduce((a, b) =&amp;gt; a * b);}function div() {return [].slice.call(arguments).reduce((a, b) =&amp;gt; a / b);}@bindCal(add, true)@bindCal(reduce, true)@bindCal(mul, false)@bindCal(div, false)class MyMath {} 上面我们完成了需求中的四个函数的封装以及对MyMath类应用了装饰器,下面我们就来实现这个装饰器:</description>
+    </item>
+    
+  </channel>
+</rss>

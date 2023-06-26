@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>webpack源码阅读 - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="在前端工程化越来越普及的今天，我们几乎每个项目都需要用到构建工具，从一开始的grunt，到gulp，再到现在的webpack。 我们在使用webpack时，可以通过配置一些命令行参数来让webpack完成一些编译打包的任务，那么当我们执行webpack这个命令的时候，webpack究竟做了哪些事情? 我们一起来读读webpack的相关源码。
+注：本文阅读的版本为webpack1.15.0，从入口开始分析再拿到我们的命令之后执行的的流程，所以有些个人认为不重要的可能会省略。
+通过package.json中的bin的指向可以知道首先会走到./bin/webpack.js这个文件：
+#!/usr/bin/env node  //	引入nodejs path模块 var path = require(&#34;path&#34;);  // require.resolve获取/bin/webpack.js的绝对路径(从项目根目录下的node_modules里面找) try { 	var localWebpack = require.resolve(path.join(process.cwd(), &#34;node_modules&#34;, &#34;webpack&#34;, &#34;bin&#34;, &#34;webpack.js&#34;)); 	if(__filename !== localWebpack) { 	return require(localWebpack); 	} } catch(e) {}  var optimist = require(&#34;optimist&#34;) 	.usage(&#34;webpack &#34; &#43; require(&#34;../package.json&#34;).version &#43; &#34;\n&#34; &#43; 	&#34;Usage: https://webpack.github.io/docs/cli.html&#34;);  require(&#34;./config-optimist&#34;)(optimist);  //	对在命令行传入的参数进行解析 //	--colors、--json、 ... optimist 	.boolean(&#34;json&#34;).alias(&#34;json&#34;, &#34;j&#34;).describe(&#34;json&#34;) 	." />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">webpack源码阅读</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Sep 25, 2017</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p>在前端工程化越来越普及的今天，我们几乎每个项目都需要用到构建工具，从一开始的<code>grunt</code>，到<code>gulp</code>，再到现在的<code>webpack</code>。
+我们在使用<code>webpack</code>时，可以通过配置一些命令行参数来让<code>webpack</code>完成一些编译打包的任务，那么当我们执行<code>webpack</code>这个命令的时候，<code>webpack</code>究竟做了哪些事情? 我们一起来读读<code>webpack</code>的相关源码。</p>
+<p>注：本文阅读的版本为<a href="https://github.com/webpack/webpack/tree/webpack-1">webpack1.15.0</a>，从入口开始分析再拿到我们的命令之后执行的的流程，所以有些个人认为不重要的可能会省略。</p>
+<p>通过<code>package.json</code>中的<code>bin</code>的指向可以知道首先会走到<code>./bin/webpack.js</code>这个文件：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env node
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	引入nodejs path模块
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">path</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;path&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// require.resolve获取/bin/webpack.js的绝对路径(从项目根目录下的node_modules里面找)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">localWebpack</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>.<span style="color:#a6e22e">resolve</span>(<span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">join</span>(<span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">cwd</span>(), <span style="color:#e6db74">&#34;node_modules&#34;</span>, <span style="color:#e6db74">&#34;webpack&#34;</span>, <span style="color:#e6db74">&#34;bin&#34;</span>, <span style="color:#e6db74">&#34;webpack.js&#34;</span>));
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">__filename</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">localWebpack</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">require</span>(<span style="color:#a6e22e">localWebpack</span>);
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>} <span style="color:#66d9ef">catch</span>(<span style="color:#a6e22e">e</span>) {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">optimist</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;optimist&#34;</span>)
+</span></span><span style="display:flex;"><span>	.<span style="color:#a6e22e">usage</span>(<span style="color:#e6db74">&#34;webpack &#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;../package.json&#34;</span>).<span style="color:#a6e22e">version</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;\n&#34;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">&#34;Usage: https://webpack.github.io/docs/cli.html&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;./config-optimist&#34;</span>)(<span style="color:#a6e22e">optimist</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	对在命令行传入的参数进行解析
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//	--colors、--json、 ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">optimist</span>
+</span></span><span style="display:flex;"><span>	.<span style="color:#66d9ef">boolean</span>(<span style="color:#e6db74">&#34;json&#34;</span>).<span style="color:#a6e22e">alias</span>(<span style="color:#e6db74">&#34;json&#34;</span>, <span style="color:#e6db74">&#34;j&#34;</span>).<span style="color:#a6e22e">describe</span>(<span style="color:#e6db74">&#34;json&#34;</span>)
+</span></span><span style="display:flex;"><span>	.<span style="color:#66d9ef">boolean</span>(<span style="color:#e6db74">&#34;colors&#34;</span>).<span style="color:#a6e22e">alias</span>(<span style="color:#e6db74">&#34;colors&#34;</span>, <span style="color:#e6db74">&#34;c&#34;</span>).<span style="color:#a6e22e">describe</span>(<span style="color:#e6db74">&#34;colors&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	其他参数解析, 略;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	获取解析后的参数并转换格式
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">argv</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">optimist</span>.<span style="color:#a6e22e">argv</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">options</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;./convert-argv&#34;</span>)(<span style="color:#a6e22e">optimist</span>, <span style="color:#a6e22e">argv</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	如果有符合argv里面的参数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//	就执行相关的回调函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">ifArg</span>(<span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">fn</span>, <span style="color:#a6e22e">init</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span>(Array.<span style="color:#a6e22e">isArray</span>(<span style="color:#a6e22e">argv</span>[<span style="color:#a6e22e">name</span>])) {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">init</span>) <span style="color:#a6e22e">init</span>();
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">argv</span>[<span style="color:#a6e22e">name</span>].<span style="color:#a6e22e">forEach</span>(<span style="color:#a6e22e">fn</span>);
+</span></span><span style="display:flex;"><span>	} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span>(<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">argv</span>[<span style="color:#a6e22e">name</span>] <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#34;undefined&#34;</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">init</span>) <span style="color:#a6e22e">init</span>();
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fn</span>(<span style="color:#a6e22e">argv</span>[<span style="color:#a6e22e">name</span>], <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  处理输出相关（output）的配置参数，并执行编译函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  @param   {[type]}  options  [description]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  @return  {[type]}           [description]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">processOptions</span>(<span style="color:#a6e22e">options</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	如果options下面的then是个函数(options是个Promise示例)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//	把processOptions作为参数传到options.then中
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//	并且中断下面代码的执行
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span>(<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">then</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;function&#34;</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">processOptions</span>).<span style="color:#66d9ef">catch</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">err</span>) {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">error</span>(<span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">stack</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">err</span>);
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">exit</span>();
+</span></span><span style="display:flex;"><span>		});
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	如果传入的options是一个数组, 取数组的第一项
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">firstOptions</span> <span style="color:#f92672">=</span> Array.<span style="color:#a6e22e">isArray</span>(<span style="color:#a6e22e">options</span>) <span style="color:#f92672">?</span> <span style="color:#a6e22e">options</span>[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">:</span> <span style="color:#a6e22e">options</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	输出的配置
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">outputOptions</span> <span style="color:#f92672">=</span> Object.<span style="color:#a6e22e">create</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">stats</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">firstOptions</span>.<span style="color:#a6e22e">stats</span> <span style="color:#f92672">||</span> {});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	如果outputOptions中本身没有context
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">//	就把配置项中的context给它
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span>(<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">outputOptions</span>.<span style="color:#a6e22e">context</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;undefined&#34;</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">outputOptions</span>.<span style="color:#a6e22e">context</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">firstOptions</span>.<span style="color:#a6e22e">context</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	各种命令行参数处理
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ifArg</span>(<span style="color:#e6db74">&#34;json&#34;</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">bool</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">bool</span>)
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">outputOptions</span>.<span style="color:#a6e22e">json</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">bool</span>;
+</span></span><span style="display:flex;"><span>	});
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	还有很多ifArg，略
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	引入webpack入口文件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">webpack</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;../lib/webpack.js&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	错误堆栈追踪上限
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	Error.<span style="color:#a6e22e">stackTraceLimit</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">30</span>;
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">lastHash</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	执行编译
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">compiler</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">webpack</span>(<span style="color:#a6e22e">options</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">function</span> <span style="color:#a6e22e">compilerCallback</span>(<span style="color:#a6e22e">err</span>, <span style="color:#a6e22e">stats</span>) {
+</span></span><span style="display:flex;"><span>      	<span style="color:#75715e">//	命令行参数中没有带有--watch
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span><span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">watch</span>) {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">purgeInputFileSystem</span>();
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>      
+</span></span><span style="display:flex;"><span>      	<span style="color:#75715e">//	出错
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">err</span>) {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">lastHash</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">error</span>(<span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">stack</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">err</span>);
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">details</span>) <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">error</span>(<span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">details</span>);
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span><span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">watch</span>) {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#34;exit&#34;</span>, <span style="color:#66d9ef">function</span>() {
+</span></span><span style="display:flex;"><span>					<span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">exit</span>(<span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>				});
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">outputOptions</span>.<span style="color:#a6e22e">json</span>) {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">stdout</span>.<span style="color:#a6e22e">write</span>(<span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">stringify</span>(<span style="color:#a6e22e">stats</span>.<span style="color:#a6e22e">toJson</span>(<span style="color:#a6e22e">outputOptions</span>), <span style="color:#66d9ef">null</span>, <span style="color:#ae81ff">2</span>) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;\n&#34;</span>);
+</span></span><span style="display:flex;"><span>		} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">stats</span>.<span style="color:#a6e22e">hash</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">lastHash</span>) {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">lastHash</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">stats</span>.<span style="color:#a6e22e">hash</span>;
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">stdout</span>.<span style="color:#a6e22e">write</span>(<span style="color:#a6e22e">stats</span>.<span style="color:#a6e22e">toString</span>(<span style="color:#a6e22e">outputOptions</span>) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;\n&#34;</span>);
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	命令行参数中带有--watch
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">watch</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">primaryOptions</span> <span style="color:#f92672">=</span> <span style="color:#f92672">!</span>Array.<span style="color:#a6e22e">isArray</span>(<span style="color:#a6e22e">options</span>) <span style="color:#f92672">?</span> <span style="color:#a6e22e">options</span> <span style="color:#f92672">:</span> <span style="color:#a6e22e">options</span>[<span style="color:#ae81ff">0</span>];
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">watchOptions</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">primaryOptions</span>.<span style="color:#a6e22e">watchOptions</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">primaryOptions</span>.<span style="color:#a6e22e">watch</span> <span style="color:#f92672">||</span> {};
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">watchOptions</span>.<span style="color:#a6e22e">stdin</span>) {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">stdin</span>.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#39;end&#39;</span>, <span style="color:#66d9ef">function</span>() {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">exit</span>(<span style="color:#ae81ff">0</span>); <span style="color:#75715e">// eslint-disable-line
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>			});
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">stdin</span>.<span style="color:#a6e22e">resume</span>();
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>      	
+</span></span><span style="display:flex;"><span>      	<span style="color:#75715e">//	调用compiler下面的watch来监听文件变化
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">watch</span>(<span style="color:#a6e22e">watchOptions</span>, <span style="color:#a6e22e">compilerCallback</span>);
+</span></span><span style="display:flex;"><span>	} <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">run</span>(<span style="color:#a6e22e">compilerCallback</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	执行processOptions并且传入解析出来的参数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">processOptions</span>(<span style="color:#a6e22e">options</span>);
+</span></span></code></pre></div><p>在上面定义的<code>processOptions</code>方法中可以看到引入了<code>../lib/webpack.js</code>这个文件，下面我们一起看看<code>../lib/webpack.js</code>这个文件。</p>
+<p>在<code>../lib/webpack.js</code>中，<code>webpack</code>作为入口函数，我们一起看下它的实现：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  webpack入口
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  @param   {Object}    options   webpack.config.js中module.exports出来的对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  @param   {Function}  callback  回调函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  @return  {Object}              webpack Compiler Object/multi compiler object Collection
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">webpack</span>(<span style="color:#a6e22e">options</span>, <span style="color:#a6e22e">callback</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">compiler</span>;
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	options是一个数组时, 实例化一个MultiCompiler, 去map这个数组, 针对每个配置项返回一个webpack实例, 最后用compiler接收
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span>(Array.<span style="color:#a6e22e">isArray</span>(<span style="color:#a6e22e">options</span>)) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">MultiCompiler</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">map</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">options</span>) {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">webpack</span>(<span style="color:#a6e22e">options</span>);
+</span></span><span style="display:flex;"><span>		}));
+</span></span><span style="display:flex;"><span>	} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span>(<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">options</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;object&#34;</span>) {
+</span></span><span style="display:flex;"><span>		
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// 实例化一个WebpackOptionsDefaulter来处理默认配置项
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">WebpackOptionsDefaulter</span>().<span style="color:#a6e22e">process</span>(<span style="color:#a6e22e">options</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">//	实例化一个Compiler, Compiler继承自Tapable(https://doc.webpack-china.org/api/plugins/tapable/)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#75715e">//	Compiler实例化后会继承到apply、plugin等调用和绑定插件的方法
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">compiler</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Compiler</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">//	配置项
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">options</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">//	对传入的options进行逐个编译,并且把options作为返回值重赋值到compiler.options
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">options</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">WebpackOptionsApply</span>().<span style="color:#a6e22e">process</span>(<span style="color:#a6e22e">options</span>, <span style="color:#a6e22e">compiler</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">//	应用node环境插件(给compiler设置resolvers、watchFileSystem、outputFileSystem)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">NodeEnvironmentPlugin</span>().<span style="color:#a6e22e">apply</span>(<span style="color:#a6e22e">compiler</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">//	触发environment和after-environment事件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">applyPlugins</span>(<span style="color:#e6db74">&#34;environment&#34;</span>);
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">applyPlugins</span>(<span style="color:#e6db74">&#34;after-environment&#34;</span>);
+</span></span><span style="display:flex;"><span>	} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">//	options既不是数组也不是对象时, 抛出异常
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">&#34;Invalid argument: options&#34;</span>);
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	存在回调函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">callback</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span>(<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">callback</span> <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#34;function&#34;</span>) <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">&#34;Invalid argument: callback&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">//	命令行里面带watch, 或者options是个数组(并且数组中有一项的watch为true)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">watch</span> <span style="color:#f92672">===</span> <span style="color:#66d9ef">true</span> <span style="color:#f92672">||</span> (Array.<span style="color:#a6e22e">isArray</span>(<span style="color:#a6e22e">options</span>) <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">some</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">o</span>) {
+</span></span><span style="display:flex;"><span>					<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">o</span>.<span style="color:#a6e22e">watch</span>;
+</span></span><span style="display:flex;"><span>				}))) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">//	根据参数类型拿到watchOptions
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>			<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">watchOptions</span> <span style="color:#f92672">=</span> (<span style="color:#f92672">!</span>Array.<span style="color:#a6e22e">isArray</span>(<span style="color:#a6e22e">options</span>) <span style="color:#f92672">?</span> <span style="color:#a6e22e">options</span> <span style="color:#f92672">:</span> <span style="color:#a6e22e">options</span>[<span style="color:#ae81ff">0</span>]).<span style="color:#a6e22e">watchOptions</span> <span style="color:#f92672">||</span> {};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">//	watchDelay属性应该被options.watchOptions.aggregateTimeout代替
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>			<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">watchDelay</span> <span style="color:#f92672">=</span> (<span style="color:#f92672">!</span>Array.<span style="color:#a6e22e">isArray</span>(<span style="color:#a6e22e">options</span>) <span style="color:#f92672">?</span> <span style="color:#a6e22e">options</span> <span style="color:#f92672">:</span> <span style="color:#a6e22e">options</span>[<span style="color:#ae81ff">0</span>]).<span style="color:#a6e22e">watchDelay</span>;
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">watchDelay</span>) {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">warn</span>(<span style="color:#e6db74">&#34;options.watchDelay is deprecated: Use &#39;options.watchOptions.aggregateTimeout&#39; instead&#34;</span>);
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">watchOptions</span>.<span style="color:#a6e22e">aggregateTimeout</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">watchDelay</span>;
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">//	实例化并返回一个watch对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">watch</span>(<span style="color:#a6e22e">watchOptions</span>, <span style="color:#a6e22e">callback</span>);
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">run</span>(<span style="color:#a6e22e">callback</span>);
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">compiler</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  在对象下用Object.defineProperty的方法添加插件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  @param   {Object}  exports  被添加的对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  @param   {String}  path     在get中返回require
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  @param   {Array}   plugins  插件数组
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">exportPlugins</span>(<span style="color:#a6e22e">exports</span>, <span style="color:#a6e22e">path</span>, <span style="color:#a6e22e">plugins</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">plugins</span>.<span style="color:#a6e22e">forEach</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">name</span>) {
+</span></span><span style="display:flex;"><span>		Object.<span style="color:#a6e22e">defineProperty</span>(<span style="color:#a6e22e">exports</span>, <span style="color:#a6e22e">name</span>, {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">configurable</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">false</span>,
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">enumerable</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>,
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">get</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>() {
+</span></span><span style="display:flex;"><span>				<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">require</span>(<span style="color:#a6e22e">path</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;/&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">name</span>);
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>		});
+</span></span><span style="display:flex;"><span>	});
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>在这个文件最后，通过上面的<code>exportPlugins </code>在<code>webpack</code>下面挂载了一些插件做属性</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">//	暴露插件到webpack下面
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//	new webpack.DefinePlugin()
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//	...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">exportPlugins</span>(<span style="color:#a6e22e">exports</span>, <span style="color:#e6db74">&#34;.&#34;</span>, [
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;DefinePlugin&#34;</span>,
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>]);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">exportPlugins</span>(<span style="color:#a6e22e">exports</span>.<span style="color:#a6e22e">optimize</span> <span style="color:#f92672">=</span> {}, <span style="color:#e6db74">&#34;./optimize&#34;</span>, [
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;AggressiveMergingPlugin&#34;</span>,
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;CommonsChunkPlugin&#34;</span>,
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;DedupePlugin&#34;</span>,
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;LimitChunkCountPlugin&#34;</span>,
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;MinChunkSizePlugin&#34;</span>,
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;OccurenceOrderPlugin&#34;</span>,
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;OccurrenceOrderPlugin&#34;</span>,
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;UglifyJsPlugin&#34;</span>
+</span></span><span style="display:flex;"><span>]);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">exportPlugins</span>(<span style="color:#a6e22e">exports</span>.<span style="color:#a6e22e">dependencies</span> <span style="color:#f92672">=</span> {}, <span style="color:#e6db74">&#34;./dependencies&#34;</span>, [
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;LabeledModulesPlugin&#34;</span>
+</span></span><span style="display:flex;"><span>]);
+</span></span></code></pre></div><p>刚才在对<code>webpack</code>进行标注的时候，实例化了<code>WebpackOptionsApply </code>对象并且调用了<code>process </code>方法，这个方法将会对我们传进去的<code>options</code>和<code>compiler</code>编译对象进行逐个编译，下面我们一起看下<code>WebpackOptionsApply</code>这个模块的实现：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">WebpackOptionsApply</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	OptionsApply构造函数的继承
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">OptionsApply</span>.<span style="color:#a6e22e">call</span>(<span style="color:#66d9ef">this</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">module</span>.<span style="color:#a6e22e">exports</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">WebpackOptionsApply</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	继承OptionsApply的原型
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">WebpackOptionsApply</span>.<span style="color:#a6e22e">prototype</span> <span style="color:#f92672">=</span> Object.<span style="color:#a6e22e">create</span>(<span style="color:#a6e22e">OptionsApply</span>.<span style="color:#a6e22e">prototype</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  对我们传进去的options和compiler编译对象进行逐个编译
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  @param   {[type]}  options   [description]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  @param   {[type]}  compiler  [description]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  @return  {[type]}            [description]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">WebpackOptionsApply</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">process</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">options</span>, <span style="color:#a6e22e">compiler</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	context处理
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">context</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">context</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	plugins的处理, 调用compiler.apply.apply
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">plugins</span> <span style="color:#f92672">&amp;&amp;</span> Array.<span style="color:#a6e22e">isArray</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">plugins</span>)) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#a6e22e">compiler</span>, <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">plugins</span>);
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	缓存输入输出的路径
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">outputPath</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">output</span>.<span style="color:#a6e22e">path</span>;
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">recordsInputPath</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">recordsInputPath</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">recordsPath</span>;
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">recordsOutputPath</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">recordsOutputPath</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">recordsPath</span>;
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">name</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">name</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	如果options.target是个字符串,根据options.target判断具体应用哪些插件(compiler.apply)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span>(<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">target</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;string&#34;</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">//	这边本来有个switch...case来根据options.target的具体值应用
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">target</span> <span style="color:#f92672">!==</span> <span style="color:#66d9ef">false</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">target</span>(<span style="color:#a6e22e">compiler</span>);
+</span></span><span style="display:flex;"><span>	} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">&#34;Unsupported target &#39;&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">target</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;&#39;.&#34;</span>);
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	output.library相关配置
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">output</span>.<span style="color:#a6e22e">library</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">output</span>.<span style="color:#a6e22e">libraryTarget</span> <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#34;var&#34;</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">LibraryTemplatePlugin</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;./LibraryTemplatePlugin&#34;</span>);
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">LibraryTemplatePlugin</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">output</span>.<span style="color:#a6e22e">library</span>, <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">output</span>.<span style="color:#a6e22e">libraryTarget</span>, <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">output</span>.<span style="color:#a6e22e">umdNamedDefine</span>));
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	处理externals属性,告诉webpack不要打包这些模块,而是在运行时从环境中请求他们
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">externals</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">ExternalsPlugin</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;./ExternalsPlugin&#34;</span>);
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">ExternalsPlugin</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">output</span>.<span style="color:#a6e22e">libraryTarget</span>, <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">externals</span>));
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	处理hot属性,devServer相关
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">hot</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">MovedToPluginWarningPlugin</span>(<span style="color:#e6db74">&#34;hot&#34;</span>, <span style="color:#e6db74">&#34;HotModuleReplacementPlugin&#34;</span>));
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">HotModuleReplacementPlugin</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;./HotModuleReplacementPlugin&#34;</span>);
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">HotModuleReplacementPlugin</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">output</span>));
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	devtool和sourceMap相关配置
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">devtool</span> <span style="color:#f92672">&amp;&amp;</span> (<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">devtool</span>.<span style="color:#a6e22e">indexOf</span>(<span style="color:#e6db74">&#34;sourcemap&#34;</span>) <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">devtool</span>.<span style="color:#a6e22e">indexOf</span>(<span style="color:#e6db74">&#34;source-map&#34;</span>) <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">0</span>)) {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">hidden</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">devtool</span>.<span style="color:#a6e22e">indexOf</span>(<span style="color:#e6db74">&#34;hidden&#34;</span>) <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">inline</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">devtool</span>.<span style="color:#a6e22e">indexOf</span>(<span style="color:#e6db74">&#34;inline&#34;</span>) <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">evalWrapped</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">devtool</span>.<span style="color:#a6e22e">indexOf</span>(<span style="color:#e6db74">&#34;eval&#34;</span>) <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">cheap</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">devtool</span>.<span style="color:#a6e22e">indexOf</span>(<span style="color:#e6db74">&#34;cheap&#34;</span>) <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">moduleMaps</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">devtool</span>.<span style="color:#a6e22e">indexOf</span>(<span style="color:#e6db74">&#34;module&#34;</span>) <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">noSources</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">devtool</span>.<span style="color:#a6e22e">indexOf</span>(<span style="color:#e6db74">&#34;nosources&#34;</span>) <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">legacy</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">devtool</span>.<span style="color:#a6e22e">indexOf</span>(<span style="color:#e6db74">&#34;@&#34;</span>) <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">modern</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">devtool</span>.<span style="color:#a6e22e">indexOf</span>(<span style="color:#e6db74">&#34;#&#34;</span>) <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">comment</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">legacy</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">modern</span> <span style="color:#f92672">?</span> <span style="color:#e6db74">&#34;\n/*\n//@ sourceMappingURL=[url]\n//# sourceMappingURL=[url]\n*/&#34;</span> <span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">legacy</span> <span style="color:#f92672">?</span> <span style="color:#e6db74">&#34;\n/*\n//@ sourceMappingURL=[url]\n*/&#34;</span> <span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">modern</span> <span style="color:#f92672">?</span> <span style="color:#e6db74">&#34;\n//# sourceMappingURL=[url]&#34;</span> <span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">Plugin</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">evalWrapped</span> <span style="color:#f92672">?</span> <span style="color:#a6e22e">EvalSourceMapDevToolPlugin</span> <span style="color:#f92672">:</span> <span style="color:#a6e22e">SourceMapDevToolPlugin</span>;
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Plugin</span>({
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">filename</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">inline</span> <span style="color:#f92672">?</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">:</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">output</span>.<span style="color:#a6e22e">sourceMapFilename</span>,
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">moduleFilenameTemplate</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">output</span>.<span style="color:#a6e22e">devtoolModuleFilenameTemplate</span>,
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">fallbackModuleFilenameTemplate</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">output</span>.<span style="color:#a6e22e">devtoolFallbackModuleFilenameTemplate</span>,
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">append</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">hidden</span> <span style="color:#f92672">?</span> <span style="color:#66d9ef">false</span> <span style="color:#f92672">:</span> <span style="color:#a6e22e">comment</span>,
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">module</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">moduleMaps</span> <span style="color:#f92672">?</span> <span style="color:#66d9ef">true</span> <span style="color:#f92672">:</span> <span style="color:#a6e22e">cheap</span> <span style="color:#f92672">?</span> <span style="color:#66d9ef">false</span> <span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>,
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">columns</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">cheap</span> <span style="color:#f92672">?</span> <span style="color:#66d9ef">false</span> <span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>,
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">lineToLine</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">output</span>.<span style="color:#a6e22e">devtoolLineToLine</span>,
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">noSources</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">noSources</span>,
+</span></span><span style="display:flex;"><span>		}));
+</span></span><span style="display:flex;"><span>	} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">devtool</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">devtool</span>.<span style="color:#a6e22e">indexOf</span>(<span style="color:#e6db74">&#34;eval&#34;</span>) <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">legacy</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">devtool</span>.<span style="color:#a6e22e">indexOf</span>(<span style="color:#e6db74">&#34;@&#34;</span>) <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">modern</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">devtool</span>.<span style="color:#a6e22e">indexOf</span>(<span style="color:#e6db74">&#34;#&#34;</span>) <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">comment</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">legacy</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">modern</span> <span style="color:#f92672">?</span> <span style="color:#e6db74">&#34;//@ sourceURL=[url]\n//# sourceURL=[url]&#34;</span> <span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">legacy</span> <span style="color:#f92672">?</span> <span style="color:#e6db74">&#34;//@ sourceURL=[url]&#34;</span> <span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">modern</span> <span style="color:#f92672">?</span> <span style="color:#e6db74">&#34;//# sourceURL=[url]&#34;</span> <span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">EvalDevToolModulePlugin</span>(<span style="color:#a6e22e">comment</span>, <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">output</span>.<span style="color:#a6e22e">devtoolModuleFilenameTemplate</span>));
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">EntryOptionPlugin</span>());
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">applyPluginsBailResult</span>(<span style="color:#e6db74">&#34;entry-option&#34;</span>, <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">context</span>, <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">entry</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">prefetch</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">MovedToPluginWarningPlugin</span>(<span style="color:#e6db74">&#34;prefetch&#34;</span>, <span style="color:#e6db74">&#34;PrefetchPlugin&#34;</span>));
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">PrefetchPlugin</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;./PrefetchPlugin&#34;</span>);
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">prefetch</span>.<span style="color:#a6e22e">map</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">request</span>) {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">PrefetchPlugin</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">context</span>, <span style="color:#a6e22e">request</span>));
+</span></span><span style="display:flex;"><span>		});
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">CompatibilityPlugin</span>(),
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">LoaderPlugin</span>(),						<span style="color:#75715e">//	loader插件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">NodeStuffPlugin</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">node</span>),		<span style="color:#75715e">//	nodejs环境相关的插件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">RequireJsStuffPlugin</span>(),				<span style="color:#75715e">//	RequireJs的插件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">APIPlugin</span>(),						<span style="color:#75715e">//	变量名的替换,编译后的文件里随处可见的__webpack_require__变量名就是在此处理
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">ConstPlugin</span>(),						<span style="color:#75715e">//	转换一些if, 三目表达式等等
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">RequireIncludePlugin</span>(),				<span style="color:#75715e">//	require.include函数的转换
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">RequireEnsurePlugin</span>(),				<span style="color:#75715e">//	require.ensure函数的转换
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">RequireContextPlugin</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">resolve</span>.<span style="color:#a6e22e">modulesDirectories</span>, <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">resolve</span>.<span style="color:#a6e22e">extensions</span>),
+</span></span><span style="display:flex;"><span>												<span style="color:#75715e">//	
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">AMDPlugin</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">module</span>, <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">amd</span> <span style="color:#f92672">||</span> {}),
+</span></span><span style="display:flex;"><span>												<span style="color:#75715e">//	AMD规范插件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">CommonJsPlugin</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">module</span>)		<span style="color:#75715e">//	commonJs规范插件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">RemoveParentModulesPlugin</span>(),		<span style="color:#75715e">//	移除父module的插件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">RemoveEmptyChunksPlugin</span>(),			<span style="color:#75715e">//	移除空模块的插件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">MergeDuplicateChunksPlugin</span>(),		<span style="color:#75715e">//	移除重复模块的插件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">FlagIncludedChunksPlugin</span>()			<span style="color:#75715e">//	output中对于名称的配置([name].[hash].[ext])
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">TemplatedPathPlugin</span>());
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">RecordIdsPlugin</span>());		<span style="color:#75715e">//	记录chunkId的插件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">WarnCaseSensitiveModulesPlugin</span>());
+</span></span><span style="display:flex;"><span>												<span style="color:#75715e">//	大小写敏感的插件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * webpack.optimize属性下的几个方法
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * ./webpack.js
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * exportPlugins(exports.optimize = {}, &#34;./optimize&#34;, [
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * 		&#34;AggressiveMergingPlugin&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * 		//	...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * ]);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 */</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">optimize</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">optimize</span>.<span style="color:#a6e22e">occurenceOrder</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">MovedToPluginWarningPlugin</span>(<span style="color:#e6db74">&#34;optimize.occurenceOrder&#34;</span>, <span style="color:#e6db74">&#34;optimize.OccurrenceOrderPlugin&#34;</span>));
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">OccurrenceOrderPlugin</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;./optimize/OccurrenceOrderPlugin&#34;</span>);
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">OccurrenceOrderPlugin</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">optimize</span>.<span style="color:#a6e22e">occurenceOrderPreferEntry</span>));
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * 处理minChunkSize, 性能优化相关
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * 一些小模块会被打包成单独的模块而造成不必要的HTTP请求, 指定minChunkSize会合并这些小模块, 减少HTTP请求
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 */</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">optimize</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">optimize</span>.<span style="color:#a6e22e">minChunkSize</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">MovedToPluginWarningPlugin</span>(<span style="color:#e6db74">&#34;optimize.minChunkSize&#34;</span>, <span style="color:#e6db74">&#34;optimize.MinChunkSizePlugin&#34;</span>));
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">MinChunkSizePlugin</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;./optimize/MinChunkSizePlugin&#34;</span>);
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">MinChunkSizePlugin</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">optimize</span>));
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	和maxChunksSize相反
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">optimize</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">optimize</span>.<span style="color:#a6e22e">maxChunks</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">MovedToPluginWarningPlugin</span>(<span style="color:#e6db74">&#34;optimize.maxChunks&#34;</span>, <span style="color:#e6db74">&#34;optimize.LimitChunkCountPlugin&#34;</span>));
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">LimitChunkCountPlugin</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;./optimize/LimitChunkCountPlugin&#34;</span>);
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">LimitChunkCountPlugin</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">optimize</span>));
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">optimize</span>.<span style="color:#a6e22e">minimize</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">MovedToPluginWarningPlugin</span>(<span style="color:#e6db74">&#34;optimize.minimize&#34;</span>, <span style="color:#e6db74">&#34;optimize.UglifyJsPlugin&#34;</span>));
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">UglifyJsPlugin</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;./optimize/UglifyJsPlugin&#34;</span>);
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">optimize</span>.<span style="color:#a6e22e">minimize</span> <span style="color:#f92672">===</span> <span style="color:#66d9ef">true</span>)
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">UglifyJsPlugin</span>());
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">UglifyJsPlugin</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">optimize</span>.<span style="color:#a6e22e">minimize</span>));
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	缓存,该属性在watch的模式下默认开启缓存
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">cache</span> <span style="color:#f92672">===</span> <span style="color:#66d9ef">undefined</span> <span style="color:#f92672">?</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">watch</span> <span style="color:#f92672">:</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">cache</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">CachePlugin</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;./CachePlugin&#34;</span>);
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">CachePlugin</span>(<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">cache</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;object&#34;</span> <span style="color:#f92672">?</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">cache</span> <span style="color:#f92672">:</span> <span style="color:#66d9ef">null</span>));
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * 处理provide属性,如果有则调用ProvidePlugin插件,这个插件可以让一个module赋值为一个变量,从而能在每个module中以变量名访问它
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * new webpack.ProvidePlugin({
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * 		identifier: &#34;module1&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * });
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * new webpack.ProvidePlugin({
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * 		identifier: [&#34;module1&#34;, &#34;property1&#34;]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * });
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 */</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span>(<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">provide</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;object&#34;</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">MovedToPluginWarningPlugin</span>(<span style="color:#e6db74">&#34;provide&#34;</span>, <span style="color:#e6db74">&#34;ProvidePlugin&#34;</span>));
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">ProvidePlugin</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;./ProvidePlugin&#34;</span>);
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">ProvidePlugin</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">provide</span>));
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * 处理define属性,如果有这个属性则调用DefinePlugin插件,这个插件可以定义全局的常量
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * //	define
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * new webpack.DefinePlugin({
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * 		PRODUCTION: JSON.stringify(true),
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * 		BROWSER_SUPPORTS_HTML5: true
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * });
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 *
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * //	use
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * if(!PRODUCTION) {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * 		console.log(&#34;develop mode&#34;);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 *
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * if (!BROWSER_SUPPORTS_HTML5) {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * 		require(&#34;html5shiv&#34;);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 * } 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">	 */</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">define</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">MovedToPluginWarningPlugin</span>(<span style="color:#e6db74">&#34;define&#34;</span>, <span style="color:#e6db74">&#34;DefinePlugin&#34;</span>));
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">defineObject</span> <span style="color:#f92672">=</span> {};
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span>(<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">define</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;object&#34;</span>) {
+</span></span><span style="display:flex;"><span>			Object.<span style="color:#a6e22e">keys</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">define</span>).<span style="color:#a6e22e">forEach</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">key</span>) {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">defineObject</span>[<span style="color:#a6e22e">key</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">define</span>[<span style="color:#a6e22e">key</span>];
+</span></span><span style="display:flex;"><span>			});
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">DefinePlugin</span>(<span style="color:#a6e22e">defineObject</span>));
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	defineDebug不为false,声明一个全局的DEBUG
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">defineDebug</span> <span style="color:#f92672">!==</span> <span style="color:#66d9ef">false</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">DefinePlugin</span>({
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">DEBUG</span><span style="color:#f92672">:</span> <span style="color:#f92672">!!</span><span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">debug</span>
+</span></span><span style="display:flex;"><span>		}));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	触发after-plugins和应用一些其他插件, 最后触发after-resolvers
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">applyPlugins</span>(<span style="color:#e6db74">&#34;after-plugins&#34;</span>, <span style="color:#a6e22e">compiler</span>);
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">resolvers</span>.<span style="color:#a6e22e">normal</span>.<span style="color:#a6e22e">apply</span>(
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">UnsafeCachePlugin</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">resolve</span>.<span style="color:#a6e22e">unsafeCache</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">//	...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	);
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">applyPlugins</span>(<span style="color:#e6db74">&#34;after-resolvers&#34;</span>, <span style="color:#a6e22e">compiler</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	返回options
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">options</span>;
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>看完这一段之后，个人对<code>webpack</code>的了解更深入了一些，熟悉了好几个平常不怎么用到，但是感觉还是很有用的东西，例如<code>externals </code>和<code>define </code>属性。</p>
+<p>到这里，<code>webpack</code>的整体流程算是完了，在<code>webpack</code>中，有各式各样的插件，下面我们一起了解下大家所熟知的<code>UglifyJsPlugin</code>来理解下插件体系和加深对<code>webpack</code>流程的理解。</p>
+<p>首先我们了解下开发<a href="https://doc.webpack-china.org/development/how-to-write-a-plugin">webpack插件</a>的一些事项：
+在中文里面提到：</p>
+<ul>
+<li>一个JavaScript命名函数</li>
+<li>在它的原型上定义一个<code>apply</code>方法</li>
+<li>指定挂载的webpack事件钩子</li>
+<li>处理webpack内部实例的特定数据</li>
+<li>功能完成后调用webpack提供的回调</li>
+</ul>
+<p>基础结构如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">// 命名函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">MyExampleWebpackPlugin</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 在它的 prototype 上定义一个 apply 方法。
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">MyExampleWebpackPlugin</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">apply</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">compiler</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 指定挂载的webpack事件钩子
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">plugin</span>(<span style="color:#e6db74">&#39;webpacksEventHook&#39;</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">compilation</span> <span style="color:#75715e">/* 处理webpack内部实例的特定数据*/</span>, <span style="color:#a6e22e">callback</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;This is an example plugin!!!&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 功能完成后调用webpack提供的回调。
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">callback</span>();
+</span></span><span style="display:flex;"><span>  });
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>了解了插件的基本架构，下面一起看下<code>UglifyJsPlugin</code>的实现，<code>UglifyJsPlugin</code>位于<code>lib/optimize/UglifyJsPlugin.js</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">//	一个JavaScript命名函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">UglifyJsPlugin</span>(<span style="color:#a6e22e">options</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span>(<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">options</span> <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#34;object&#34;</span>) <span style="color:#a6e22e">options</span> <span style="color:#f92672">=</span> {};
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span>(<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">compressor</span> <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#34;undefined&#34;</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">compress</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">compressor</span>;
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">options</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">module</span>.<span style="color:#a6e22e">exports</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">UglifyJsPlugin</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	在它的原型上定义一个apply方法
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">UglifyJsPlugin</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">apply</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">compiler</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">options</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">options</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	如果只选指定项中有关于文件后缀的就用指定项中的，否则用默认的(.js结尾)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">test</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">test</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">/\.js($|\?)/i</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">requestShortener</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">RequestShortener</span>(<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">context</span>);
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">compiler</span>.<span style="color:#a6e22e">plugin</span>(<span style="color:#e6db74">&#34;compilation&#34;</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">compilation</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">sourceMap</span> <span style="color:#f92672">!==</span> <span style="color:#66d9ef">false</span>) {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">compilation</span>.<span style="color:#a6e22e">plugin</span>(<span style="color:#e6db74">&#34;build-module&#34;</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">module</span>) {
+</span></span><span style="display:flex;"><span>				<span style="color:#75715e">// to get detailed location info about errors
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>				<span style="color:#a6e22e">module</span>.<span style="color:#a6e22e">useSourceMap</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+</span></span><span style="display:flex;"><span>			});
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">		 * 指定挂载的webpack事件钩子(optimize-chunk-assets)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">		 * @param  {Object}  chunks     被压缩的模块信息
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">		 * @param  {Object}  callback 	webpack提供的回调
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">		 */</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">compilation</span>.<span style="color:#a6e22e">plugin</span>(<span style="color:#e6db74">&#34;optimize-chunk-assets&#34;</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">chunks</span>, <span style="color:#a6e22e">callback</span>) {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">files</span> <span style="color:#f92672">=</span> [];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">//	取出模块中的文件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>			<span style="color:#a6e22e">chunks</span>.<span style="color:#a6e22e">forEach</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">chunk</span>) {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">chunk</span>.<span style="color:#a6e22e">files</span>.<span style="color:#a6e22e">forEach</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">file</span>) {
+</span></span><span style="display:flex;"><span>					<span style="color:#a6e22e">files</span>.<span style="color:#a6e22e">push</span>(<span style="color:#a6e22e">file</span>);
+</span></span><span style="display:flex;"><span>				});
+</span></span><span style="display:flex;"><span>			});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">//	compilation.additionalChunkAssets这个队列在lib/HotModuleReplacementPlugin.js这个文件中被加入了新元素
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>			<span style="color:#75715e">//	也一起合并到files中去
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>			<span style="color:#a6e22e">compilation</span>.<span style="color:#a6e22e">additionalChunkAssets</span>.<span style="color:#a6e22e">forEach</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">file</span>) {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">files</span>.<span style="color:#a6e22e">push</span>(<span style="color:#a6e22e">file</span>);
+</span></span><span style="display:flex;"><span>			});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">//	提取出符合options中指定的文件后缀的文件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>			<span style="color:#a6e22e">files</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">files</span>.<span style="color:#a6e22e">filter</span>(<span style="color:#a6e22e">ModuleFilenameHelpers</span>.<span style="color:#a6e22e">matchObject</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#66d9ef">undefined</span>, <span style="color:#a6e22e">options</span>));
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">files</span>.<span style="color:#a6e22e">forEach</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">file</span>) {
+</span></span><span style="display:flex;"><span>				<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">oldWarnFunction</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">uglify</span>.<span style="color:#a6e22e">AST_Node</span>.<span style="color:#a6e22e">warn_function</span>;
+</span></span><span style="display:flex;"><span>				<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">warnings</span> <span style="color:#f92672">=</span> [];
+</span></span><span style="display:flex;"><span>				<span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>					<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">asset</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">compilation</span>.<span style="color:#a6e22e">assets</span>[<span style="color:#a6e22e">file</span>];
+</span></span><span style="display:flex;"><span>					<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">asset</span>.<span style="color:#a6e22e">__UglifyJsPlugin</span>) {
+</span></span><span style="display:flex;"><span>						<span style="color:#a6e22e">compilation</span>.<span style="color:#a6e22e">assets</span>[<span style="color:#a6e22e">file</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">asset</span>.<span style="color:#a6e22e">__UglifyJsPlugin</span>;
+</span></span><span style="display:flex;"><span>						<span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>					}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>					<span style="color:#75715e">//	sourceMap相关
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>					<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">sourceMap</span> <span style="color:#f92672">!==</span> <span style="color:#66d9ef">false</span>) {
+</span></span><span style="display:flex;"><span>						<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">asset</span>.<span style="color:#a6e22e">sourceAndMap</span>) {
+</span></span><span style="display:flex;"><span>							<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">sourceAndMap</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">asset</span>.<span style="color:#a6e22e">sourceAndMap</span>();
+</span></span><span style="display:flex;"><span>							<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">inputSourceMap</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">sourceAndMap</span>.<span style="color:#a6e22e">map</span>;
+</span></span><span style="display:flex;"><span>							<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">input</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">sourceAndMap</span>.<span style="color:#a6e22e">source</span>;
+</span></span><span style="display:flex;"><span>						} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>							<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">inputSourceMap</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">asset</span>.<span style="color:#a6e22e">map</span>();
+</span></span><span style="display:flex;"><span>							<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">input</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">asset</span>.<span style="color:#a6e22e">source</span>();
+</span></span><span style="display:flex;"><span>						}
+</span></span><span style="display:flex;"><span>						<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">sourceMap</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">SourceMapConsumer</span>(<span style="color:#a6e22e">inputSourceMap</span>);
+</span></span><span style="display:flex;"><span>						<span style="color:#a6e22e">uglify</span>.<span style="color:#a6e22e">AST_Node</span>.<span style="color:#a6e22e">warn_function</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">warning</span>) { <span style="color:#75715e">// eslint-disable-line camelcase
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>							<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">match</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">/\[.+:([0-9]+),([0-9]+)\]/</span>.<span style="color:#a6e22e">exec</span>(<span style="color:#a6e22e">warning</span>);
+</span></span><span style="display:flex;"><span>							<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">line</span> <span style="color:#f92672">=</span> <span style="color:#f92672">+</span><span style="color:#a6e22e">match</span>[<span style="color:#ae81ff">1</span>];
+</span></span><span style="display:flex;"><span>							<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">column</span> <span style="color:#f92672">=</span> <span style="color:#f92672">+</span><span style="color:#a6e22e">match</span>[<span style="color:#ae81ff">2</span>];
+</span></span><span style="display:flex;"><span>							<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">original</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">sourceMap</span>.<span style="color:#a6e22e">originalPositionFor</span>({
+</span></span><span style="display:flex;"><span>								<span style="color:#a6e22e">line</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">line</span>,
+</span></span><span style="display:flex;"><span>								<span style="color:#a6e22e">column</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">column</span>
+</span></span><span style="display:flex;"><span>							});
+</span></span><span style="display:flex;"><span>							<span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span><span style="color:#a6e22e">original</span> <span style="color:#f92672">||</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">original</span>.<span style="color:#a6e22e">source</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">original</span>.<span style="color:#a6e22e">source</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">file</span>) <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>							<span style="color:#a6e22e">warnings</span>.<span style="color:#a6e22e">push</span>(<span style="color:#a6e22e">warning</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/\[.+:([0-9]+),([0-9]+)\]/</span>, <span style="color:#e6db74">&#34;&#34;</span>) <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>								<span style="color:#e6db74">&#34;[&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">requestShortener</span>.<span style="color:#a6e22e">shorten</span>(<span style="color:#a6e22e">original</span>.<span style="color:#a6e22e">source</span>) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;:&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">original</span>.<span style="color:#a6e22e">line</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;,&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">original</span>.<span style="color:#a6e22e">column</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;]&#34;</span>);
+</span></span><span style="display:flex;"><span>						};
+</span></span><span style="display:flex;"><span>					} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>						<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">input</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">asset</span>.<span style="color:#a6e22e">source</span>();
+</span></span><span style="display:flex;"><span>						<span style="color:#a6e22e">uglify</span>.<span style="color:#a6e22e">AST_Node</span>.<span style="color:#a6e22e">warn_function</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">warning</span>) { <span style="color:#75715e">// eslint-disable-line camelcase
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>							<span style="color:#a6e22e">warnings</span>.<span style="color:#a6e22e">push</span>(<span style="color:#a6e22e">warning</span>);
+</span></span><span style="display:flex;"><span>						};
+</span></span><span style="display:flex;"><span>					}
+</span></span><span style="display:flex;"><span>					<span style="color:#a6e22e">uglify</span>.<span style="color:#a6e22e">base54</span>.<span style="color:#a6e22e">reset</span>();
+</span></span><span style="display:flex;"><span>					<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">ast</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">uglify</span>.<span style="color:#a6e22e">parse</span>(<span style="color:#a6e22e">input</span>, {
+</span></span><span style="display:flex;"><span>						<span style="color:#a6e22e">filename</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">file</span>
+</span></span><span style="display:flex;"><span>					});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>					<span style="color:#75715e">//	压缩代码并应用转换
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>					<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">compress</span> <span style="color:#f92672">!==</span> <span style="color:#66d9ef">false</span>) {
+</span></span><span style="display:flex;"><span>						<span style="color:#a6e22e">ast</span>.<span style="color:#a6e22e">figure_out_scope</span>();
+</span></span><span style="display:flex;"><span>						<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">compress</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">uglify</span>.<span style="color:#a6e22e">Compressor</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">compress</span>);
+</span></span><span style="display:flex;"><span>						<span style="color:#a6e22e">ast</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">ast</span>.<span style="color:#a6e22e">transform</span>(<span style="color:#a6e22e">compress</span>);
+</span></span><span style="display:flex;"><span>					}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>					<span style="color:#75715e">//	在顶级作用域打乱变量名称（默认不开启）
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>					<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">mangle</span> <span style="color:#f92672">!==</span> <span style="color:#66d9ef">false</span>) {
+</span></span><span style="display:flex;"><span>						<span style="color:#a6e22e">ast</span>.<span style="color:#a6e22e">figure_out_scope</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">mangle</span> <span style="color:#f92672">||</span> {});
+</span></span><span style="display:flex;"><span>						<span style="color:#a6e22e">ast</span>.<span style="color:#a6e22e">compute_char_frequency</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">mangle</span> <span style="color:#f92672">||</span> {});
+</span></span><span style="display:flex;"><span>						<span style="color:#a6e22e">ast</span>.<span style="color:#a6e22e">mangle_names</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">mangle</span> <span style="color:#f92672">||</span> {});
+</span></span><span style="display:flex;"><span>						<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">mangle</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">mangle</span>.<span style="color:#a6e22e">props</span>) {
+</span></span><span style="display:flex;"><span>							<span style="color:#a6e22e">uglify</span>.<span style="color:#a6e22e">mangle_properties</span>(<span style="color:#a6e22e">ast</span>, <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">mangle</span>.<span style="color:#a6e22e">props</span>);
+</span></span><span style="display:flex;"><span>						}
+</span></span><span style="display:flex;"><span>					}
+</span></span><span style="display:flex;"><span>					<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">output</span> <span style="color:#f92672">=</span> {};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>					<span style="color:#75715e">//	注释
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>					<span style="color:#a6e22e">output</span>.<span style="color:#a6e22e">comments</span> <span style="color:#f92672">=</span> Object.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">hasOwnProperty</span>.<span style="color:#a6e22e">call</span>(<span style="color:#a6e22e">options</span>, <span style="color:#e6db74">&#34;comments&#34;</span>) <span style="color:#f92672">?</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">comments</span> <span style="color:#f92672">:</span> <span style="color:#e6db74">/^\**!|@preserve|@license/</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>					<span style="color:#75715e">//	代码美化
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>					<span style="color:#a6e22e">output</span>.<span style="color:#a6e22e">beautify</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">beautify</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>					<span style="color:#75715e">//	把options.output下的每项提取到output
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>					<span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">k</span> <span style="color:#66d9ef">in</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">output</span>) {
+</span></span><span style="display:flex;"><span>						<span style="color:#a6e22e">output</span>[<span style="color:#a6e22e">k</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">output</span>[<span style="color:#a6e22e">k</span>];
+</span></span><span style="display:flex;"><span>					}
+</span></span><span style="display:flex;"><span>					<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">sourceMap</span> <span style="color:#f92672">!==</span> <span style="color:#66d9ef">false</span>) {
+</span></span><span style="display:flex;"><span>						<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">map</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">uglify</span>.<span style="color:#a6e22e">SourceMap</span>({ <span style="color:#75715e">// eslint-disable-line new-cap
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>							<span style="color:#a6e22e">file</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">file</span>,
+</span></span><span style="display:flex;"><span>							<span style="color:#a6e22e">root</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>						});
+</span></span><span style="display:flex;"><span>						<span style="color:#a6e22e">output</span>.<span style="color:#a6e22e">source_map</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">map</span>; <span style="color:#75715e">// eslint-disable-line camelcase
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>					}
+</span></span><span style="display:flex;"><span>					<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">stream</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">uglify</span>.<span style="color:#a6e22e">OutputStream</span>(<span style="color:#a6e22e">output</span>); <span style="color:#75715e">// eslint-disable-line new-cap
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>					<span style="color:#a6e22e">ast</span>.<span style="color:#a6e22e">print</span>(<span style="color:#a6e22e">stream</span>);
+</span></span><span style="display:flex;"><span>					<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">map</span>) <span style="color:#a6e22e">map</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">map</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;&#34;</span>;
+</span></span><span style="display:flex;"><span>					<span style="color:#a6e22e">stream</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">stream</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;&#34;</span>;
+</span></span><span style="display:flex;"><span>					<span style="color:#a6e22e">asset</span>.<span style="color:#a6e22e">__UglifyJsPlugin</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">compilation</span>.<span style="color:#a6e22e">assets</span>[<span style="color:#a6e22e">file</span>] <span style="color:#f92672">=</span> (<span style="color:#a6e22e">map</span> <span style="color:#f92672">?</span>
+</span></span><span style="display:flex;"><span>						<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">SourceMapSource</span>(<span style="color:#a6e22e">stream</span>, <span style="color:#a6e22e">file</span>, <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">parse</span>(<span style="color:#a6e22e">map</span>), <span style="color:#a6e22e">input</span>, <span style="color:#a6e22e">inputSourceMap</span>) <span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>						<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">RawSource</span>(<span style="color:#a6e22e">stream</span>));
+</span></span><span style="display:flex;"><span>					<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">warnings</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>						<span style="color:#a6e22e">compilation</span>.<span style="color:#a6e22e">warnings</span>.<span style="color:#a6e22e">push</span>(<span style="color:#66d9ef">new</span> Error(<span style="color:#a6e22e">file</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; from UglifyJs\n&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">warnings</span>.<span style="color:#a6e22e">join</span>(<span style="color:#e6db74">&#34;\n&#34;</span>)));
+</span></span><span style="display:flex;"><span>					}
+</span></span><span style="display:flex;"><span>				} <span style="color:#66d9ef">catch</span>(<span style="color:#a6e22e">err</span>) {
+</span></span><span style="display:flex;"><span>					<span style="color:#75715e">//	捕获到压缩出错信息的操作
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>					<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">line</span>) {
+</span></span><span style="display:flex;"><span>						<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">original</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">sourceMap</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">sourceMap</span>.<span style="color:#a6e22e">originalPositionFor</span>({
+</span></span><span style="display:flex;"><span>							<span style="color:#a6e22e">line</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">line</span>,
+</span></span><span style="display:flex;"><span>							<span style="color:#a6e22e">column</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">col</span>
+</span></span><span style="display:flex;"><span>						});
+</span></span><span style="display:flex;"><span>						<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">original</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">original</span>.<span style="color:#a6e22e">source</span>) {
+</span></span><span style="display:flex;"><span>							<span style="color:#a6e22e">compilation</span>.<span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">push</span>(<span style="color:#66d9ef">new</span> Error(<span style="color:#a6e22e">file</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; from UglifyJs\n&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">message</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; [&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">requestShortener</span>.<span style="color:#a6e22e">shorten</span>(<span style="color:#a6e22e">original</span>.<span style="color:#a6e22e">source</span>) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;:&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">original</span>.<span style="color:#a6e22e">line</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;,&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">original</span>.<span style="color:#a6e22e">column</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;]&#34;</span>));
+</span></span><span style="display:flex;"><span>						} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>							<span style="color:#a6e22e">compilation</span>.<span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">push</span>(<span style="color:#66d9ef">new</span> Error(<span style="color:#a6e22e">file</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; from UglifyJs\n&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">message</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; [&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">file</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;:&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">line</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;,&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">col</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;]&#34;</span>));
+</span></span><span style="display:flex;"><span>						}
+</span></span><span style="display:flex;"><span>					} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">msg</span>) {
+</span></span><span style="display:flex;"><span>						<span style="color:#a6e22e">compilation</span>.<span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">push</span>(<span style="color:#66d9ef">new</span> Error(<span style="color:#a6e22e">file</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; from UglifyJs\n&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">msg</span>));
+</span></span><span style="display:flex;"><span>					} <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>						<span style="color:#a6e22e">compilation</span>.<span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">push</span>(<span style="color:#66d9ef">new</span> Error(<span style="color:#a6e22e">file</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; from UglifyJs\n&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">stack</span>));
+</span></span><span style="display:flex;"><span>				} <span style="color:#66d9ef">finally</span> {
+</span></span><span style="display:flex;"><span>					<span style="color:#a6e22e">uglify</span>.<span style="color:#a6e22e">AST_Node</span>.<span style="color:#a6e22e">warn_function</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">oldWarnFunction</span>; <span style="color:#75715e">// eslint-disable-line camelcase
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>				}
+</span></span><span style="display:flex;"><span>			});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">//	执行回调函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>			<span style="color:#a6e22e">callback</span>();
+</span></span><span style="display:flex;"><span>		});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// 指定挂载的webpack事件钩子(normal-module-loader)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">compilation</span>.<span style="color:#a6e22e">plugin</span>(<span style="color:#e6db74">&#34;normal-module-loader&#34;</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">context</span>) {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">minimize</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+</span></span><span style="display:flex;"><span>		});
+</span></span><span style="display:flex;"><span>	});
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>上面就是我对<code>UglifyJsPlugin</code>的标注，从这个插件的源码分析，我们可以基本看到 webpack 编译时的读写过程大致是怎么样的：实例化插件 &ndash;&gt; 读取源文件 &ndash;&gt; 编译并输出</p>
+<h5 id="总结">总结</h5>
+<p>我们在命令行里输入了<code>webpack [--xxx]</code>之后，<code>webpack</code>内部大概帮我们做了下面几件事情：</p>
+<ul>
+<li>首先会走到<code>bin/webpack.js</code>，解析命令行参数以及开始执行编译</li>
+<li>在<code>bin/webpack.js</code>中调用<code>webpack</code>入口函数， 走到<code>lib/webpack.js</code></li>
+<li>在<code>webpack</code>中实例化一个<code>Compiler</code>对象（继承<code>Tapable </code>，实现插件的注册），调用目录下的<code>lib/WebpackOptionsApply.js</code>模块</li>
+<li>在<code>lib/WebpackOptionsApply.js</code>中根据传入的<code>options</code>和<code>compiler</code>逐个编译并应用不同插件，并且返回文件</li>
+</ul>
+<h5 id="参考">参考</h5>
+<p><a href="https://zhuanlan.zhihu.com/p/24717349">[webpack]源码解读：命令行输入webpack的时候都发生了什么？</a></p>
+<p><a href="http://www.jianshu.com/p/01a606c97d76">webpack源码分析（一）— Tapable插件架构</a></p>
+<p><a href="https://juejin.im/entry/576b7aeda633bd0064065c74">webpack 源码解析</a></p>
+</section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    <a
+      class="flex w-1/2 items-center rounded-l-md p-6 pr-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2017-10-24-write-a-sublime-plugin-by-python-nodejs/"
+      ><span class="mr-1.5">←</span><span>用NodeJs和Python开发一个Sublime插件</span></a
+    >
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2017-09-14-write-your-own-react-2/"
+      ><span>从零开始写一个React - setState和生命周期</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

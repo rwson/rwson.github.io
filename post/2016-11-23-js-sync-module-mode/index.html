@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>javascript模块化编程-同步模式 - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="在日常开发中,为了便于多人协作开发,我们通常都会采用模块化开发的模式,今天看张荣铭的《javascript设计模式》的时候,看到同步模式这一章,结合自己之前的理解,也来实现一个简单的同步模块化模式。
+ const module = (() =&gt; {   // 缓存之前声明的模块  let modules = {};   /** * [description] * @param deps 依赖列表 * @return Array */  let _loadDeps = (deps) =&gt; {  return deps.map((dep) =&gt; {  return modules[dep];  });  };   return {   /** * 声明一个模块 * @param id 模块id * @param deps 依赖数组(模块id) * @param factory 构造函数 */  define: (id, deps, factory) =&gt; {   // 获取依赖,并且取得模块返回的对象  deps = _loadDeps(deps);   deps." />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">javascript模块化编程-同步模式</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Nov 29, 2016</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p>在日常开发中,为了便于多人协作开发,我们通常都会采用模块化开发的模式,今天看张荣铭的《javascript设计模式》的时候,看到同步模式这一章,结合自己之前的理解,也来实现一个简单的同步模块化模式。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">module</span> <span style="color:#f92672">=</span> (() =&gt; {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  缓存之前声明的模块
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">modules</span> <span style="color:#f92672">=</span> {};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         * [description]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         * @param  deps     依赖列表
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         * @return Array
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         */</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">_loadDeps</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">deps</span>) =&gt; {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">deps</span>.<span style="color:#a6e22e">map</span>((<span style="color:#a6e22e">dep</span>) =&gt; {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">modules</span>[<span style="color:#a6e22e">dep</span>];
+</span></span><span style="display:flex;"><span>            });
+</span></span><span style="display:flex;"><span>        };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * 声明一个模块
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @param   id      模块id
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @param   deps    依赖数组(模块id)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @param   factory 构造函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             */</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">define</span><span style="color:#f92672">:</span> (<span style="color:#a6e22e">id</span>, <span style="color:#a6e22e">deps</span>, <span style="color:#a6e22e">factory</span>) =&gt; {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  获取依赖,并且取得模块返回的对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#a6e22e">deps</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">_loadDeps</span>(<span style="color:#a6e22e">deps</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">deps</span>.<span style="color:#a6e22e">map</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">dep</span>) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">dep</span>.<span style="color:#a6e22e">factory</span>.<span style="color:#a6e22e">apply</span>(window, <span style="color:#a6e22e">dep</span>.<span style="color:#a6e22e">deps</span>);
+</span></span><span style="display:flex;"><span>                });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  判断模块名是否重复
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">modules</span>[<span style="color:#a6e22e">id</span>]) {
+</span></span><span style="display:flex;"><span>                     <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">&#34;module &#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">id</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; has been declared!&#34;</span>);
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  缓存模块
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#a6e22e">modules</span>[<span style="color:#a6e22e">id</span>] <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">id</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">id</span>,
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">factory</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">factory</span>,
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">deps</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">deps</span>
+</span></span><span style="display:flex;"><span>                };
+</span></span><span style="display:flex;"><span>            },
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * 使用定义好的模块
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @param   depArr  依赖数组(模块id)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @param   factory 构造函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             */</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">use</span><span style="color:#f92672">:</span> (<span style="color:#a6e22e">depArr</span>, <span style="color:#a6e22e">factory</span>) =&gt; {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  获取依赖,并且取得模块返回的对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#a6e22e">depArr</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">depArr</span>.<span style="color:#a6e22e">map</span>((<span style="color:#a6e22e">dep</span>) =&gt; {
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">modules</span>[<span style="color:#a6e22e">dep</span>].<span style="color:#a6e22e">factory</span>.<span style="color:#a6e22e">apply</span>(window, <span style="color:#a6e22e">modules</span>[<span style="color:#a6e22e">dep</span>].<span style="color:#a6e22e">deps</span>);
+</span></span><span style="display:flex;"><span>                });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  运行构造函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#a6e22e">factory</span>.<span style="color:#a6e22e">apply</span>(window, <span style="color:#a6e22e">depArr</span>);
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    })();
+</span></span></code></pre></div><p>下面我们声明几个模块做测试:</p>
+<pre><code>//  A模块
+module.define(&quot;A&quot;, [], () =&gt; {
+    return {
+        method: () =&gt; {
+            console.log(&quot;method under module A&quot;);
+        }
+    };
+});
+
+//  B模块
+module.define(&quot;B&quot;, [], () =&gt; {
+    return {
+        method: () =&gt; {
+            console.log(&quot;method under module B&quot;);
+        }
+    };
+});
+
+//  Person类
+module.define(&quot;PersonClass&quot;, [], () =&gt; {
+
+    class Person {
+        constructor(name, age, sex, job) {
+            this.name = name;
+            this.age = age;
+            this.sex = sex;
+            this.job = job;
+        }
+
+        hello() {
+            console.log(&quot;hello &quot; + this.name);
+        }
+
+        eat() {
+            console.log(this.name + &quot; will eat&quot;);
+        }
+
+        getProfile() {
+            return {
+                name: this.name,
+                age: this.age,
+                sex: this.sex,
+                job: this.job
+            };
+        }
+    }
+
+    return Person;
+});
+</code></pre>
+<p>最后我们调用module.use来使用这些模块:</p>
+<pre><code>module.use([&quot;A&quot;, &quot;B&quot;, &quot;PersonClass&quot;], (A, B, PersonClass) =&gt; {
+
+    A.method();
+    B.method();
+
+    let person = new PersonClass(&quot;rwson&quot;, 24, &quot;male&quot;, &quot;web developer&quot;);
+    person.hello();
+
+    setTimeout(function() {
+        person.eat();
+    }, 5000);
+
+    console.log(person.getProfile());
+
+});
+</code></pre>
+<p>最后浏览器控制台输出如下图的结果:</p>
+<p><img src="/imgs/sync-module-mode.png" alt="javascript模块化-同步模式"></p>
+<p>至此一个简单的模块化工具就开发完成了。</p>
+</section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    <a
+      class="flex w-1/2 items-center rounded-l-md p-6 pr-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2016-11-29-gulp-plugin-tourial/"
+      ><span class="mr-1.5">←</span><span>Gulp插件的研究</span></a
+    >
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2016-11-20-write-a-client/"
+      ><span>一起写一个npm命令行工具</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

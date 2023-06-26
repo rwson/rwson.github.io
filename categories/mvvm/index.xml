@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>MVVM on rwson</title>
+    <link>/categories/mvvm/</link>
+    <description>Recent content in MVVM on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Thu, 23 Jun 2016 00:00:00 +0000</lastBuildDate><atom:link href="/categories/mvvm/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>实现一个迷你MVVM</title>
+      <link>/post/2016-06-23-mvvm-tourial/</link>
+      <pubDate>Thu, 23 Jun 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-06-23-mvvm-tourial/</guid>
+      <description>在近几年,MVVM模式一直很火热,其全称为&amp;quot;Model-View-ViewModel&amp;quot;,MVVM火的主要原因就是在用这种模式开发的,更多的只需要关注数据层的东西,不需要花额外的时间去维护视图,包括angular/Vue都是这种开发模式,但是两者的原理是截然不同的,现在参考Vue的实现原理,简单实现一个MVVM框架,支持的指令有&amp;quot;vm-modle&amp;quot;、&amp;ldquo;vm-click&amp;rdquo;、&amp;ldquo;vm-bind&amp;rdquo;,代码量大概在300行左右,先来看下用法:
+// HTML ... &amp;lt;div id=&amp;quot;app&amp;quot;&amp;gt; &amp;lt;input type=&amp;quot;text&amp;quot; class=&amp;quot;text-filed&amp;quot; vm-model=&amp;quot;text&amp;quot; /&amp;gt; &amp;lt;p class=&amp;quot;bind-text&amp;quot; vm-bind=&amp;quot;text&amp;quot;&amp;gt;&amp;lt;/p&amp;gt; &amp;lt;div class=&amp;quot;click-area&amp;quot; vm-click=&amp;quot;clicked()&amp;quot;&amp;gt;点我&amp;lt;/div&amp;gt; &amp;lt;div class=&amp;quot;click-area&amp;quot; vm-click=&amp;quot;clickWitharguments(text)&amp;quot;&amp;gt;点我(带参数)&amp;lt;/div&amp;gt; &amp;lt;/div&amp;gt; ... // javascript window.onload = function() { var clickTimes = 0, e; // 调用MVVM MVVM({ el: document.querySelector(&amp;quot;#app&amp;quot;), data: { text: &amp;quot;I&#39;m an attribute named &#39;text&#39; under data&amp;quot; }, methods: { clicked: function () { e = event; clickTimes ++; e.target.innerHTML += &amp;quot;&amp;lt;p&amp;gt;第&amp;quot; + clickTimes + &amp;quot;次点击 - &amp;quot; + Date.</description>
+    </item>
+    
+  </channel>
+</rss>

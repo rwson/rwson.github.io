@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>类 on rwson</title>
+    <link>/categories/%E7%B1%BB/</link>
+    <description>Recent content in 类 on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Tue, 10 Mar 2015 00:00:00 +0000</lastBuildDate><atom:link href="/categories/%E7%B1%BB/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>javascript创建类的常用模式</title>
+      <link>/post/2015-03-10-js-object-create-class-mode/</link>
+      <pubDate>Tue, 10 Mar 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-03-10-js-object-create-class-mode/</guid>
+      <description>javaScript创建类的常用模式: 严格意义上,在ECMAScript6出来之前,js中是没有类的概念的,但是聪明的人类想到了用方法和原型类模拟类的一些特性,比如一个对象经过new关键字实例化以后就具有了某些属性,方法。
+下面我们就看下常用的创建类的一些常用模式:
+1.工厂模式
+function Person(name,sex,age){ var obj = { &amp;quot;name&amp;quot;:name, &amp;quot;sex&amp;quot;:sex, &amp;quot;age&amp;quot;:age, &amp;quot;say&amp;quot;:function(){ console.log(&amp;quot;hello world!&amp;quot;); } }; return obj; } //	工厂模式就是在构造方法里面定义一个对象,给这个对象赋予相应的属性、方法,最后返回这个对象  2.构造方法模式
+function CrearePerson(name,sex,age){ this.name = name; this.age = sex; this.age = age; this.say = function(){ console.log(&amp;quot;你好！我是:&amp;quot; + this.name); }; } //	构造方法,就是给当前对象指定一些属性,方法  3.构造方法 + 原型模式
+function Person(name){ this.name = name; } Person.prototype = { &amp;quot;constructor&amp;quot;:Person, // 指定原型对象的构造器 &amp;quot;name&amp;quot;:&amp;quot;小宋&amp;quot;, &amp;quot;age&amp;quot;:20, &amp;quot;job&amp;quot;:&amp;quot;程序员&amp;quot;, &amp;quot;say&amp;quot;:function(){ console.log(&amp;quot;我是原型的函数&amp;quot;); } };  在前面2种创建类的模式中，我们每次实例化一个对象都会重新声明出一些东西,对象个数少可能没什么关系,但是当对象个数达到一定数量时,就会对性能造成一定的影响。所以,就出来了第三种&amp;quot;构造方法 + 原型模式&amp;quot;,构造方法的作用是为实例化出来的对象定义一些私有属性,原型的作用就是绑定一些公共属性方法,让所有实例化出来的对象都可以共,只有在第一次实例化的时候进行初始化,往后就不会再初始化了。这样,当在写大型Web程序时,性能会相对较好。</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>webpack，构建工具 on rwson</title>
+    <link>/categories/webpack%E6%9E%84%E5%BB%BA%E5%B7%A5%E5%85%B7/</link>
+    <description>Recent content in webpack，构建工具 on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Mon, 25 Sep 2017 00:00:00 +0000</lastBuildDate><atom:link href="/categories/webpack%E6%9E%84%E5%BB%BA%E5%B7%A5%E5%85%B7/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>webpack源码阅读</title>
+      <link>/post/2017-09-25-read-webpack-source/</link>
+      <pubDate>Mon, 25 Sep 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2017-09-25-read-webpack-source/</guid>
+      <description>在前端工程化越来越普及的今天，我们几乎每个项目都需要用到构建工具，从一开始的grunt，到gulp，再到现在的webpack。 我们在使用webpack时，可以通过配置一些命令行参数来让webpack完成一些编译打包的任务，那么当我们执行webpack这个命令的时候，webpack究竟做了哪些事情? 我们一起来读读webpack的相关源码。
+注：本文阅读的版本为webpack1.15.0，从入口开始分析再拿到我们的命令之后执行的的流程，所以有些个人认为不重要的可能会省略。
+通过package.json中的bin的指向可以知道首先会走到./bin/webpack.js这个文件：
+#!/usr/bin/env node  //	引入nodejs path模块 var path = require(&amp;#34;path&amp;#34;);  // require.resolve获取/bin/webpack.js的绝对路径(从项目根目录下的node_modules里面找) try { 	var localWebpack = require.resolve(path.join(process.cwd(), &amp;#34;node_modules&amp;#34;, &amp;#34;webpack&amp;#34;, &amp;#34;bin&amp;#34;, &amp;#34;webpack.js&amp;#34;)); 	if(__filename !== localWebpack) { 	return require(localWebpack); 	} } catch(e) {}  var optimist = require(&amp;#34;optimist&amp;#34;) 	.usage(&amp;#34;webpack &amp;#34; + require(&amp;#34;../package.json&amp;#34;).version + &amp;#34;\n&amp;#34; + 	&amp;#34;Usage: https://webpack.github.io/docs/cli.html&amp;#34;);  require(&amp;#34;./config-optimist&amp;#34;)(optimist);  //	对在命令行传入的参数进行解析 //	--colors、--json、 ... optimist 	.boolean(&amp;#34;json&amp;#34;).alias(&amp;#34;json&amp;#34;, &amp;#34;j&amp;#34;).describe(&amp;#34;json&amp;#34;) 	.</description>
+    </item>
+    
+  </channel>
+</rss>

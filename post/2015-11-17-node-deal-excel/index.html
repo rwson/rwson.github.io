@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>NodeJs处理excel返回json - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="快3个月没写博客了，感觉好生疏。
+由于最近在做一个乐队投票活动，每个乐队都有几个预览图片，但是运营上传图片的时候没有考虑顺序问题，后端也没做类似于拖拽排序的功能，为了快速改出来，乐队预览图的url格式是&quot;http://api.juhuaba.com/api/file/z2/图片id&quot;, 然后一想，前端可以根据指定的id的顺序来显示，然后运营那边就给了我一个excel表格，每个乐队的id和图片，然后，看了一眼excel表格，好几百条数据，感觉手动处理太烦，而且容易出错，所以就想搞个办法让程序来处理。
+先上一张excel的图
+然后开始从网上找办法，很多都是说用一个&quot;node-xlsx&quot;的插件，但是我试了下，可能是excel表格的问题吧，报了个很奇怪的错，就放弃了。后来去npm上找到一个&quot;xlsx-json&quot;的插件，试了下，确实可以取得表格里的数据做为一个数组，每一项都有，只不过如果是空单元格或者被合并的单元格都会显示null,所以还是得自己处理下。
+首先肯定是执行&quot;npm install xlsx-json&quot;啦
+然后这个插件需要有个配置文件，暂且叫task.json吧，下面是task.json中的内容。
+[ { &quot;input&quot;: &quot;data.xlsx&quot;, &quot;sheet&quot;: &quot;Sheet1&quot;, &quot;range&quot;: &quot;A1:C240&quot;, &quot;raw&quot;: true, &quot;output&quot;: &quot;data.json&quot; } ] //	该数组接受多个对象，每个对象的基本格式是上面那种 //	input代表是哪个文件 //	sheet代表一个工作簿 //	range代表要转换的一个区域 //	row代表逐行读取 //	output代表输出到哪个文件  下面是调用代码
+var xlsx2json = require(&#39;xlsx-json&#39;); xlsx2json(task, function(err, jsonArr) { if (err) { console.error(err); return; } });  虽然配置了这些参数，但是读取出来的不如人意，就像下面这样：
+然后就对转换出来数组的进行了处理，下面是完整代码，前台浏览器访问http://localhost:3000,直接返回json给前台
+var xlsx2json = require(&#39;xlsx-json&#39;), // 加载xlsx-json模块 task = require(&#39;./task.json&#39;), // 配置文件 express = require(&quot;express&quot;), app = express(), jsonData, // 临时变量,存储转转出来的数据 tmpObj = {}, // 对象,循环时用 lastTmp = {}, // 对象,循环用,存储每个乐队的完整对象 result = []; // 由完整乐队对象构成的数组 xlsx2json(task, function (err, jsonArr) { if (err) { console." />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">NodeJs处理excel返回json</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Nov 17, 2015</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p>快3个月没写博客了，感觉好生疏。</p>
+<p>由于最近在做一个乐队投票活动，每个乐队都有几个预览图片，但是运营上传图片的时候没有考虑顺序问题，后端也没做类似于拖拽排序的功能，为了快速改出来，乐队预览图的url格式是&quot;http://api.juhuaba.com/api/file/z2/图片id&quot;,
+然后一想，前端可以根据指定的id的顺序来显示，然后运营那边就给了我一个excel表格，每个乐队的id和图片，然后，看了一眼excel表格，好几百条数据，感觉手动处理太烦，而且容易出错，所以就想搞个办法让程序来处理。</p>
+<p>先上一张excel的图</p>
+<p><img src="/imgs/excel-to-json.png" alt=""></p>
+<p>然后开始从网上找办法，很多都是说用一个&quot;node-xlsx&quot;的插件，但是我试了下，可能是excel表格的问题吧，报了个很奇怪的错，就放弃了。后来去npm上找到一个&quot;xlsx-json&quot;的插件，试了下，确实可以取得表格里的数据做为一个数组，每一项都有，只不过如果是空单元格或者被合并的单元格都会显示null,所以还是得自己处理下。</p>
+<p>首先肯定是执行&quot;npm install xlsx-json&quot;啦<br>
+然后这个插件需要有个配置文件，暂且叫task.json吧，下面是task.json中的内容。</p>
+<pre><code>[
+  {
+    &quot;input&quot;: &quot;data.xlsx&quot;,
+    &quot;sheet&quot;: &quot;Sheet1&quot;,
+    &quot;range&quot;: &quot;A1:C240&quot;,
+    &quot;raw&quot;: true,
+    &quot;output&quot;: &quot;data.json&quot;
+  }
+]
+//	该数组接受多个对象，每个对象的基本格式是上面那种
+//	input代表是哪个文件
+//	sheet代表一个工作簿
+//	range代表要转换的一个区域
+//	row代表逐行读取
+//	output代表输出到哪个文件
+</code></pre>
+<p>下面是调用代码</p>
+<pre><code>var xlsx2json = require('xlsx-json');
+xlsx2json(task, function(err, jsonArr) {
+    if (err) {
+        console.error(err);
+        return;
+    }
+});
+</code></pre>
+<p>虽然配置了这些参数，但是读取出来的不如人意，就像下面这样：</p>
+<p><img src="/imgs/excel-to-json2.png" alt=""></p>
+<p>然后就对转换出来数组的进行了处理，下面是完整代码，前台浏览器访问http://localhost:3000,直接返回json给前台</p>
+<pre><code>var xlsx2json = require('xlsx-json'),   //  加载xlsx-json模块
+    task = require('./task.json'),      //  配置文件
+    express = require(&quot;express&quot;),
+    app = express(),
+    jsonData,                           //  临时变量,存储转转出来的数据
+    tmpObj = {},                        //  对象,循环时用
+    lastTmp = {},                       //  对象,循环用,存储每个乐队的完整对象
+    result = [];                        //  由完整乐队对象构成的数组
+xlsx2json(task, function (err, jsonArr) {
+    if (err) {
+        console.error(err);
+        return;
+    }
+    jsonData = jsonArr[0];
+    //  返回值为[[],[],[],[]]格式,所以拿第一个
+});
+
+for (var i = 1, len = jsonData.length; i &lt; len; i++) {
+    var str = jsonData[i].join(&quot;-&quot;);
+    jsonData[i] = str;
+}
+//  对转出来的数组进行遍历(从第二项,第一项是[&quot;name&quot;,&quot;id&quot;,&quot;pics&quot;],所以不需要转换),有的前面两项是null的数组就被转换成&quot;--第三项&quot;了
+
+for (var j = 1, lenj = jsonData.length; j &lt; lenj + 1; j++) {
+    //  同样从第二项开始遍历,这边多循环一次由于最后一项的原因(当然也可以不多循环,直接在for外面再做个push就好)
+
+    if (j == lenj) {
+        result.push(lastTmp);
+    }
+    //  到最后一项时,放到数组里面(此时最后一项已经没有了)
+
+    if (jsonData[j] &amp;&amp; !jsonData[j].match(/\-\-/g)) {
+        //  该项存在且不是前面两项为null的情况
+
+        if (lastTmp.hasOwnProperty(&quot;id&quot;)) {
+            result.push(lastTmp);
+        }
+        //  在&quot;第二轮&quot;循环时,把一个完整的乐队对象放到数组
+
+        tmpObj = {};
+        var spl = jsonData[j].split(&quot;-&quot;);
+        tmpObj = {
+            &quot;id&quot;: spl[1],
+            &quot;image&quot;: [
+                spl[2]
+            ]
+        };
+        //  给tmpObj指定id和image,其中image为数组
+
+    } else if (jsonData[j] &amp;&amp; jsonData[j].match(/\-\-/g).length) {
+        //  该项存在且前面两项为null的情况,就取最后一项
+
+        var tmpStr = jsonData[j].replace(&quot;--&quot;, &quot;&quot;);
+        if (tmpStr) {
+            tmpObj.image.push(jsonData[j].replace(&quot;--&quot;, &quot;&quot;));
+        }
+    }
+
+    lastTmp = tmpObj;
+    //  把每次循环得到的乐队对象做存储
+}
+
+app.get(&quot;/&quot;, function (req, res) {
+    //  配置路由,请求http://localhost:3000时,输出转换好的数据
+    res.send(200, {
+        &quot;data&quot;: result
+    });
+});
+
+app.listen(3000, function () {
+    console.log(&quot;success!&quot;);
+});
+</code></pre>
+<p>最终返回的结果如下图所示: <br>
+<img src="/imgs/excel-to-json3.png" alt=""></p>
+</section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    <a
+      class="flex w-1/2 items-center rounded-l-md p-6 pr-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2015-11-20-my-first-react-demo/"
+      ><span class="mr-1.5">←</span><span>第一个React Native App</span></a
+    >
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2015-08-20-node-redis-across-database-insert/"
+      ><span>NodeJs中redis窜库插入</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

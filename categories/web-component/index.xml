@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Web Component on rwson</title>
+    <link>/categories/web-component/</link>
+    <description>Recent content in Web Component on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Mon, 12 Dec 2016 00:00:00 +0000</lastBuildDate><atom:link href="/categories/web-component/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Shadow DOM研究</title>
+      <link>/post/2016-12-12-chrome-shadow-dom-tourial/</link>
+      <pubDate>Mon, 12 Dec 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-12-12-chrome-shadow-dom-tourial/</guid>
+      <description>在Polymer中,提出了Web Component的概念,旨在让开发者可以封装出很多可复用的组件。现在,webkit添加了对该API支持,也就意味着我们不用借助框架,也可以自己封装出可复用的组件(通过自定义元素的形式),而不需要依赖其他框架来实现。
+假设我们这边需要封装一个进度条组件,实现代码大概是这样的:
+// javascriptclass CustomProgressBar extends HTMLElement {constructor(args) {super(args);// createShadowRoot用来创建一个shadowDOM实例const shadowRoot = this.createShadowRoot();// 设置组件内的布局结构和样式shadowRoot.innerHTML = `&amp;lt;style type=&amp;quot;text/css&amp;quot;&amp;gt;:host {display: inline-block;width: 200px;height: 30px;box-sizing: border-box;padding: 1px;}:host * {-webkit-touch-callout: none;-webkit-user-select: none;-khtml-user-select: none;-moz-user-select: none;-ms-user-select: none;user-select: none;}.progress {display: inline-block;width: 200px;height: 30px;position: relative;border: 1px solid #000;}.</description>
+    </item>
+    
+  </channel>
+</rss>

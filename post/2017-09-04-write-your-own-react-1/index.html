@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>从零开始写一个React - 初始化渲染 - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="我们知道React组件返回的是JSX，而JSX将被babel转换，在React中是将JSX中转换成React.createElement(type, config, children)的形式。
+class App extends Component {  render() {  return &lt;div className=&#34;app-container&#34;&gt;App Component&lt;/div&gt;  } }  //	babel转换后输出的代码 var App = React.createClass({  render() {  return React.createElement(&#34;div&#34;, {  className: &#34;app-container&#34;  }, &#34;App Component&#34;)  } }); 我们可以在babel中把JSX的pragma转换改成自己的函数名:
+{  &#34;presets&#34;: [  &#34;es2015&#34;  ],  &#34;plugins&#34;: [  [&#34;transform-react-jsx&#34;, {  &#34;pragma&#34;: &#34;createElement&#34;	//	默认的是React.createElement, 这里我们还是用默认的  }]  ] } 下面一起看看createElement的实现" />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">从零开始写一个React - 初始化渲染</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Sep 4, 2017</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p>我们知道<code>React</code>组件返回的是<code>JSX</code>，而<code>JSX</code>将被<code>babel</code>转换，在<code>React</code>中是将<code>JSX</code>中转换成<code>React.createElement(type, config, children)</code>的形式。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">App</span> <span style="color:#66d9ef">extends</span> <span style="color:#a6e22e">Component</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">render</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">div</span> <span style="color:#a6e22e">className</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;app-container&#34;</span><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">App</span> <span style="color:#a6e22e">Component</span><span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/div&gt;</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	babel转换后输出的代码
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">App</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">React</span>.<span style="color:#a6e22e">createClass</span>({
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">render</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">React</span>.<span style="color:#a6e22e">createElement</span>(<span style="color:#e6db74">&#34;div&#34;</span>, {
+</span></span><span style="display:flex;"><span>          	<span style="color:#a6e22e">className</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;app-container&#34;</span>
+</span></span><span style="display:flex;"><span>        }, <span style="color:#e6db74">&#34;App Component&#34;</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div><p>我们可以在<code>babel</code>中把<code>JSX</code>的<code>pragma</code>转换改成自己的函数名:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;presets&#34;</span>: [
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;es2015&#34;</span>
+</span></span><span style="display:flex;"><span>  ],
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;plugins&#34;</span>: [
+</span></span><span style="display:flex;"><span>    [<span style="color:#e6db74">&#34;transform-react-jsx&#34;</span>, {
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&#34;pragma&#34;</span>:  <span style="color:#e6db74">&#34;createElement&#34;</span>	<span style="color:#75715e">//	默认的是React.createElement, 这里我们还是用默认的
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    }]
+</span></span><span style="display:flex;"><span>  ]
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>下面一起看看<code>createElement</code>的实现</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">uselessProp</span> <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#34;key&#34;</span>, <span style="color:#e6db74">&#34;ref&#34;</span>, <span style="color:#e6db74">&#34;__self&#34;</span>, <span style="color:#e6db74">&#34;__source&#34;</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">createElement</span>(<span style="color:#a6e22e">type</span>, <span style="color:#a6e22e">config</span>, ...<span style="color:#a6e22e">children</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">props</span> <span style="color:#f92672">=</span> {},
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">key</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">ref</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">config</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">ref</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">lodash</span>.<span style="color:#a6e22e">isUndefined</span>(<span style="color:#a6e22e">config</span>.<span style="color:#a6e22e">ref</span>) <span style="color:#f92672">?</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">:</span> <span style="color:#a6e22e">config</span>.<span style="color:#a6e22e">ref</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">key</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">lodash</span>.<span style="color:#a6e22e">isUndefined</span>(<span style="color:#a6e22e">config</span>.<span style="color:#a6e22e">key</span>) <span style="color:#f92672">?</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">config</span>.<span style="color:#a6e22e">key</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">let</span> <span style="color:#a6e22e">propsName</span> <span style="color:#66d9ef">in</span> <span style="color:#a6e22e">config</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">uselessProp</span>.<span style="color:#a6e22e">indexOf</span>(<span style="color:#a6e22e">propsName</span>) <span style="color:#f92672">===</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">hasOwnProperty</span>(<span style="color:#a6e22e">config</span>, <span style="color:#a6e22e">propsName</span>)) {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">props</span>[<span style="color:#a6e22e">propsName</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">config</span>[<span style="color:#a6e22e">propsName</span>];
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  子组件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">props</span>.<span style="color:#a6e22e">children</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">children</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">ReactElement</span>(<span style="color:#a6e22e">type</span>, <span style="color:#a6e22e">key</span>, <span style="color:#a6e22e">props</span>, <span style="color:#a6e22e">ref</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>这里<code>createElement</code>就是对参数进行处理，返回一个ReactElement(<code>virtual-dom</code>)，<code>ReactElement</code>返回一个<code>vnode</code>来表示一个节点：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ReactElement</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">constructor</span>(<span style="color:#a6e22e">type</span>, <span style="color:#a6e22e">key</span>, <span style="color:#a6e22e">props</span>, <span style="color:#a6e22e">ref</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">type</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">type</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">key</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">key</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">props</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">props</span> <span style="color:#f92672">||</span> {};
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">ref</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">ref</span> <span style="color:#f92672">||</span> {};
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>在返回的<code>vnode</code>中，<code>type</code>用来标识组件类型，<code>props</code>就是组件中标签上的<code>attributes</code>，<code>key</code>用作这个<code>vnode</code>的唯一标识，可用于后面的更新，现在有了<code>vnode</code>，就需要将<code>vnode</code>转换成真实的<code>DOM</code>挂载到页面上，在<code>React</code>启动的时候，是通过<code>ReactDOM.render</code>来进行渲染组件到页面，渲染就是一个递归调用<code>render</code>的过程：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">render</span>(<span style="color:#a6e22e">componnet</span>, <span style="color:#a6e22e">container</span>, <span style="color:#a6e22e">callback</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">noop</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">componentInstance</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">instantiateReactComponent</span>(<span style="color:#a6e22e">componnet</span>),
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">markup</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">componentInstance</span>.<span style="color:#a6e22e">mountComponent</span>(<span style="color:#a6e22e">React</span>.<span style="color:#a6e22e">nextReactRootIndex</span> <span style="color:#f92672">++</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">container</span>.<span style="color:#a6e22e">innerHTML</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">markup</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">lodash</span>.<span style="color:#a6e22e">isFunction</span>(<span style="color:#a6e22e">callback</span>)) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">callback</span>.<span style="color:#a6e22e">call</span>(<span style="color:#a6e22e">componentInstance</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>在<code>render</code>中我们调用了一个<code>instantiateReactComponent</code>，这个函数的作用是根据<code>vnode</code>里面<code>type</code>的不同来返回不同的组件：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">instantiateReactComponent</span>(<span style="color:#a6e22e">node</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  文本节点的情况
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">node</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;string&#34;</span> <span style="color:#f92672">||</span> <span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">node</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;number&#34;</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">ReactDOMTextComponent</span>(<span style="color:#a6e22e">node</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  浏览器默认节点的情况
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">node</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;object&#34;</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">type</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;string&#34;</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">ReactDOMComponent</span>(<span style="color:#a6e22e">node</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  自定义的元素节点
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">node</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;object&#34;</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">type</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;function&#34;</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">ReactCompositeComponent</span>(<span style="color:#a6e22e">node</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>其中，<code>ReactDOMTextComponent</code>是纯文本组件，<code>ReactDOMComponent</code>是浏览器标签组件，<code>ReactCompositeComponent</code>是自定义的组件，后面的两种组件类型都属于<code>virtual-dom</code>。</p>
+<p>我们接下来看看上面三个组件的实现：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">//  文本组件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ReactDOMTextComponent</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">constructor</span>(<span style="color:#a6e22e">text</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  存下当前的字符串
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currentElement</span> <span style="color:#f92672">=</span>  (<span style="color:#e6db74">&#34;&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">text</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  组件唯一id
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_rootNodeID</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  component渲染时生成的dom结构
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  @param   {String}  rootID  [组件唯一id]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  @return  {String}          [HTML字符串]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mountComponent</span>(<span style="color:#a6e22e">rootID</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_rootNodeID</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">rootID</span>;
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#e6db74">`&lt;!-- react-text: </span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_rootNodeID</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> --&gt;</span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currentElement</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&lt;!-- /react-text --&gt;`</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	浏览器标签组件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ReactDOMComponent</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">constructor</span>(<span style="color:#a6e22e">element</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  存下当前元素引用
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currentElement</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">element</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  组件唯一id
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_rootNodeID</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  子组件集合
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_renderedChildren</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  component渲染时生成的dom结构
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  @param   {String}  rootID  [组件唯一id]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  @return  {String}          [HTML字符串]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mountComponent</span>(<span style="color:#a6e22e">rootID</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_rootNodeID</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">rootID</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">props</span>, <span style="color:#a6e22e">type</span> } <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currentElement</span>,
+</span></span><span style="display:flex;"><span>            { <span style="color:#a6e22e">children</span> } <span style="color:#f92672">=</span> <span style="color:#a6e22e">props</span>,
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">//	判断是否为单标签
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#a6e22e">isSingleTag</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">SINGLE_TAG_REG</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">type</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">tagOpen</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">tagClose</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">propKey</span>, 
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">propValue</span>, 
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">eventType</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">childrenInstances</span>, 
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">childComponentInstance</span>, 
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">childrenMarkups</span>, 
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">curRootId</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">tagOpen</span> <span style="color:#f92672">=</span> [];
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">tagOpen</span>.<span style="color:#a6e22e">push</span>(<span style="color:#e6db74">`&lt;</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">type</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>, <span style="color:#e6db74">`data-reactid=&#34;</span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_rootNodeID</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;`</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> (<span style="color:#a6e22e">propKey</span> <span style="color:#66d9ef">in</span> <span style="color:#a6e22e">props</span>) {
+</span></span><span style="display:flex;"><span>          
+</span></span><span style="display:flex;"><span>          	<span style="color:#75715e">//	过滤掉propKey为&#34;children&#34;的情况
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">hasOwnProperty</span>(<span style="color:#a6e22e">props</span>, <span style="color:#a6e22e">propKey</span>) <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">propKey</span> <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#34;children&#34;</span>) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">propValue</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">props</span>[<span style="color:#a6e22e">propKey</span>];
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> (<span style="color:#e6db74">/^on[a-z]+/i</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">propKey</span>)) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     *  handleClick() {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     *      alert(&#34;clicked&#34;);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     *  }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     *  
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     *  render() {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     *      return (
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     *          &lt;div onClick={this.handleClick}&gt;click me&lt;/div&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     *      );
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     *  }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     */</span>
+</span></span><span style="display:flex;"><span>                  
+</span></span><span style="display:flex;"><span>                  	<span style="color:#75715e">//	取得事件名称并进行事件代理
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                    <span style="color:#a6e22e">eventType</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">propKey</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">&#34;on&#34;</span>, <span style="color:#e6db74">&#34;&#34;</span>).<span style="color:#a6e22e">toLowerCase</span>();
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">Event</span>.<span style="color:#a6e22e">delegate</span>({
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">element</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">doc</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">eventType</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">selector</span><span style="color:#f92672">:</span> <span style="color:#e6db74">`[data-reactid=&#34;</span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_rootNodeID</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;]`</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">handler</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">propValue</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">context</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">null</span>
+</span></span><span style="display:flex;"><span>                    });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e">//  TODO: 实现对当前元素进行事件代理
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">propKey</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;style&#34;</span>) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     *  render() {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     *      return (
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     *          &lt;div style={&#34;background: red;&#34;}&gt;&lt;/div&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     *      );
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     *  }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     *
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     *  -----------------------
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     *
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     *  render() {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     *      return (
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     *          &lt;div style={{background: &#39;red&#39;}}&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     *          &lt;/div&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     *      );
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     *  }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">                     */</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">lodash</span>.<span style="color:#a6e22e">isObject</span>(<span style="color:#a6e22e">propValue</span>)) {
+</span></span><span style="display:flex;"><span>                      
+</span></span><span style="display:flex;"><span>						<span style="color:#75715e">//	这里的toStyle用了一个npm包(https://www.npmjs.com/package/to-style)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                        <span style="color:#a6e22e">propValue</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">toStyle</span>.<span style="color:#a6e22e">string</span>(<span style="color:#a6e22e">propValue</span>);
+</span></span><span style="display:flex;"><span>                    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">tagOpen</span>.<span style="color:#a6e22e">push</span>(<span style="color:#e6db74">`style=&#34;</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">propValue</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;`</span>);
+</span></span><span style="display:flex;"><span>                } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">propValue</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;className&#34;</span>) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">tagOpen</span>.<span style="color:#a6e22e">push</span>(<span style="color:#e6db74">`class=&#34;</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">propValue</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;`</span>);
+</span></span><span style="display:flex;"><span>                } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">tagOpen</span>.<span style="color:#a6e22e">push</span>(<span style="color:#e6db74">`</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">propKey</span><span style="color:#e6db74">}</span><span style="color:#e6db74">=&#34;</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">propValue</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;`</span>);
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">isSingleTag</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">tagOpen</span>.<span style="color:#a6e22e">push</span>(<span style="color:#e6db74">&#34;/&gt;&#34;</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">tagClose</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;</span>;
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">tagOpen</span>.<span style="color:#a6e22e">push</span>(<span style="color:#e6db74">&#34;&gt;&#34;</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">tagClose</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">`&lt;/</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">type</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&gt;`</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">childrenMarkups</span> <span style="color:#f92672">=</span> [];
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">childrenInstances</span> <span style="color:#f92672">=</span> [];
+</span></span><span style="display:flex;"><span>      
+</span></span><span style="display:flex;"><span>      	<span style="color:#75715e">//	遍历子节点，实例化-&gt;渲染子节点
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">children</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">children</span>.<span style="color:#a6e22e">length</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">children</span>.<span style="color:#a6e22e">forEach</span>((<span style="color:#a6e22e">child</span>, <span style="color:#a6e22e">key</span>) =&gt; {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">childComponentInstance</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">instantiateReactComponent</span>(<span style="color:#a6e22e">child</span>);
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">childrenInstances</span>.<span style="color:#a6e22e">push</span>(<span style="color:#a6e22e">childComponentInstance</span>);
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">childComponentInstance</span>.<span style="color:#a6e22e">_mountIndex</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">key</span>;
+</span></span><span style="display:flex;"><span>              
+</span></span><span style="display:flex;"><span>              	<span style="color:#75715e">//	拼一个类似于&#34;x.y&#34;的子节点的nodeId
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#a6e22e">curRootId</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">`</span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_rootNodeID</span><span style="color:#e6db74">}</span><span style="color:#e6db74">.</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">key</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>;
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">childrenMarkups</span>.<span style="color:#a6e22e">push</span>(<span style="color:#a6e22e">childComponentInstance</span>.<span style="color:#a6e22e">mountComponent</span>.<span style="color:#a6e22e">call</span>(<span style="color:#a6e22e">childComponentInstance</span>, <span style="color:#a6e22e">curRootId</span>));
+</span></span><span style="display:flex;"><span>            });
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      	<span style="color:#75715e">//	将子组件的集合保留起来，留作后面更新使用
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_renderedChildren</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">childrenInstances</span>;
+</span></span><span style="display:flex;"><span>      
+</span></span><span style="display:flex;"><span>      	<span style="color:#75715e">//	返回组件的真实HTML结构
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">`</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">tagOpen</span>.<span style="color:#a6e22e">join</span>(<span style="color:#e6db74">&#34; &#34;</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">childrenMarkups</span>.<span style="color:#a6e22e">join</span>(<span style="color:#e6db74">&#34; &#34;</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">tagClose</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	React自定义组件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ReactCompositeComponent</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">constructor</span>(<span style="color:#a6e22e">element</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  存放元素element对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currentElement</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">element</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  存放唯一标识
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_rootNodeID</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  存放对应的ReactClass的实例
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_instance</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mountComponent</span>(<span style="color:#a6e22e">rootID</span>, <span style="color:#a6e22e">hostContainerInfo</span>, <span style="color:#a6e22e">context</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_rootNodeID</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">rootID</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">props</span>, <span style="color:#a6e22e">type</span> } <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currentElement</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">ReactClass</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">type</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//	根据vnode中的type来实例化
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#75715e">//	在instantiateReactComponent中可以看到,只有当vnode的type是一个方法类型(组件的constructor)时才会返回ReactCompositeComponent
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#a6e22e">inst</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">ReactClass</span>(<span style="color:#a6e22e">props</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">renderedElement</span>, <span style="color:#a6e22e">renderedComponentInstance</span>, <span style="color:#a6e22e">renderedMarkup</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      	<span style="color:#75715e">//	保持对当前组件实例的引用
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_instance</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">inst</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">inst</span>.<span style="color:#a6e22e">_reactInternalInstance</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      	<span style="color:#75715e">//	执行生命周期中的componentWillMount
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">lodash</span>.<span style="color:#a6e22e">isFunction</span>(<span style="color:#a6e22e">inst</span>.<span style="color:#a6e22e">componentWillMount</span>)) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">inst</span>.<span style="color:#a6e22e">componentWillMount</span>();
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      	<span style="color:#75715e">//	调用当前组件的render
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">renderedElement</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_instance</span>.<span style="color:#a6e22e">render</span>();
+</span></span><span style="display:flex;"><span>      
+</span></span><span style="display:flex;"><span>      	<span style="color:#75715e">//	根据render中返回的再去执行instantiateReactComponent
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">renderedComponentInstance</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">instantiateReactComponent</span>(<span style="color:#a6e22e">renderedElement</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_renderedComponent</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">renderedComponentInstance</span>;
+</span></span><span style="display:flex;"><span>      
+</span></span><span style="display:flex;"><span>      	<span style="color:#75715e">//	挂载组件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">renderedMarkup</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">renderedComponentInstance</span>.<span style="color:#a6e22e">mountComponent</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_rootNodeID</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      	<span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">lodash</span>.<span style="color:#a6e22e">isFunction</span>(<span style="color:#a6e22e">inst</span>.<span style="color:#a6e22e">componentDidMount</span>)) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">inst</span>.<span style="color:#a6e22e">componentDidMount</span>();
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">renderedMarkup</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">receiveComponent</span>(<span style="color:#a6e22e">nextElement</span>, <span style="color:#a6e22e">newState</span>) {}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>上面就是我们对三种组件的一个实现，下面我们用一个图简单表示下具体的渲染过程。</p>
+<p><img src="/imgs/react-render.png" alt="渲染逻辑"></p>
+<p>接下来我们需要写一个<code>Component</code>基类，去给所有的子类继承：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Component</span> {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">constructor</span>() {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">setState</span>(<span style="color:#a6e22e">newState</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_reactInternalInstance</span>.<span style="color:#a6e22e">receiveComponent</span>(<span style="color:#66d9ef">null</span>, <span style="color:#a6e22e">newState</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  组件即将被挂载到DOM上
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">componentWillMount</span>() {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  组件已经被挂载到DOM上
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">componentDidMount</span>() {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  组件即将收到新的props
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  @param   {Object}  nextProps  [新的props]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  @param   {Object}  nextState  [新的state]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">componentWillReceiveProps</span>(<span style="color:#a6e22e">nextProps</span>, <span style="color:#a6e22e">nextState</span>) {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  组件是否应该更新
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  @param   {Object}  nextProps  [新的props]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  @param   {Object}  nextState  [新的state]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  @return  {Boolean}            [标记组件是否应该更新]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">shouldComponentUpdate</span>(<span style="color:#a6e22e">nextProps</span>, <span style="color:#a6e22e">nextState</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">lodash</span>.<span style="color:#a6e22e">isEqual</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">state</span>, <span style="color:#a6e22e">nextState</span>) <span style="color:#f92672">||</span> <span style="color:#a6e22e">lodash</span>.<span style="color:#a6e22e">isEqual</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">props</span>, <span style="color:#a6e22e">nextProps</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  组件即将更新
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">componentWillUpdate</span>() {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  组件已经更新
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">componentDidUpdate</span>() {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  组件即将被卸载
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">componentWillUnmount</span>() {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  返回组件内部的jsx
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  @return  {JSX}  [组件布局]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">render</span>() {}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>下面我们一起根据上面的代码来完成一个初始化渲染的demo：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">import</span> <span style="color:#a6e22e">React</span>, { <span style="color:#a6e22e">Component</span> } <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#34;./src/react&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">InputComponnet</span> <span style="color:#66d9ef">extends</span> <span style="color:#a6e22e">Component</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">constructor</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">super</span>();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">keyUpHandler</span>(<span style="color:#a6e22e">ev</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#66d9ef">this</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">render</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> (
+</span></span><span style="display:flex;"><span>			<span style="color:#f92672">&lt;</span><span style="color:#a6e22e">input</span>
+</span></span><span style="display:flex;"><span>		        <span style="color:#a6e22e">type</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;text&#34;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">ref</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;textInput&#34;</span>
+</span></span><span style="display:flex;"><span>		        <span style="color:#a6e22e">placeholder</span> <span style="color:#f92672">=</span> { <span style="color:#e6db74">&#34;请输入...&#34;</span> }
+</span></span><span style="display:flex;"><span>		        <span style="color:#a6e22e">onKeyUp</span> <span style="color:#f92672">=</span> { <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">keyUpHandler</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#66d9ef">this</span>) }
+</span></span><span style="display:flex;"><span>		        <span style="color:#a6e22e">style</span> <span style="color:#f92672">=</span> {{
+</span></span><span style="display:flex;"><span>	                <span style="color:#a6e22e">display</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;block&#34;</span>,
+</span></span><span style="display:flex;"><span>	                <span style="color:#a6e22e">width</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;200px&#34;</span>,
+</span></span><span style="display:flex;"><span>	                <span style="color:#a6e22e">height</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;30px&#34;</span>,
+</span></span><span style="display:flex;"><span>	                <span style="color:#a6e22e">fontSize</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;14px&#34;</span>,
+</span></span><span style="display:flex;"><span>	                <span style="color:#a6e22e">lineHeight</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;30px&#34;</span>
+</span></span><span style="display:flex;"><span>		        }} <span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>    	   );
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">App</span> <span style="color:#66d9ef">extends</span> <span style="color:#a6e22e">Component</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">constructor</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">super</span>();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">render</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> ( 
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">div</span> <span style="color:#a6e22e">style</span> <span style="color:#f92672">=</span> { <span style="color:#e6db74">&#34;background: red;&#34;</span> } <span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>        		<span style="color:#a6e22e">App</span> <span style="color:#a6e22e">Component</span> <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">InputComponnet</span> <span style="color:#a6e22e">placeholder</span> <span style="color:#f92672">=</span> { <span style="color:#e6db74">&#34;请输入...&#34;</span> }<span style="color:#f92672">/&gt;</span> 
+</span></span><span style="display:flex;"><span>        	 <span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/div&gt;</span>
+</span></span><span style="display:flex;"><span>        );
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">React</span>.<span style="color:#a6e22e">render</span>( <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">App</span> <span style="color:#f92672">/</span> <span style="color:#f92672">&gt;</span> , document.<span style="color:#a6e22e">querySelector</span>(<span style="color:#e6db74">&#34;#root&#34;</span>));
+</span></span></code></pre></div><p>到这里我们的初始化渲染已经完成了，我们实现了组件中的事件绑定（事件代理），简单的生命周期（<code>componentWillMout</code>， <code>componentDidMount</code>），将<code>virtual-dom</code>转换成真实的<code>DOM</code>并且挂载到页面的过程。</p>
+<p><a href="https://github.com/rwson/little-react">这里</a>可以查看相对完整的代码。</p>
+<h4 id="参考">参考</h4>
+<ul>
+<li><a href="http://www.ahonn.me/2017/06/08/write-a-react-from-scratch-init-render/">从零开始写一个 React：初始化渲染</a></li>
+<li><a href="https://segmentfault.com/a/1190000010822571">从0实现一个tiny react</a></li>
+<li><a href="http://purplebamboo.github.io/2015/09/15/reactjs_source_analyze_part_one/">reactjs源码分析-上篇</a></li>
+</ul>
+</section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    <a
+      class="flex w-1/2 items-center rounded-l-md p-6 pr-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2017-09-14-write-your-own-react-2/"
+      ><span class="mr-1.5">←</span><span>从零开始写一个React - setState和生命周期</span></a
+    >
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2017-08-04-write-your-promise/"
+      ><span>实现你自己的Promise</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

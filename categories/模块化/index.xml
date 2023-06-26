@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>模块化 on rwson</title>
+    <link>/categories/%E6%A8%A1%E5%9D%97%E5%8C%96/</link>
+    <description>Recent content in 模块化 on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Tue, 29 Nov 2016 00:00:00 +0000</lastBuildDate><atom:link href="/categories/%E6%A8%A1%E5%9D%97%E5%8C%96/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>javascript模块化编程-同步模式</title>
+      <link>/post/2016-11-23-js-sync-module-mode/</link>
+      <pubDate>Tue, 29 Nov 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-11-23-js-sync-module-mode/</guid>
+      <description>在日常开发中,为了便于多人协作开发,我们通常都会采用模块化开发的模式,今天看张荣铭的《javascript设计模式》的时候,看到同步模式这一章,结合自己之前的理解,也来实现一个简单的同步模块化模式。
+ const module = (() =&amp;gt; {   // 缓存之前声明的模块  let modules = {};   /** * [description] * @param deps 依赖列表 * @return Array */  let _loadDeps = (deps) =&amp;gt; {  return deps.map((dep) =&amp;gt; {  return modules[dep];  });  };   return {   /** * 声明一个模块 * @param id 模块id * @param deps 依赖数组(模块id) * @param factory 构造函数 */  define: (id, deps, factory) =&amp;gt; {   // 获取依赖,并且取得模块返回的对象  deps = _loadDeps(deps);   deps.</description>
+    </item>
+    
+  </channel>
+</rss>

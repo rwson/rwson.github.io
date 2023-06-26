@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>ES6中的Promise - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="在执行一些异步操作(典型的有JavaScript中的ajax/NodeJs中读取文件等等)的时候,我们不知道该操作什么时候完成,所以就需要在不同的时候写上回调,等到有返回的时候,再执行下一步操作,下面就用jQuery中的一个ajax来做示例:
+$.ajax({ &quot;url&quot;: &quot;xxx&quot;, &quot;type&quot;: &quot;GET&quot;, &quot;dataType&quot;: &quot;&quot;JSON, &quot;success&quot;: function(res){}, &quot;error&quot;: function(ex){ // do some thing } });  最基础的一个ajax示例,当我们有多个ajax嵌套请求的时候,就中了所谓的&quot;回调地狱&quot;,类似于下面的写法:
+$.ajax({ // some configs &quot;success&quot;: function(res){ $.ajax({ // ... &quot;success&quot;: function(res){ $.ajax({ // ... &quot;success&quot;:function(res){ . . . } }); } }); } });  一层套着一层,代码可读性很差,且不容易后期的维护
+这时候就需要一个比前者好的解决方案来解决该问题,ES6中的Promise一定程度上解决了该问题:
+我们可以利用Promise对ajax进行一层封装
+function _ajax(url, method, args) { let promise = new Promise((resolve, reject) =&gt; { let client = new XMLHttpRequest(); let uri = url; if (args &amp;&amp; (method == &quot;POST&quot; || method == &quot;PUT&quot;)) { let argcount = 0; uri &#43;= &quot;?" />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">ES6中的Promise</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>May 4, 2016</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p>在执行一些异步操作(典型的有JavaScript中的ajax/NodeJs中读取文件等等)的时候,我们不知道该操作什么时候完成,所以就需要在不同的时候写上回调,等到有返回的时候,再执行下一步操作,下面就用jQuery中的一个ajax来做示例:</p>
+<pre><code>$.ajax({
+    &quot;url&quot;: &quot;xxx&quot;,
+    &quot;type&quot;: &quot;GET&quot;,
+    &quot;dataType&quot;: &quot;&quot;JSON,
+    &quot;success&quot;: function(res){},
+    &quot;error&quot;: function(ex){
+        //  do some thing
+    }
+});
+</code></pre>
+<p>最基础的一个ajax示例,当我们有多个ajax嵌套请求的时候,就中了所谓的&quot;回调地狱&quot;,类似于下面的写法:</p>
+<pre><code>$.ajax({
+    //  some configs
+    &quot;success&quot;: function(res){
+        $.ajax({
+            //  ...
+            &quot;success&quot;: function(res){
+                $.ajax({
+                    //  ...
+                    &quot;success&quot;:function(res){
+                        .
+                        .
+                        .
+                    }
+                });
+            }
+        });
+    }
+});
+</code></pre>
+<p>一层套着一层,代码可读性很差,且不容易后期的维护</p>
+<p>这时候就需要一个比前者好的解决方案来解决该问题,ES6中的Promise一定程度上解决了该问题:</p>
+<p>我们可以利用Promise对ajax进行一层封装</p>
+<pre><code>function _ajax(url, method, args) {
+    let promise = new Promise((resolve, reject) =&gt; {
+
+        let client = new XMLHttpRequest();
+        let uri = url;
+
+        if (args &amp;&amp; (method == &quot;POST&quot; || method == &quot;PUT&quot;)) {
+            let argcount = 0;
+            uri += &quot;?&quot;;
+            for (var key in args) {
+                if (args.hasOwnProperty(key)) {
+                    if (argcount++) {
+                        uri += '&amp;';
+                    }
+                    uri += encodeURIComponent(key) + '=' + encodeURIComponent(args[key]);
+                }
+            }
+        }
+
+        client.open(method, uri);
+        client.send();
+
+        client.onload = function() {
+            if (this.status &gt;= 200 &amp;&amp; this.status &lt; 300) {
+                resolve(this.response);
+            } else {
+                reject(this.statusText);
+            }
+        };
+        client.onerror = function() {
+            reject(this.statusText);
+        };
+
+    });
+
+    return promise;
+}
+
+let core = {
+
+    &quot;GET&quot;: function(args) {
+        return _ajax(url, &quot;GET&quot;, args);
+    },
+
+    &quot;POST&quot;: function(args) {
+        return _ajax(url, &quot;POST&quot;, args);
+    },
+
+    &quot;PUT&quot;: function(args) {
+        return _ajax(url, &quot;PUT&quot;, args);
+    },
+
+    &quot;DELETE&quot;: function(args) {
+        return _ajax(url, &quot;DELETE&quot;, args);
+    }
+
+};
+</code></pre>
+<p>上面这段代码是JavaScript MDN上的代码(可能稍微有点改动),它对ajax进行了一层封装,经过这层封装,我们可以像下面这样写一些异步代码:</p>
+<pre><code>$http(&quot;xxx&quot;)
+.GET()
+.then((data) =&gt; {
+    
+    //  do something
+    
+    $http(&quot;xxx2&quot;)
+    .GET()
+    .then((data) =&gt; {
+    
+        //  do something
+        
+        $http(&quot;xxx3&quot;)
+        .GET({&quot;key&quot;,&quot;value&quot;})
+        .then((data) =&gt; {
+            //  do something...
+        })
+        
+        
+    },(ex) =&gt; {});
+    
+})
+.catch((ex) =&gt; {});
+</code></pre>
+<p>虽然还有嵌套,但是代码看起来已经舒服了很多。</p>
+<p>Promise是一个异步编程的抽象,它是一个返回值或抛出exception的代理对象,一般promise对象都有一个then方法,这个then方法是我们如何获得返回值(成功实现承诺的结果值,称为fulfillment)或抛出exception(拒绝承诺的理由,称为rejection)，then是用两个可选的回调作为参数,我们可以称为onFulfilled和OnRejected,也可以把OnRejected写在catch里面</p>
+<p>所以一个Promise一共有下面几个状态</p>
+<ol>
+<li>pending待承诺 - promise初始状态</li>
+<li>fulfilled实现承诺 - 一个承诺成功实现状态</li>
+<li>rejected拒绝承诺 - 一个承诺失败的状态</li>
+</ol>
+<p>再来个NodeJs中读取文件的例子:</p>
+<pre><code>function readFile(path) {
+    var fs = require(&quot;fs&quot;);
+    var prromise = new Promise((resolve, reject) =&gt; {
+        fs.readdir(path, (ex, files) =&gt; {
+            if (ex) {
+                return reject(ex);
+            }
+            return resolve(files);
+        });
+    });
+    
+    return prromise;
+}
+
+readFile(config.avatarPath + &quot;1&quot;).then((files) =&gt; {
+    //  do some thing
+    console.log(files);
+}).catch((ex) =&gt; {
+    //  do something...
+    console.log(ex);
+});
+</code></pre>
+<p>如果不用Promise和一些ES6的特性,上面的代码应该看起来是下面的这样子:</p>
+<pre><code>var fs = require(&quot;fs&quot;);
+fs.readdir(path, function (ex, files) {
+    if (ex) {
+        //  do something
+        return console.log();
+    }
+    
+    //  do some thing
+    console.log(files);
+});
+</code></pre>
+<p>代码量可能更少,但是陷入&quot;回调地狱&quot;的可能就更大了,在ES7中,又新增了async/await特性来针对异步操作的,后面介绍😄</p>
+</section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    <a
+      class="flex w-1/2 items-center rounded-l-md p-6 pr-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2016-06-23-mvvm-tourial/"
+      ><span class="mr-1.5">←</span><span>实现一个迷你MVVM</span></a
+    >
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2016-04-05-javascript-event-delegate/"
+      ><span>javascript中事件代理和取消</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

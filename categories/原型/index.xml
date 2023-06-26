@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>原型 on rwson</title>
+    <link>/categories/%E5%8E%9F%E5%9E%8B/</link>
+    <description>Recent content in 原型 on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Sat, 23 May 2015 00:00:00 +0000</lastBuildDate><atom:link href="/categories/%E5%8E%9F%E5%9E%8B/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>javascript原型</title>
+      <link>/post/2015-05-23-js-object-prototype/</link>
+      <pubDate>Sat, 23 May 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-05-23-js-object-prototype/</guid>
+      <description>javaScript原型:
+定义：每一个方法被创建时都有一个prototype属性,改属性是一个指针,总是指向一个对象。该对象可以将特定的属性和方法包含在内,起到一个被所有实例所共享的作用。
+ function Person(){ } var obj = Person.prototype; obj.name = &amp;quot;小宋&amp;quot;; obj.age = 20; obj.sayName = function(){ console.log(this.name); }; //	定义一个变量来引用原型,修改这个变量的属性达到修改原型的目的  原型对象、构造方法、实例对象三者的关系
+1、构造方法.prototype = 原型对象
+2、原型对象的constructor = 构造方法
+3、实例对象.prototype = 原型对象
+原型中的常用方法
+1、isPrototypeOf	(判断一个对象是不是另一个对象的原型) 示例:
+function Person(){} var obj = Person.prototype; obj.name = &amp;quot;小宋&amp;quot;; obj.age = 20; obj.sayName = function(){ console.log(this.name); }; var p = new Person(); console.log(obj.isPrototypeOf(p1));	//	true  2、Object.getPrototypeOf	(根据实例对象获取原型对象) 示例:
+function Person(){} Person.prototype.name = &amp;quot;张三&amp;quot;; Person.</description>
+    </item>
+    
+  </channel>
+</rss>

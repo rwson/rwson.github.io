@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>call/apply on rwson</title>
+    <link>/categories/call/apply/</link>
+    <description>Recent content in call/apply on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language><atom:link href="/categories/call/apply/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>我理解的apply和call</title>
+      <link>/post/2015-02-24-apply-call/</link>
+      <pubDate>Tue, 24 Feb 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-02-24-apply-call/</guid>
+      <description>方法定义:
+语法：call([this[,arg1[, arg2[, [,.argN]]]]])
+定义：调用一个对象的一个方法，以另一个对象替换当前对象。
+说明：call 方法可以用来代替另一个对象调用一个方法。call 方法可将一个函数的对象上下文从初始的上下文改变为由 this 指定的新对象。如果没有提供 this 参数，那么 Global 对象被用作 this。
+语法：apply([this[,argArray]])
+定义：应用某一对象的一个方法，用另一个对象替换当前对象。
+说明：如果 argArray 不是一个有效的数组或者不是 arguments 对象，那么将导致一个 TypeError。如果没有提供 argArray 和 this 任何一个参数，那么 Global 对象将被用作 this， 并且无法被传递任何参数。
+两者区别微乎其微(除了调用对象传的参数一致，apply传入的参数是逐个传入，而apply是通过一个数组传的)
+示例:
+// 做绑定参数之用
+function sum(x,y){ return x + y; } function call1(num1,num2){ return sum.call(this,num1,num2); } // call调用sum function apply1(num1,num2){ return sum.apply(this,[num1,num2]); } // apply调用sum console.log(call1(10,20)); console.log(apply1(16,20));  // 扩充作用域，对象和方法不需要有任何关系
+window.color = &amp;quot;red&amp;quot;; var obj = { &amp;quot;color&amp;quot;:&amp;quot;blue&amp;quot; }; function showColor(){ console.</description>
+    </item>
+    
+  </channel>
+</rss>

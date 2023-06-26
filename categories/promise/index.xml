@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Promise on rwson</title>
+    <link>/categories/promise/</link>
+    <description>Recent content in Promise on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Fri, 04 Aug 2017 00:00:00 +0000</lastBuildDate><atom:link href="/categories/promise/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>实现你自己的Promise</title>
+      <link>/post/2017-08-04-write-your-promise/</link>
+      <pubDate>Fri, 04 Aug 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2017-08-04-write-your-promise/</guid>
+      <description>在现代化前端开发中，经常会用到Promise模式，Promise最大的好处就是可以使异步代码看起来如同步般清新易读，从而从回调地狱中解脱出来，ES6已经原生支持Promise对象，但在未支持的浏览器中还需要通过 polyfill 模拟实现。下面一起实现一个Promise。
+一般我们用Promise会写成类似下面的样子：
+const ins = new Promise((resolve, reject) =&amp;gt; {  //	... });  ins.then((res) =&amp;gt; {  // ... }, (ex) =&amp;gt; {}); 在Promise中一共存在三种状态，PENDING, FULFILLED,REJECTED，在实例化一个Promise后，它的状态会变成PENDING，执行resolve或者reject方法会把状态改成FULFILLED或者REJECTED，此过程不可逆，也就是说每个Promise只能调用一次resolve或者reject。
+先来搭个骨架:
+const PENDING = &amp;#34;PENDING&amp;#34;,  FULFILLED = &amp;#34;FULFILLED&amp;#34;,  REJECTED = &amp;#34;REJECTED&amp;#34;;  function Promise(resolver) {  if (!isFunction(resolver)) {  throw new TypeError(&amp;#34;TypeError: resolver must be a function&amp;#34;);  }   //	实例的值  this.value = null;   //	实例的状态  this.</description>
+    </item>
+    
+    <item>
+      <title>ES6中的Promise</title>
+      <link>/post/2016-05-04-es6-promise/</link>
+      <pubDate>Wed, 04 May 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-05-04-es6-promise/</guid>
+      <description>在执行一些异步操作(典型的有JavaScript中的ajax/NodeJs中读取文件等等)的时候,我们不知道该操作什么时候完成,所以就需要在不同的时候写上回调,等到有返回的时候,再执行下一步操作,下面就用jQuery中的一个ajax来做示例:
+$.ajax({ &amp;quot;url&amp;quot;: &amp;quot;xxx&amp;quot;, &amp;quot;type&amp;quot;: &amp;quot;GET&amp;quot;, &amp;quot;dataType&amp;quot;: &amp;quot;&amp;quot;JSON, &amp;quot;success&amp;quot;: function(res){}, &amp;quot;error&amp;quot;: function(ex){ // do some thing } });  最基础的一个ajax示例,当我们有多个ajax嵌套请求的时候,就中了所谓的&amp;quot;回调地狱&amp;quot;,类似于下面的写法:
+$.ajax({ // some configs &amp;quot;success&amp;quot;: function(res){ $.ajax({ // ... &amp;quot;success&amp;quot;: function(res){ $.ajax({ // ... &amp;quot;success&amp;quot;:function(res){ . . . } }); } }); } });  一层套着一层,代码可读性很差,且不容易后期的维护
+这时候就需要一个比前者好的解决方案来解决该问题,ES6中的Promise一定程度上解决了该问题:
+我们可以利用Promise对ajax进行一层封装
+function _ajax(url, method, args) { let promise = new Promise((resolve, reject) =&amp;gt; { let client = new XMLHttpRequest(); let uri = url; if (args &amp;amp;&amp;amp; (method == &amp;quot;POST&amp;quot; || method == &amp;quot;PUT&amp;quot;)) { let argcount = 0; uri += &amp;quot;?</description>
+    </item>
+    
+  </channel>
+</rss>

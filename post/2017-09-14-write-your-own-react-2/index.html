@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>从零开始写一个React - setState和生命周期 - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="在前面一篇中我们用instantiateReactComponent方法来根据node的不同来返回不同的组件实例，之前的分类可能有些问题，就是当该组件中JSX部分有返回null的情况，instantiateReactComponent就不能返回正确的组件，所以在这里加了一种新的组件类型：ReactEmptyComponent，作用就是返回一段空的注释，标记这是一个空组件：
+export function instantiateReactComponent(node) {  if (lodash.isNull(node) || lodash.isUndefined(node)) {  return new ReactEmptyComponent(null);  }   // ... }  // 空组件 export class ReactEmptyComponent {  constructor(node) {  this.type = &#34;ReactEmptyComponent&#34;;  this._currentElement = null;  this._rootNodeID = null;  }   /** * 空组件挂载直接返回一段空注释回去 */  mountComponent(rootID) {  this._rootNodeID = rootID;  return `&lt;!-- empty component data-reactid=&#34;${this._rootNodeID}&#34; --&gt;`;  } } 我们之前简单实现了一个初始化渲染的过程，现在我们一起实现一个setState方法以及组件后面的更新逻辑。setState是在组件中被调用的，所以我们需要在之前的Component类中加入一个setState方法：" />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">从零开始写一个React - setState和生命周期</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Sep 14, 2017</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p>在前面一篇中我们用<code>instantiateReactComponent</code>方法来根据<code>node</code>的不同来返回不同的组件实例，之前的分类可能有些问题，就是当该组件中<code>JSX</code>部分有返回<code>null</code>的情况，<code>instantiateReactComponent</code>就不能返回正确的组件，所以在这里加了一种新的组件类型：<code>ReactEmptyComponent</code>，作用就是返回一段空的注释，标记这是一个空组件：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">instantiateReactComponent</span>(<span style="color:#a6e22e">node</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">lodash</span>.<span style="color:#a6e22e">isNull</span>(<span style="color:#a6e22e">node</span>) <span style="color:#f92672">||</span> <span style="color:#a6e22e">lodash</span>.<span style="color:#a6e22e">isUndefined</span>(<span style="color:#a6e22e">node</span>)) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">ReactEmptyComponent</span>(<span style="color:#66d9ef">null</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//  空组件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ReactEmptyComponent</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">constructor</span>(<span style="color:#a6e22e">node</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">type</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;ReactEmptyComponent&#34;</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currentElement</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_rootNodeID</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  空组件挂载直接返回一段空注释回去
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mountComponent</span>(<span style="color:#a6e22e">rootID</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_rootNodeID</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">rootID</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">`&lt;!-- empty component data-reactid=&#34;</span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_rootNodeID</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34; --&gt;`</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>我们之前简单实现了一个初始化渲染的过程，现在我们一起实现一个<code>setState</code>方法以及组件后面的更新逻辑。<code>setState</code>是在组件中被调用的，所以我们需要在之前的<code>Component</code>类中加入一个<code>setState</code>方法：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Component</span> {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">setState</span>(<span style="color:#a6e22e">newState</span>, <span style="color:#a6e22e">callback</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">stacks</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">StackTrace</span>.<span style="color:#a6e22e">getSync</span>();
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">let</span> {<span style="color:#a6e22e">functionName</span>, <span style="color:#a6e22e">source</span>} <span style="color:#66d9ef">of</span> <span style="color:#a6e22e">stacks</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">RENDER_REG</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">functionName</span>) <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">RENDER_REG</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">source</span>)) {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">&#34;callStack Error: you can&#39;t call setState in render method!&#34;</span>);
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_reactInternalInstance</span>.<span style="color:#a6e22e">receiveComponent</span>(<span style="color:#66d9ef">null</span>, <span style="color:#a6e22e">newState</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">lodash</span>.<span style="color:#a6e22e">isFunction</span>(<span style="color:#a6e22e">callback</span>)) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">callback</span>();
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//	...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p>之前一篇我们说到一共可分成文本组件，浏览器标签组件，自定义标签组件，所以我们需要在这三个组件中各实现一个<code>receiveComponent</code>来接收新组件并且实现相应更新：</p>
+<p>对于普通的文本节点，要做的相对简单，就是在<code>receiveComponent</code>中去更新相关<code>DOM</code>的<code>textContent</code>：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ReactDOMTextComponent</span> {
+</span></span><span style="display:flex;"><span>  	<span style="color:#75715e">//	...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  接收到新组件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  @param   {String}  text  [接收到的新组件]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">receiveComponent</span>(<span style="color:#a6e22e">text</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">nextStringText</span> <span style="color:#f92672">=</span> (<span style="color:#e6db74">&#34;&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">text</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">nextStringText</span> <span style="color:#f92672">!==</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currentElement</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currentElement</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">nextStringText</span>;
+</span></span><span style="display:flex;"><span>          	<span style="color:#75715e">//	更新相关DOM的textContent
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#a6e22e">$</span>(<span style="color:#e6db74">`[data-reactid=&#39;</span><span style="color:#e6db74">${</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_rootNodeID</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;]`</span>).<span style="color:#a6e22e">textContent</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">nextStringText</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>在自定标签组件中，我们需要做的事情大概如下</p>
+<ul>
+<li>如果调用时传入了新的<code>Vnode</code>就把当前的<code>_currentElement</code>改成新传入的<code>Vnode</code></li>
+<li>合并新老<code>state</code></li>
+<li>调用组件实例下的<code>shouldComponentUpdate</code>根据返回的布尔值去判断是否需要更新组件</li>
+<li>调用组件实例下的<code>componentWillUpdate</code></li>
+<li>调用组件的<code>render</code>去拿到新的<code>Vnode</code>，和之前的做对比，如果之前的组件<code>Vnode</code>不存在，就直接调用<code>instantiateReactComponent</code>返回新的组件实例</li>
+<li>调用组件生命周期下的<code>componentDidUpdate</code>方法</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ReactCompositeComponent</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//	...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  接收到新组件, 更新实例下的state, 组件生命周期方法调用
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  @param   {ReactElement}  nextElement  [新的Vnode]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  @param   {Object}        newState     [this.setState(state)中的state]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">receiveComponent</span>(<span style="color:#a6e22e">nextElement</span>, <span style="color:#a6e22e">newState</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  如果接受了新的, 就使用最新的element
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currentElement</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">nextElement</span> <span style="color:#f92672">||</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currentElement</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">_rootNodeID</span> } <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">inst</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_instance</span>,
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//  nextState和nextProps的处理
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#a6e22e">nextState</span> <span style="color:#f92672">=</span> Object.<span style="color:#a6e22e">assign</span>(<span style="color:#a6e22e">inst</span>.<span style="color:#a6e22e">state</span> <span style="color:#f92672">||</span> {}, <span style="color:#a6e22e">newState</span>),
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">nextProps</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">lodash</span>.<span style="color:#a6e22e">clone</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currentElement</span>.<span style="color:#a6e22e">props</span>),
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">finalProps</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">prevComponentInstance</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">prevRenderedElement</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">nextRenderedElement</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">nextMarkup</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">child</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  修改组件的state和props
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_instance</span>.<span style="color:#a6e22e">state</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">nextState</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_instance</span>.<span style="color:#a6e22e">props</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">nextProps</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">inst</span>.<span style="color:#a6e22e">state</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">nextState</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">inst</span>.<span style="color:#a6e22e">props</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">nextProps</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  声明周期shouldComponentUpdate
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">inst</span>.<span style="color:#a6e22e">shouldComponentUpdate</span>(<span style="color:#a6e22e">nextProps</span>, <span style="color:#a6e22e">nextState</span>)) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  声明周期componentWillUpdate
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">inst</span>.<span style="color:#a6e22e">componentWillUpdate</span>(<span style="color:#a6e22e">nextProps</span>, <span style="color:#a6e22e">nextState</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  之前的组件组件实例
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">prevComponentInstance</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_renderedComponent</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  之前的组件元素
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">prevRenderedElement</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">prevComponentInstance</span>.<span style="color:#a6e22e">_currentElement</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  即将被渲染的新组件元素
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">nextRenderedElement</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">inst</span>.<span style="color:#a6e22e">render</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  判断是需要更新还是直接就重新渲染
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">shouldUpdateReactComponent</span>(<span style="color:#a6e22e">prevRenderedElement</span>, <span style="color:#a6e22e">nextRenderedElement</span>)) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">prevComponentInstance</span>.<span style="color:#a6e22e">receiveComponent</span>(<span style="color:#a6e22e">nextRenderedElement</span>);
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//  重新new一个对应的component
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_renderedComponent</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">instantiateReactComponent</span>(<span style="color:#a6e22e">nextRenderedElement</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//  重新生成对应的元素内容
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#a6e22e">nextMarkup</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_renderedComponent</span>.<span style="color:#a6e22e">mountComponent</span>(<span style="color:#a6e22e">_rootNodeID</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//  替换整个节点
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#a6e22e">$</span>(<span style="color:#e6db74">`[data-reactid=&#34;</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">_rootNodeID</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;]`</span>).<span style="color:#a6e22e">innerHTML</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">nextMarkup</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">inst</span>.<span style="color:#a6e22e">componentDidUpdate</span>();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>在组件的<code>render</code>被重新调用之后，最后还是需要要更新<code>DOM</code>的，所以在<code>ReactDOMComponent</code>下的<code>receiveComponent</code>里我们需要对组件里的<code>DOM</code>下的属性和结构进行更新。</p>
+<p>在<code>React</code>中，有一套<code>diff</code>算法来比较新老组件间的差异，返回需要更新的队列，然后统一对<code>DOM</code>结构进行更新，在<code>ReactDOMComponent</code>下的<code>receiveComponent</code>中，我们需要完成下面的几件事情</p>
+<ul>
+<li>拿到老的<code>props</code>和新的<code>props</code>做，在<code>_updateDOMProperties</code>中对<code>DOM</code>下的属性进行更新</li>
+<li>调用<code>_updateDOMChildren</code>，传入新的组件子节点，去拼凑差异队列，然后更新<code>DOM</code></li>
+<li>修改<code>currentElement</code>变成本次渲染的，供下次使用</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ReactDOMComponent</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  接收到新组件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  @param   {Object}  nextElement  [新组件]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">receiveComponent</span>(<span style="color:#a6e22e">nextElement</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">lastProps</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">lodash</span>.<span style="color:#a6e22e">clone</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currentElement</span>.<span style="color:#a6e22e">props</span>),
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">nextProps</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">nextElement</span>.<span style="color:#a6e22e">props</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  需要单独的更新属性
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_updateDOMProperties</span>(<span style="color:#a6e22e">lastProps</span>, <span style="color:#a6e22e">nextProps</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  再更新子节点
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_updateDOMChildren</span>(<span style="color:#a6e22e">nextElement</span>.<span style="color:#a6e22e">props</span>.<span style="color:#a6e22e">children</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  修改currentElement变成本次渲染的
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_currentElement</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">nextElement</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  更新组件中相关DOM的属性
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  @param    {Object}  lastProps  [旧属性]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  @param    {Object}  nextProps  [新属性]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  @private
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">_updateDOMProperties</span>(<span style="color:#a6e22e">lastProps</span>, <span style="color:#a6e22e">nextProps</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">_rootNodeID</span> } <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">element</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">$</span>(<span style="color:#e6db74">`[data-reactid=&#34;</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">_rootNodeID</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;]`</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">propKey</span>, <span style="color:#a6e22e">propValue</span>, <span style="color:#a6e22e">eventType</span>, <span style="color:#a6e22e">removed</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> (<span style="color:#a6e22e">propKey</span> <span style="color:#66d9ef">in</span> <span style="color:#a6e22e">lastProps</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//  只删除老属性中有但是新属性中没有的
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">hasOwnProperty</span>(<span style="color:#a6e22e">lastProps</span>, <span style="color:#a6e22e">propKey</span>) <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">hasOwnProperty</span>(<span style="color:#a6e22e">nextProps</span>, <span style="color:#a6e22e">propKey</span>)) {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">propValue</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">lastProps</span>[<span style="color:#a6e22e">propKey</span>];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  之前的事件代理需要解除
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">EVENT_REG</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">propKey</span>)) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">eventType</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">propKey</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">&#34;on&#34;</span>, <span style="color:#e6db74">&#34;&#34;</span>);
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">Event</span>.<span style="color:#a6e22e">undelegate</span>({
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">element</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">doc</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">eventType</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">selector</span><span style="color:#f92672">:</span> <span style="color:#e6db74">`[data-reactid=&#34;</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">_rootNodeID</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;]`</span>
+</span></span><span style="display:flex;"><span>                    });
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">continue</span>;
+</span></span><span style="display:flex;"><span>                } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">propKey</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;className&#34;</span>) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">removed</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;class&#34;</span>;
+</span></span><span style="display:flex;"><span>                } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">removed</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">propKey</span>;
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  删除DOM上的相关属性
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#a6e22e">element</span>.<span style="color:#a6e22e">removeAttribute</span>(<span style="color:#a6e22e">removed</span>);
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  开始遍历新属性集合
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">for</span> (<span style="color:#a6e22e">propKey</span> <span style="color:#66d9ef">in</span> <span style="color:#a6e22e">nextProps</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">hasOwnProperty</span>(<span style="color:#a6e22e">nextProps</span>, <span style="color:#a6e22e">propKey</span>) <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">propKey</span> <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#34;children&#34;</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">propValue</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">lastProps</span>[<span style="color:#a6e22e">propKey</span>];
+</span></span><span style="display:flex;"><span>              	<span style="color:#75715e">//	重新代理事件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">EVENT_REG</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">propKey</span>)) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">eventType</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">propKey</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">&#34;on&#34;</span>, <span style="color:#e6db74">&#34;&#34;</span>);
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">Event</span>.<span style="color:#a6e22e">undelegate</span>({
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">element</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">doc</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">eventType</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">selector</span><span style="color:#f92672">:</span> <span style="color:#e6db74">`[data-reactid=&#34;</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">_rootNodeID</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;]`</span>
+</span></span><span style="display:flex;"><span>                    });
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">Event</span>.<span style="color:#a6e22e">delegate</span>({
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">element</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">doc</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">eventType</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">selector</span><span style="color:#f92672">:</span> <span style="color:#e6db74">`[data-reactid=&#34;</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">_rootNodeID</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;]`</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">handler</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">propValue</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">context</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">null</span>
+</span></span><span style="display:flex;"><span>                    });
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">continue</span>;
+</span></span><span style="display:flex;"><span>                } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">propKey</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;className&#34;</span>) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">element</span>.<span style="color:#a6e22e">setAttribute</span>(<span style="color:#e6db74">&#34;class&#34;</span>, <span style="color:#a6e22e">propValue</span>);
+</span></span><span style="display:flex;"><span>                } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">propKey</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;style&#34;</span>) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">lodash</span>.<span style="color:#a6e22e">isObject</span>(<span style="color:#a6e22e">propValue</span>)) {
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">propValue</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">toStyle</span>.<span style="color:#a6e22e">string</span>(<span style="color:#a6e22e">propValue</span>);
+</span></span><span style="display:flex;"><span>                    }
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">element</span>.<span style="color:#a6e22e">setAttribute</span>(<span style="color:#a6e22e">propKey</span>, <span style="color:#a6e22e">propValue</span>);
+</span></span><span style="display:flex;"><span>                } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">element</span>.<span style="color:#a6e22e">setAttribute</span>(<span style="color:#a6e22e">propKey</span>, <span style="color:#a6e22e">propValue</span>);
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  更新子元素
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  @param    {Array}  nextChildrenElements  [被更新的组件队列]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">_updateDOMChildren</span>(<span style="color:#a6e22e">nextChildrenElements</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">nextChildrenElements</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">nextChildrenElements</span>.<span style="color:#a6e22e">length</span>) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">update</span>.<span style="color:#a6e22e">updateDepth</span><span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//  递归找出差别, 组装差异对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#a6e22e">update</span>.<span style="color:#a6e22e">diff</span>(<span style="color:#a6e22e">update</span>.<span style="color:#a6e22e">diffQueue</span>, <span style="color:#a6e22e">nextChildrenElements</span>, <span style="color:#66d9ef">this</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">update</span>.<span style="color:#a6e22e">updateDepth</span><span style="color:#f92672">--</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//  应用更新
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">update</span>.<span style="color:#a6e22e">updateDepth</span> <span style="color:#f92672">===</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">update</span>.<span style="color:#a6e22e">patch</span>(<span style="color:#a6e22e">update</span>.<span style="color:#a6e22e">diffQueue</span>);
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>在<code>_updateDOMChildren</code>中我们调用了<code>update.diff</code>和<code>update.patch</code>方法，一个对比一个应用，这里我是把<code>diff</code>和<code>patch</code>放到一个对象下作为一个模块暴露出去的，下面就是具体的实现代码：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">//	定义更新类型(移动已经存在的，删除节点，插入的新标签)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">UPDATE_TYPES</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">MOVE_EXISTING</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">1</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">REMOVE_NODE</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">2</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">INSERT_MARKUP</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">update</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  更新深度标识
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">updateDepth</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">0</span>,
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  更新队列
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">diffQueue</span><span style="color:#f92672">:</span> [],
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  递归找出差别, 组装差异对象, 添加到更新队列diffQueue
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  @param   {Array}  diffQueue             [更新队列]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  @param   {Array}  nextChildrenElements  [新的子组件集合]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  @param   {Object} component             [被diff的组件]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  @return  {Array}                        [需要更新的内容]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">diff</span>(<span style="color:#a6e22e">diffQueue</span>, <span style="color:#a6e22e">nextChildrenElements</span>, <span style="color:#a6e22e">component</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  获取到当前组件下已经渲染的组件集合，把component._renderedChildren扁平成一个对象，如果child有key，就拿key作为对应的属性名，否则用下标做属性名，具体实现可以看下面
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">prevChildren</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">flattenChildren</span>(<span style="color:#a6e22e">component</span>.<span style="color:#a6e22e">_renderedChildren</span>),
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//  生成新的子节点的component对象集合(如果是组件有更新, 就复用原来的, 如果是新增就是新的组件实例)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#a6e22e">nextChildren</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">generateComponentChildren</span>(<span style="color:#a6e22e">prevChildren</span>, <span style="color:#a6e22e">nextChildrenElements</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">lastIndex</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">nextIndex</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">prevChild</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">nextChild</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">props</span>, <span style="color:#a6e22e">propKey</span>, <span style="color:#a6e22e">eventType</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  枚举nextChildren
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">for</span> (<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">in</span> <span style="color:#a6e22e">nextChildren</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">hasOwnProperty</span>(<span style="color:#a6e22e">nextChildren</span>, <span style="color:#a6e22e">name</span>)) {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">continue</span>;
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">prevChild</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">prevChildren</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">prevChildren</span>[<span style="color:#a6e22e">name</span>];
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">nextChild</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">nextChildren</span>[<span style="color:#a6e22e">name</span>];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//  两个相同说明是使用的同一个component,所以我们需要做移动的操作
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">lodash</span>.<span style="color:#a6e22e">isEqual</span>(<span style="color:#a6e22e">prevChild</span>, <span style="color:#a6e22e">nextChild</span>)) {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">prevChild</span>.<span style="color:#a6e22e">_mountIndex</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">lastIndex</span>) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">diffQueue</span>.<span style="color:#a6e22e">push</span>({
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">parentId</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">component</span>.<span style="color:#a6e22e">_rootNodeID</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">parentNode</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">$</span>(<span style="color:#e6db74">`[data-reactid=&#34;</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">component</span>.<span style="color:#a6e22e">_rootNodeID</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;]`</span>),
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">UPDATE_TYPES</span>.<span style="color:#a6e22e">MOVE_EXISTING</span>,
+</span></span><span style="display:flex;"><span>                      	<span style="color:#75715e">//	从组件原来的mountIndex
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                        <span style="color:#a6e22e">fromIndex</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">prevChild</span>.<span style="color:#a6e22e">_mountIndex</span>,
+</span></span><span style="display:flex;"><span>                      	<span style="color:#75715e">//	到nextIndex
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                        <span style="color:#a6e22e">toIndex</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">nextIndex</span>
+</span></span><span style="display:flex;"><span>                    });
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>              
+</span></span><span style="display:flex;"><span>              	<span style="color:#75715e">//	缓存上次遍历时最大的index
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#a6e22e">lastIndex</span> <span style="color:#f92672">=</span> Math.<span style="color:#a6e22e">max</span>(<span style="color:#a6e22e">prevChild</span>.<span style="color:#a6e22e">_mountIndex</span>, <span style="color:#a6e22e">lastIndex</span>);
+</span></span><span style="display:flex;"><span>            } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  之前存在子节点, 需要先将子节点移除
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">prevChild</span>) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">diffQueue</span>.<span style="color:#a6e22e">push</span>({
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">parentId</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">component</span>.<span style="color:#a6e22e">_rootNodeID</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">parentNode</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">$</span>(<span style="color:#e6db74">`[data-reactid=&#34;</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">component</span>.<span style="color:#a6e22e">_rootNodeID</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;]`</span>),
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">UPDATE_TYPES</span>.<span style="color:#a6e22e">REMOVE_NODE</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">fromIndex</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">prevChild</span>.<span style="color:#a6e22e">_mountIndex</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">toIndex</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">null</span>
+</span></span><span style="display:flex;"><span>                    });
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">lastIndex</span> <span style="color:#f92672">=</span> Math.<span style="color:#a6e22e">max</span>(<span style="color:#a6e22e">prevChild</span>.<span style="color:#a6e22e">_mountIndex</span>, <span style="color:#a6e22e">lastIndex</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">props</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">prevChild</span>.<span style="color:#a6e22e">_currentElement</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">prevChild</span>.<span style="color:#a6e22e">_currentElement</span>.<span style="color:#a6e22e">props</span>) <span style="color:#f92672">?</span> <span style="color:#a6e22e">prevChild</span>.<span style="color:#a6e22e">_currentElement</span>.<span style="color:#a6e22e">props</span> <span style="color:#f92672">:</span> {};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                  	<span style="color:#75715e">//	对移除的子节点需要进行事件代理的接触，防止重复
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                    <span style="color:#66d9ef">for</span> (<span style="color:#a6e22e">propKey</span> <span style="color:#66d9ef">in</span> <span style="color:#a6e22e">props</span>) {
+</span></span><span style="display:flex;"><span>                        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">hasOwnProperty</span>(<span style="color:#a6e22e">props</span>, <span style="color:#a6e22e">propKey</span>) <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">EVENT_REG</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">propKey</span>)) {
+</span></span><span style="display:flex;"><span>                            <span style="color:#a6e22e">eventType</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">propKey</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">&#34;on&#34;</span>, <span style="color:#e6db74">&#34;&#34;</span>);
+</span></span><span style="display:flex;"><span>                            <span style="color:#a6e22e">Event</span>.<span style="color:#a6e22e">undelegate</span>({
+</span></span><span style="display:flex;"><span>                                <span style="color:#a6e22e">element</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">doc</span>,
+</span></span><span style="display:flex;"><span>                                <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">eventType</span>,
+</span></span><span style="display:flex;"><span>                                <span style="color:#a6e22e">selector</span><span style="color:#f92672">:</span> <span style="color:#e6db74">`[data-reactid=&#34;</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">prevChild</span>.<span style="color:#a6e22e">_rootNodeID</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;]`</span>
+</span></span><span style="display:flex;"><span>                            });
+</span></span><span style="display:flex;"><span>                        }
+</span></span><span style="display:flex;"><span>                    }
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  新增的节点, 需要push到diffQueue
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">nextChild</span>) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">diffQueue</span>.<span style="color:#a6e22e">push</span>({
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">parentId</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">component</span>.<span style="color:#a6e22e">_rootNodeID</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">parentNode</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">$</span>(<span style="color:#e6db74">`[data-reactid=&#34;</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">component</span>.<span style="color:#a6e22e">_rootNodeID</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;]`</span>),
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">UPDATE_TYPES</span>.<span style="color:#a6e22e">INSERT_MARKUP</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">fromIndex</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">null</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">toIndex</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">nextIndex</span>,
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">markup</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">nextChild</span>.<span style="color:#a6e22e">mountComponent</span>(<span style="color:#e6db74">`</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">component</span>.<span style="color:#a6e22e">_rootNodeID</span><span style="color:#e6db74">}</span><span style="color:#e6db74">.</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">name</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>)
+</span></span><span style="display:flex;"><span>                    });
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//  更新_mountIndex和nextIndex
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#a6e22e">nextChild</span>.<span style="color:#a6e22e">_mountIndex</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">nextIndex</span>;
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">nextIndex</span><span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//  把nextChildren克隆一份给_renderedChildren
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#a6e22e">component</span>.<span style="color:#a6e22e">_renderedChildren</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">makeArray</span>(<span style="color:#a6e22e">nextChildren</span>);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  应用更新, 执行DOM操作
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  @param   {Array}  updates  [差异对象集合]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">patch</span>(<span style="color:#a6e22e">updates</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">initialChildren</span> <span style="color:#f92672">=</span> {},
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">deleteChildren</span> <span style="color:#f92672">=</span> [],
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">updatedIndex</span>, <span style="color:#a6e22e">updatedChild</span>, <span style="color:#a6e22e">parentID</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">let</span> <span style="color:#a6e22e">update</span> <span style="color:#66d9ef">of</span> <span style="color:#a6e22e">updates</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">updatedIndex</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">update</span>.<span style="color:#a6e22e">fromIndex</span>;
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">updatedChild</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">update</span>.<span style="color:#a6e22e">parentNode</span>.<span style="color:#a6e22e">children</span>[<span style="color:#a6e22e">updatedIndex</span>];
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">parentID</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">update</span>.<span style="color:#a6e22e">parentID</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//  把所有需要更新的节点都保存下来
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#a6e22e">initialChildren</span>[<span style="color:#a6e22e">parentID</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">initialChildren</span>[<span style="color:#a6e22e">parentID</span>] <span style="color:#f92672">||</span> [];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//  使用parentID作为简易命名空间
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#a6e22e">initialChildren</span>[<span style="color:#a6e22e">parentID</span>][<span style="color:#a6e22e">updatedIndex</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">updatedChild</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//  所有需要修改的节点先删除,对于move的,后面再重新插入到正确的位置即可
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">lodash</span>.<span style="color:#a6e22e">isNull</span>(<span style="color:#a6e22e">updatedChild</span>) <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">lodash</span>.<span style="color:#a6e22e">isUndefined</span>(<span style="color:#a6e22e">updatedChild</span>)) {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">deleteChildren</span>.<span style="color:#a6e22e">push</span>(<span style="color:#a6e22e">updatedChild</span>);
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  删除需要删除的节点
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">let</span> <span style="color:#a6e22e">child</span> <span style="color:#66d9ef">of</span> <span style="color:#a6e22e">deleteChildren</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">child</span>.<span style="color:#a6e22e">parentNode</span>.<span style="color:#a6e22e">removeChild</span>(<span style="color:#a6e22e">child</span>);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">let</span> <span style="color:#a6e22e">updateItem</span> <span style="color:#66d9ef">of</span> <span style="color:#a6e22e">updates</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">switch</span> (<span style="color:#a6e22e">updateItem</span>.<span style="color:#a6e22e">type</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  插入新元素
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">UPDATE_TYPES</span>.<span style="color:#a6e22e">INSERT_MARKUP</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">insertChildAt</span>(<span style="color:#a6e22e">updateItem</span>.<span style="color:#a6e22e">parentNode</span>, <span style="color:#a6e22e">updateItem</span>.<span style="color:#a6e22e">markup</span>, <span style="color:#a6e22e">updateItem</span>.<span style="color:#a6e22e">toIndex</span>);
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e">//  元素位置发生改变    
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">UPDATE_TYPES</span>.<span style="color:#a6e22e">MOVE_EXISTING</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">insertChildAt</span>(<span style="color:#a6e22e">updateItem</span>.<span style="color:#a6e22e">parentNode</span>, <span style="color:#a6e22e">initialChildren</span>[<span style="color:#a6e22e">updateItem</span>.<span style="color:#a6e22e">parentID</span>][<span style="color:#a6e22e">updateItem</span>.<span style="color:#a6e22e">fromIndex</span>], <span style="color:#a6e22e">updateItem</span>.<span style="color:#a6e22e">toIndex</span>);
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e">//  上面已经删除, 所以不需要处理
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">UPDATE_TYPES</span>.<span style="color:#a6e22e">REMOVE_NODE</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">default</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  重置相关变量
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">reset</span>();
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  重置相关变量
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">reset</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">updateDepth</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">diffQueue</span> <span style="color:#f92672">=</span> [];
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>在<code>diff</code>中，我们看到了两个新方法，分别是<code>flattenChildren</code>和<code>generateComponentChildren</code>，我们先看下<code>flattenChildren</code>的实现：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  把原来是数组的子组件集合转换成Map返回
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  @param   {Array}  componentChildren     [子组件集合]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  @return  {Object}                       [输出的Map, 每个子组件的key或者一个随机数做key]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">flattenChildren</span>(<span style="color:#a6e22e">componentChildren</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">childrenMap</span> <span style="color:#f92672">=</span> {},
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">child</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">len</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">len</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">componentChildren</span>.<span style="color:#a6e22e">length</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">len</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">child</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">componentChildren</span>[<span style="color:#a6e22e">i</span>];
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">name</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">child</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">child</span>.<span style="color:#a6e22e">_currentelement</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">child</span>.<span style="color:#a6e22e">_currentelement</span>.<span style="color:#a6e22e">key</span> <span style="color:#f92672">?</span> <span style="color:#a6e22e">child</span>.<span style="color:#a6e22e">_currentelement</span>.<span style="color:#a6e22e">key</span> <span style="color:#f92672">:</span> <span style="color:#a6e22e">i</span>.<span style="color:#a6e22e">toString</span>(<span style="color:#ae81ff">36</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">childrenMap</span>[<span style="color:#a6e22e">name</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">child</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">childrenMap</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>在<code>generateComponentChildren</code>我们大概需要完成下面几件事情：</p>
+<ul>
+<li>遍历拿到即将渲染的新组件<code>children</code>（做参数 <code>nextChildrenElements</code>传入）和老节点进行对比</li>
+<li>如果老节点存在且和新节点有差异，即调用老节点下的<code>receiveComponent</code>去更新</li>
+<li>否则如果老节点不存在，则重新调用<code>instantiateReactComponent</code>返回一个组件实例</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  生成子节点elements的component集合
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  @param   {Object}  prevChildren          [flattenChildren返回的Map]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  @param   {Array}   nextChildrenElements  [即将要渲染的节点]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  @return  {Object}                        [子节点elements的component集合]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">generateComponentChildren</span>(<span style="color:#a6e22e">prevChildren</span>, <span style="color:#a6e22e">nextChildrenElements</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">nextChildren</span> <span style="color:#f92672">=</span> {},
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">index</span>, <span style="color:#a6e22e">len</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">prevChild</span>, <span style="color:#a6e22e">prevElement</span>, <span style="color:#a6e22e">nextElement</span>, <span style="color:#a6e22e">nextChildInstance</span>, <span style="color:#a6e22e">element</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">nextChildrenElements</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">nextChildrenElements</span> <span style="color:#f92672">||</span> [];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#a6e22e">index</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">len</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">nextChildrenElements</span>.<span style="color:#a6e22e">length</span>; <span style="color:#a6e22e">index</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">len</span>; <span style="color:#a6e22e">index</span><span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">element</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">nextChildrenElements</span>[<span style="color:#a6e22e">index</span>];
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">name</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">element</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">element</span>.<span style="color:#a6e22e">key</span>) <span style="color:#f92672">?</span> <span style="color:#a6e22e">element</span>.<span style="color:#a6e22e">key</span> <span style="color:#f92672">:</span> <span style="color:#a6e22e">index</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">prevChild</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">prevChildren</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">prevChildren</span>[<span style="color:#a6e22e">name</span>];
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">prevElement</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">prevChild</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">prevChild</span>.<span style="color:#a6e22e">_currentElement</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">nextElement</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">element</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  组件有更新, 调用当前组件下的reciveComponent去更新组件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">shouldUpdateReactComponent</span>(<span style="color:#a6e22e">prevElement</span>, <span style="color:#a6e22e">nextElement</span>)) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">prevChild</span>.<span style="color:#a6e22e">receiveComponent</span>(<span style="color:#a6e22e">nextElement</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">nextChildren</span>[<span style="color:#a6e22e">name</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">prevChild</span>;
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">//  新节点, 实例化新组件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#a6e22e">nextChildInstance</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">instantiateReactComponent</span>(<span style="color:#a6e22e">nextElement</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">nextChildren</span>[<span style="color:#a6e22e">name</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">nextChildInstance</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">nextChildren</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>在之前好几个地方我们都看到了<code>shouldUpdateReactComponent</code>这个方法，它完成的功能主要是判断两个<code>Vnode</code>之前是否有差异，返回布尔值，主要完成下面几件事情：</p>
+<ul>
+<li>如果新老<code>Vnode</code>有一个或者都为空，直接返回<code>false</code></li>
+<li>文本节点之间的对比</li>
+<li>当新的<code>Vnode</code>的<code>type</code>是<code>object</code>，比较老节点的<code>type</code>和<code>key</code>，并且拿到两者的<code>children</code>数组，做一个简单的长度对比</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  判断组件是否需要更新
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  @param   {Object}  prevElement  [老的vnode]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  @param   {Object}  nextElement  [新的vnode]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> *  @return  {Boolean}              [标识组件是否需要更新]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">shouldUpdateReactComponent</span>(<span style="color:#a6e22e">prevElement</span>, <span style="color:#a6e22e">nextElement</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//  排除为空的情况
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">lodash</span>.<span style="color:#a6e22e">isNull</span>(<span style="color:#a6e22e">prevElement</span>) <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">lodash</span>.<span style="color:#a6e22e">isNull</span>(<span style="color:#a6e22e">nextElement</span>) <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">lodash</span>.<span style="color:#a6e22e">isUndefined</span>(<span style="color:#a6e22e">prevElement</span>) <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">lodash</span>.<span style="color:#a6e22e">isUndefined</span>(<span style="color:#a6e22e">nextElement</span>)) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">prevType</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">prevElement</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">nextType</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">nextElement</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  纯文本组件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">prevType</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;number&#34;</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">prevType</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;string&#34;</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> (<span style="color:#a6e22e">nextType</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;number&#34;</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">nextType</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;number&#34;</span>);
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">prevChildren</span> <span style="color:#f92672">=</span> [],
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">nextChildren</span> <span style="color:#f92672">=</span> [],
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">childEqual</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">prevElement</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">prevElement</span>.<span style="color:#a6e22e">props</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">prevChildren</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">prevElement</span>.<span style="color:#a6e22e">props</span>.<span style="color:#a6e22e">children</span> <span style="color:#f92672">||</span> [];
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">nextElement</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">nextElement</span>.<span style="color:#a6e22e">props</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">nextChildren</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">nextElement</span>.<span style="color:#a6e22e">props</span>.<span style="color:#a6e22e">children</span> <span style="color:#f92672">||</span> [];
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">childEqual</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">prevChildren</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">nextChildren</span>.<span style="color:#a6e22e">length</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> (<span style="color:#a6e22e">nextType</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;object&#34;</span> <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>                (<span style="color:#a6e22e">prevElement</span>.<span style="color:#a6e22e">type</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">nextElement</span>.<span style="color:#a6e22e">type</span>) <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>                (<span style="color:#a6e22e">prevElement</span>.<span style="color:#a6e22e">key</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">nextElement</span>.<span style="color:#a6e22e">key</span>) <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">childEqual</span>);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>到这里我们就实现一个<code>setState</code>和生命周期，在例子中实现了一个<code>Todo</code>，一起看下效果</p>
+<p><img src="/imgs/todo.gif" alt="todo"></p>
+<p>至此我们就实现了一个简单的<code>React</code>，但是仅仅实现了<code>虚拟节点</code>，<code>差异算法</code>，<code>props单向数据流</code>，还有很多更优秀的没实现，比如批量更新，事件优化，组件中的<code>refs</code>，服务端渲染等等，只是一个玩具，对于想深入了解<code>React</code>原理的可能会有些帮助。</p>
+</section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    <a
+      class="flex w-1/2 items-center rounded-l-md p-6 pr-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2017-09-25-read-webpack-source/"
+      ><span class="mr-1.5">←</span><span>webpack源码阅读</span></a
+    >
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2017-09-04-write-your-own-react-1/"
+      ><span>从零开始写一个React - 初始化渲染</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

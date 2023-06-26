@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>Sentry源码阅读 - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="在平时做前端开发时，特别是互联网业务，我们需要及时知道发布后的项目，在运行时有哪些问题，在什么平台或者什么条件下会抛出异常，从而更精确的定位问题，及时修复线上bug。
+Sentry 做为一款开源的监控平台，对各大框架或者语言都有支持，今天我们一起来讨论下它的源码结构。本文分析的是打包完没有压缩的版本，完整地址在这里。
+捕获异常的几种方式 //	运行错误 //	https://developer.mozilla.org/zh-CN/docs/Web/API/GlobalEventHandlers/onerror try catch  window.onerror = xxx window.addEventListener(&#39;error&#39;, xxx) //	其中try catch只能捕获其包裹的代码段里的异常，我们不能对每一个代码段都用try catch包起来，这样可读性太差了 //	window.onerror能捕获所有运行时异常，但是对于资源加载异常无法捕获 //	window.addEventListener(&#39;error&#39;, xxx)较为完善，既能捕获运行时异常，也能捕获资源加载的异常   //	Promise异常 //	https://developer.mozilla.org/zh-CN/docs/Web/Events/unhandledrejection window.onunhandledrejection = xxx window.addEventListener(&#39;unhandledrejection&#39;, xxx) //	对于Promise来说，用捕获运行时错误的方式无法捕获到其抛出的异常，所以就需要用&#39;unhandledrejection&#39;来捕获  //	接口异常(XMLHttpRequest，fetch) //	代理内部方法，此处省略 错误上报的方案   ajax通信，向后台发送错误信息
+  new Image().src = &#39;xxxx&#39;上报，这也是主流方式
+  前面分析的都是异常原生里面捕获和上报的一些方式，现在我们看看Sentry是怎么处理的：
+Sentry.init 初始化 //	dsn是我们用Sentry部署的监控平台上新建项目时生成的， Sentry.init({  dsn: &#39;https://xxxx&#39; }); init 源码：
+function init(options) { 	//	如果options为undefined， 则把options赋值为空对象  if (options === void 0) { options = {}; }   //	如果没有指定集成哪些捕获钩子，则默认全部集成  if (options." />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">Sentry源码阅读</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Mar 26, 2020</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p>在平时做前端开发时，特别是互联网业务，我们需要及时知道发布后的项目，在运行时有哪些问题，在什么平台或者什么条件下会抛出异常，从而更精确的定位问题，及时修复线上<code>bug</code>。</p>
+<p><a href="https://github.com/getsentry/sentry-javascript">Sentry</a> 做为一款开源的监控平台，对各大框架或者语言都有支持，今天我们一起来讨论下它的源码结构。本文分析的是打包完没有压缩的版本，完整地址在<a href="https://browser.sentry-cdn.com/5.7.1/bundle.js">这里</a>。</p>
+<h3 id="捕获异常的几种方式">捕获异常的几种方式</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">//	运行错误
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//	https://developer.mozilla.org/zh-CN/docs/Web/API/GlobalEventHandlers/onerror
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">try</span> <span style="color:#66d9ef">catch</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>window.<span style="color:#a6e22e">onerror</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">xxx</span>
+</span></span><span style="display:flex;"><span>window.<span style="color:#a6e22e">addEventListener</span>(<span style="color:#e6db74">&#39;error&#39;</span>, <span style="color:#a6e22e">xxx</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	其中try catch只能捕获其包裹的代码段里的异常，我们不能对每一个代码段都用try catch包起来，这样可读性太差了
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//	window.onerror能捕获所有运行时异常，但是对于资源加载异常无法捕获
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//	window.addEventListener(&#39;error&#39;, xxx)较为完善，既能捕获运行时异常，也能捕获资源加载的异常
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	Promise异常
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//	https://developer.mozilla.org/zh-CN/docs/Web/Events/unhandledrejection
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>window.<span style="color:#a6e22e">onunhandledrejection</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">xxx</span>
+</span></span><span style="display:flex;"><span>window.<span style="color:#a6e22e">addEventListener</span>(<span style="color:#e6db74">&#39;unhandledrejection&#39;</span>, <span style="color:#a6e22e">xxx</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	对于Promise来说，用捕获运行时错误的方式无法捕获到其抛出的异常，所以就需要用&#39;unhandledrejection&#39;来捕获
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	接口异常(XMLHttpRequest，fetch)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//	代理内部方法，此处省略
+</span></span></span></code></pre></div><h3 id="错误上报的方案">错误上报的方案</h3>
+<ul>
+<li>
+<p><code>ajax</code>通信，向后台发送错误信息</p>
+</li>
+<li>
+<p><code>new Image().src = 'xxxx'</code>上报，这也是主流方式</p>
+</li>
+</ul>
+<p>前面分析的都是异常原生里面捕获和上报的一些方式，现在我们看看<code>Sentry</code>是怎么处理的：</p>
+<h3 id="sentryinit-初始化">Sentry.init 初始化</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">//	dsn是我们用Sentry部署的监控平台上新建项目时生成的，
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">Sentry</span>.<span style="color:#a6e22e">init</span>({
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">dsn</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;https://xxxx&#39;</span>
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div><p><code>init</code> 源码：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">init</span>(<span style="color:#a6e22e">options</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	如果options为undefined， 则把options赋值为空对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">options</span> <span style="color:#f92672">===</span> <span style="color:#66d9ef">void</span> <span style="color:#ae81ff">0</span>) { <span style="color:#a6e22e">options</span> <span style="color:#f92672">=</span> {}; }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">//	如果没有指定集成哪些捕获钩子，则默认全部集成
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">defaultIntegrations</span> <span style="color:#f92672">===</span> <span style="color:#66d9ef">undefined</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">defaultIntegrations</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">defaultIntegrations</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">//	这里是跟webpack和sourceMap集成相关的一些东西，项目里没用的，不做深究
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">release</span> <span style="color:#f92672">===</span> <span style="color:#66d9ef">undefined</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//	获取当前运行环境, Nodejs、浏览器
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">window_1</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">getGlobalObject</span>();
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// This supports the variable that sentry-webpack-plugin injects
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">window_1</span>.<span style="color:#a6e22e">SENTRY_RELEASE</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">window_1</span>.<span style="color:#a6e22e">SENTRY_RELEASE</span>.<span style="color:#a6e22e">id</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">release</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">window_1</span>.<span style="color:#a6e22e">SENTRY_RELEASE</span>.<span style="color:#a6e22e">id</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">//	初始化并且绑定
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">initAndBind</span>(<span style="color:#a6e22e">BrowserClient</span>, <span style="color:#a6e22e">options</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>上面<code>init</code>源码里第二个<code>if</code>里面用到了<code>defaultIntegrations</code>，这边是所有<code>Sentry</code>内置的异常捕获钩子，最主要的也是这边，下面先看看<code>defaultIntegrations</code>有哪些钩子：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">defaultIntegrations</span> <span style="color:#f92672">=</span> [
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">InboundFilters</span>(),
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">FunctionToString</span>(),
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">TryCatch</span>(),
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Breadcrumbs</span>(),
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">GlobalHandlers</span>(),
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">LinkedErrors</span>(),
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">UserAgent</span>(),
+</span></span><span style="display:flex;"><span>];
+</span></span></code></pre></div><p><code>InboundFilters</code>和<code>FunctionToString</code>是<code>Sentry/core</code>里面实现的，先不做分析，从<code>TryCatch</code>来分析</p>
+<p><code>TryCatch</code>是给内置一些<code>API</code>加上<code>try catch</code>包裹</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">TryCatch</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/** JSDoc */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_ignoreOnError</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             * @inheritDoc
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">             */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">name</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">TryCatch</span>.<span style="color:#a6e22e">id</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/** JSDoc */</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">TryCatch</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">_wrapTimeFunction</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">original</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">function</span> () {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">args</span> <span style="color:#f92672">=</span> [];
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">_i</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">_i</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">arguments</span>.<span style="color:#a6e22e">length</span>; <span style="color:#a6e22e">_i</span><span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">args</span>[<span style="color:#a6e22e">_i</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">arguments</span>[<span style="color:#a6e22e">_i</span>];
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">originalCallback</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">args</span>[<span style="color:#ae81ff">0</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">args</span>[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">wrap</span>(<span style="color:#a6e22e">originalCallback</span>, {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">mechanism</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">data</span><span style="color:#f92672">:</span> { <span style="color:#66d9ef">function</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">getFunctionName</span>(<span style="color:#a6e22e">original</span>) },
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">handled</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;instrument&#39;</span>,
+</span></span><span style="display:flex;"><span>      },
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">original</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">args</span>);
+</span></span><span style="display:flex;"><span>  };
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/** JSDoc */</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">TryCatch</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">_wrapRAF</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">original</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">callback</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">original</span>(<span style="color:#a6e22e">wrap</span>(<span style="color:#a6e22e">callback</span>, {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">mechanism</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">data</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">function</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;requestAnimationFrame&#39;</span>,
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">handler</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">getFunctionName</span>(<span style="color:#a6e22e">original</span>),
+</span></span><span style="display:flex;"><span>        },
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">handled</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;instrument&#39;</span>,
+</span></span><span style="display:flex;"><span>      },
+</span></span><span style="display:flex;"><span>    }));
+</span></span><span style="display:flex;"><span>  };
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/** JSDoc */</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">TryCatch</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">_wrapEventTarget</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">target</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">global</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">getGlobalObject</span>();
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">proto</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">global</span>[<span style="color:#a6e22e">target</span>] <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">global</span>[<span style="color:#a6e22e">target</span>].<span style="color:#a6e22e">prototype</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">proto</span> <span style="color:#f92672">||</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">proto</span>.<span style="color:#a6e22e">hasOwnProperty</span> <span style="color:#f92672">||</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">proto</span>.<span style="color:#a6e22e">hasOwnProperty</span>(<span style="color:#e6db74">&#39;addEventListener&#39;</span>)) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">fill</span>(<span style="color:#a6e22e">proto</span>, <span style="color:#e6db74">&#39;addEventListener&#39;</span>, <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">original</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">eventName</span>, <span style="color:#a6e22e">fn</span>, <span style="color:#a6e22e">options</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// tslint:disable-next-line:no-unbound-method strict-type-predicates
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">fn</span>.<span style="color:#a6e22e">handleEvent</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;function&#39;</span>) {
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">fn</span>.<span style="color:#a6e22e">handleEvent</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">wrap</span>(<span style="color:#a6e22e">fn</span>.<span style="color:#a6e22e">handleEvent</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#a6e22e">fn</span>), {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">mechanism</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>              <span style="color:#a6e22e">data</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">function</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;handleEvent&#39;</span>,
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">handler</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">getFunctionName</span>(<span style="color:#a6e22e">fn</span>),
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">target</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">target</span>,
+</span></span><span style="display:flex;"><span>              },
+</span></span><span style="display:flex;"><span>              <span style="color:#a6e22e">handled</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>,
+</span></span><span style="display:flex;"><span>              <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;instrument&#39;</span>,
+</span></span><span style="display:flex;"><span>            },
+</span></span><span style="display:flex;"><span>          });
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">err</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// can sometimes get &#39;Permission denied to access property &#34;handle Event&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      }
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">original</span>.<span style="color:#a6e22e">call</span>(<span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">eventName</span>, <span style="color:#a6e22e">wrap</span>(<span style="color:#a6e22e">fn</span>, {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">mechanism</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">data</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">function</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;addEventListener&#39;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">handler</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">getFunctionName</span>(<span style="color:#a6e22e">fn</span>),
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">target</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">target</span>,
+</span></span><span style="display:flex;"><span>          },
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">handled</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>,
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;instrument&#39;</span>,
+</span></span><span style="display:flex;"><span>        },
+</span></span><span style="display:flex;"><span>      }), <span style="color:#a6e22e">options</span>);
+</span></span><span style="display:flex;"><span>    };
+</span></span><span style="display:flex;"><span>  });
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">fill</span>(<span style="color:#a6e22e">proto</span>, <span style="color:#e6db74">&#39;removeEventListener&#39;</span>, <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">original</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">eventName</span>, <span style="color:#a6e22e">fn</span>, <span style="color:#a6e22e">options</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">callback</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">fn</span>;
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">callback</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">callback</span> <span style="color:#f92672">&amp;&amp;</span> (<span style="color:#a6e22e">callback</span>.<span style="color:#a6e22e">__sentry_wrapped__</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">callback</span>);
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">e</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// ignore, accessing __sentry_wrapped__ will throw in some Selenium environments
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      }
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">original</span>.<span style="color:#a6e22e">call</span>(<span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">eventName</span>, <span style="color:#a6e22e">callback</span>, <span style="color:#a6e22e">options</span>);
+</span></span><span style="display:flex;"><span>    };
+</span></span><span style="display:flex;"><span>  });
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         * Wrap timer functions and event targets to catch errors
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         * and provide better metadata.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         */</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">TryCatch</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">setupOnce</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> () {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_ignoreOnError</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_ignoreOnError</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">global</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">getGlobalObject</span>();
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">fill</span>(<span style="color:#a6e22e">global</span>, <span style="color:#e6db74">&#39;setTimeout&#39;</span>, <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_wrapTimeFunction</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#66d9ef">this</span>));
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">fill</span>(<span style="color:#a6e22e">global</span>, <span style="color:#e6db74">&#39;setInterval&#39;</span>, <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_wrapTimeFunction</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#66d9ef">this</span>));
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">fill</span>(<span style="color:#a6e22e">global</span>, <span style="color:#e6db74">&#39;requestAnimationFrame&#39;</span>, <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_wrapRAF</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#66d9ef">this</span>));
+</span></span><span style="display:flex;"><span>  [
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;EventTarget&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;Window&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;Node&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;ApplicationCache&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;AudioTrackList&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;ChannelMergerNode&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;CryptoOperation&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;EventSource&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;FileReader&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;HTMLUnknownElement&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;IDBDatabase&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#39;IDBRequest&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#39;IDBTransaction&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#39;KeyOperation&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#39;MediaController&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#39;MessagePort&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#39;ModalWindow&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#39;Notification&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#39;SVGElementInstance&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#39;Screen&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#39;TextTrack&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#39;TextTrackCue&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#39;TextTrackList&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#39;WebSocket&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#39;WebSocketWorker&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#39;Worker&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#39;XMLHttpRequest&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#39;XMLHttpRequestEventTarget&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#39;XMLHttpRequestUpload&#39;</span>,
+</span></span><span style="display:flex;"><span>    ].<span style="color:#a6e22e">forEach</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_wrapEventTarget</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#66d9ef">this</span>));
+</span></span><span style="display:flex;"><span>  };
+</span></span></code></pre></div></section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    <a
+      class="flex w-1/2 items-center rounded-l-md p-6 pr-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2020-03-26-read-npx/"
+      ><span class="mr-1.5">←</span><span>npm之npx源码阅读</span></a
+    >
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2019-09-28-react-binding-events-with-arguments/"
+      ><span>React事件绑定终极优化方案</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

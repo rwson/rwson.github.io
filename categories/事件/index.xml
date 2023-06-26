@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>事件 on rwson</title>
+    <link>/categories/%E4%BA%8B%E4%BB%B6/</link>
+    <description>Recent content in 事件 on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Tue, 05 Apr 2016 00:00:00 +0000</lastBuildDate><atom:link href="/categories/%E4%BA%8B%E4%BB%B6/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>javascript中事件代理和取消</title>
+      <link>/post/2016-04-05-javascript-event-delegate/</link>
+      <pubDate>Tue, 05 Apr 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-04-05-javascript-event-delegate/</guid>
+      <description>在日常前端开发中，事件是必不可少的一部分，有时候我们需要根据后端接口的返回来动态输出HTML，这时候直接用jQuery中的click之类的方法已经不能达到目的，需要重新绑定或者用事件代理来实现事件绑定。
+事件代理的原理很简单: 事件冒泡会触发容器 dom 的相关事件并执行监听函数。
+比如我们有这样一段HTML:
+ &amp;lt;div class=&amp;#34;container&amp;#34;&amp;gt;  &amp;lt;div class=&amp;#34;block1&amp;#34;&amp;gt;&amp;lt;/div&amp;gt;  &amp;lt;div class=&amp;#34;block2&amp;#34;&amp;gt;&amp;lt;/div&amp;gt;  &amp;lt;div class=&amp;#34;block3&amp;#34;&amp;gt;&amp;lt;/div&amp;gt;  &amp;lt;div class=&amp;#34;block4&amp;#34;&amp;gt;&amp;lt;/div&amp;gt;  &amp;lt;/div&amp;gt; 我们想给class中带有block的元素绑定一个点击事件：
+window.onload = function() {  var container = document.querySelector(&amp;#34;.selector&amp;#34;);   container.addEventListener(&amp;#34;click&amp;#34;, function(e) {  var ev = e || window.event,  target = ev.target,  classList = target.classList;  if (classList.contains(&amp;#34;block1&amp;#34;) || classList.contains(&amp;#34;block2&amp;#34;) || classList.contains(&amp;#34;block3&amp;#34;) || classList.contains(&amp;#34;block4&amp;#34;)) {  console.log(&amp;#34;target clicked,&amp;#34; + classList[0]);  }  }); }; 如上我们就实现一个事件代理。</description>
+    </item>
+    
+  </channel>
+</rss>

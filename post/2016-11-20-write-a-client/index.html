@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>一起写一个npm命令行工具 - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="自从nodejs问世之后，随着前端不断的发展，出现过很多的命令行工具，就比如前端构建工具，从最开始的grunt，再到gulp，然后到现在的webpack等等，它们都有自己的命令行，接下来我们一起分析并实现一个简单的命令行工具
+首先需要建一个目录，在这里我们暂且叫cli-starter
+mkdir cli-starter 然后我们需要去用npm初始化这个目录，这里我们用默认的就好
+npm init -y 普通的 node.js 脚本需要使用node 文件名的形式执行，在脚本首行加上#!/usr/bin/env node可以在linux环境中指定脚本的解释程序
+一切从hello world开始，我们现在新建一个bin目录，在下面用建一个hello.js，写入下面内容
+#!/usr/bin/env node console.log(&#34;hello world&#34;); 然后去node ./bin/hello，可以看到控制台会输出hello world
+当然这个只是在特定目录下去执行这个文件，如果想和其他命令行工具做到无处不在，可以在package.json中做如下指定
+{  &#34;name&#34;: &#34;hello&#34;,  &#34;bin&#34;: {  &#34;hello&#34;: &#34;./bin/hello&#34;  } } 然后再通过npm link去添加到系统PATH，不要担心会污染系统，既然有npm link，肯定就有npm unlink，就是把我们添加的删除，这样，我们就可以在任何一个目录下使用这个hello命令了
+上面就是一个最简单的命令行了，接下来我们需要对它进行完善，最常见的就是参数，有很多npm模块可以解析我们传入的参数，常用的有commander、minimist等
+在这里我用的minimist这个模块，用法npm上已经有了这里不再赘述，下面我们一起完成一个翻译小工具，调用谷歌的翻译接口，这里我直接用的translate-api这个npm包,一起看下实现：
+#!/usr/bin/env node  var minimist = require(&#34;minimist&#34;),  translate = require(&#34;translate-api&#34;);  //	获取参数 var args = minimist((process.argv.slice(2)), {  /** * 参数别名 * hello --target=abc &lt;=&gt; hello -t=abc */  alias: {  t: &#34;target&#34;,  i: &#34;input&#34;  } });  //	存储输入的参数 var target = args." />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">一起写一个npm命令行工具</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Nov 20, 2016</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p>自从nodejs问世之后，随着前端不断的发展，出现过很多的命令行工具，就比如前端构建工具，从最开始的<code>grunt</code>，再到<code>gulp</code>，然后到现在的<code>webpack</code>等等，它们都有自己的命令行，接下来我们一起分析并实现一个简单的命令行工具</p>
+<p>首先需要建一个目录，在这里我们暂且叫<code>cli-starter</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir cli-starter
+</span></span></code></pre></div><p>然后我们需要去用<code>npm</code>初始化这个目录，这里我们用默认的就好</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>npm init -y
+</span></span></code></pre></div><p>普通的 node.js 脚本需要使用<code>node 文件名</code>的形式执行，在脚本首行加上<code>#!/usr/bin/env node</code>可以在<code>linux</code>环境中指定脚本的解释程序</p>
+<p>一切从<code>hello world</code>开始，我们现在新建一个<code>bin</code>目录，在下面用建一个<code>hello.js</code>，写入下面内容</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env node
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;hello world&#34;</span>);
+</span></span></code></pre></div><p>然后去<code>node ./bin/hello</code>，可以看到控制台会输出<code>hello world</code></p>
+<p>当然这个只是在特定目录下去执行这个文件，如果想和其他命令行工具做到无处不在，可以在<code>package.json</code>中做如下指定</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;hello&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;bin&#34;</span>: {
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;hello&#34;</span>: <span style="color:#e6db74">&#34;./bin/hello&#34;</span>
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>然后再通过<code>npm link</code>去添加到系统<code>PATH</code>，不要担心会污染系统，既然有<code>npm link</code>，肯定就有<code>npm unlink</code>，就是把我们添加的删除，这样，我们就可以在任何一个目录下使用这个<code>hello</code>命令了</p>
+<p>上面就是一个最简单的命令行了，接下来我们需要对它进行完善，最常见的就是参数，有很多<code>npm</code>模块可以解析我们传入的参数，常用的有<a href="https://www.npmjs.com/package/commander">commander</a>、<a href="https://www.npmjs.com/package/minimist">minimist</a>等</p>
+<p>在这里我用的<code>minimist</code>这个模块，用法<code>npm</code>上已经有了这里不再赘述，下面我们一起完成一个翻译小工具，调用谷歌的翻译接口，这里我直接用的<code>translate-api</code>这个<code>npm</code>包,一起看下实现：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env node
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">minimist</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;minimist&#34;</span>),
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">translate</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;translate-api&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	获取参数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">args</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">minimist</span>((<span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">slice</span>(<span style="color:#ae81ff">2</span>)), {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     *  参数别名
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     * hello --target=abc &lt;=&gt; hello -t=abc
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">     */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">alias</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">t</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;target&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">i</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;input&#34;</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	存储输入的参数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">target</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">target</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">input</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">input</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//	调用封装好的Google Translate API
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">translate</span>.<span style="color:#a6e22e">getText</span>(<span style="color:#a6e22e">input</span>, { <span style="color:#a6e22e">to</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">target</span> }).<span style="color:#a6e22e">then</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">res</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">text</span>);
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//	退出进程
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">exit</span>(<span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div><p>到这里我们一个简单的命令行工具就写好了，只是一个小玩具，还有很多没实现，比如子命令等。</p>
+<p>那么如果感觉这个工具写的还行，想分享到<code>npm</code>仓库里面给更多人使用，这时候我们就要用到<code>npm</code>的一些子命令了，首先我们需要用<code>npm adduser</code>去登录<code>npm</code>，让它知道这个包是谁发布的，然后用<code>npm publish</code>去推送到仓库，这里需要注意的是，在发布<code>npm</code>包时我们需要把镜像源切换成官方的，推荐使用<a href="https://www.npmjs.com/package/nrm">nrm</a>去管理镜像，在用<code>publish</code>之前，先<code>nrm use npm</code>切下镜像，等发布成功之后别人就可以用<code>npm install &lt;package-name&gt; -g</code>去把我们的命令行工具安装到全局使用啦😜</p>
+</section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    <a
+      class="flex w-1/2 items-center rounded-l-md p-6 pr-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2016-11-23-js-sync-module-mode/"
+      ><span class="mr-1.5">←</span><span>javascript模块化编程-同步模式</span></a
+    >
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2016-11-09-asyncawait-tourial/"
+      ><span>async/await学习</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

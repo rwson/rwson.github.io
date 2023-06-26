@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>模板引擎 on rwson</title>
+    <link>/categories/%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E/</link>
+    <description>Recent content in 模板引擎 on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Mon, 14 Dec 2015 00:00:00 +0000</lastBuildDate><atom:link href="/categories/%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>实现一个简单的模板引擎</title>
+      <link>/post/2015-12-14-front-end-template-engine/</link>
+      <pubDate>Mon, 14 Dec 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2015-12-14-front-end-template-engine/</guid>
+      <description>在最开始想要把数据显示到页面上,我们可以需要用到一些后端的模板引擎(比如java中的Freemarker等),随着技术的发展,前端会把数据从后端取回来,用拼接HTML或者模板引擎的方式来呈现页面,如果布局结构简单还好,但是如果碰到复杂结构的时候,前者可能显得比较吃力,且容易出错。
+比较著名的一些前端模板引擎有Handlebars、Underscore.js(一个javascript工具库的集合,带模板引擎)等等。各自也有各自的语法。
+前端模板引擎带来了很多嚎头,(预)编译、缓存、渲染等等,下面我们实现一个简单的模板引擎。
+首先想一下,在用模板引擎和拼接字符串时最大的区别是什么?就是一个是通过手动的绑定属性,一个是像写HTML一样把属性绑定好:
+// 比如有这么一段数据 var data = [ { name: &amp;quot;foo&amp;quot;, age: 23 }, { name: &amp;quot;bar&amp;quot;, age: 25 } ]; // 字符串拼接的写法 var html = &amp;quot;&amp;quot;; for(var i = 0, len = data.length; i &amp;lt; len; i ++) { html += &amp;quot;&amp;lt;div class=&#39;item&#39;&amp;gt;&amp;lt;span class=&#39;name&#39;&amp;gt;&amp;quot; + data[i].name + &amp;quot;&amp;lt;/span&amp;gt;&amp;lt;span class=&#39;age&#39;&amp;gt;&amp;quot; + data[i].age + &amp;quot;&amp;lt;/span&amp;gt;&amp;lt;/div&amp;gt;&amp;quot;; } document.getElementById(&amp;quot;target&amp;quot;).innerHTML = html; // 模板引擎 &amp;lt;script type=&amp;quot;text/template&amp;quot;&amp;gt; &amp;lt;% for(var i in obj) %&amp;gt; &amp;lt;div class=&amp;quot;item&amp;quot;&amp;gt; &amp;lt;span class=&amp;quot;name&amp;quot;&amp;gt; &amp;lt;%= obj[i].</description>
+    </item>
+    
+  </channel>
+</rss>

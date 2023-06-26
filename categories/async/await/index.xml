@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>async/await on rwson</title>
+    <link>/categories/async/await/</link>
+    <description>Recent content in async/await on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language><atom:link href="/categories/async/await/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>async/await学习</title>
+      <link>/post/2016-11-09-asyncawait-tourial/</link>
+      <pubDate>Wed, 09 Nov 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-11-09-asyncawait-tourial/</guid>
+      <description>在处理javascript中异步的时候,回调往往是最让人恶心的,之前介绍过用Promise来处理异步的问题,但是即使用上了Promise,在处理回调上还是会有各种嵌套,今天来介绍下ES7中的async/await,由于在Nodejs中还未得到支持,所以需要借助一些npm包来实践,在这里用的是asyncawait。
+先来个原生文件读取的例子:
+ const fs = require(&amp;#34;fs&amp;#34;);  fs.readFile(&amp;#34;test.txt&amp;#34;, (ex, res) =&amp;gt; {  console.log(res.toString());   // do something...   fs.readFile(&amp;#34;test2.txt&amp;#34;, (ex, res) =&amp;gt; {  console.log(res.toString());   // do something  });  });   // 控制台输出  xxxxx  yyyyy 下面我们再用async/await实现一遍:
+ const async = require(&amp;#34;asyncawait&amp;#34;).async;  const await = require(&amp;#34;asyncawait&amp;#34;).await;  let readFile = function(path) {  return new Promise((resolve, reject) =&amp;gt; {  fs.</description>
+    </item>
+    
+  </channel>
+</rss>

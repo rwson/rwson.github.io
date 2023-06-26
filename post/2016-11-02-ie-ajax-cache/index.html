@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #faf6f1"
+  lang="zh"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>IE下AngularJs中的ajax缓存 - rwson</title>
+
+  
+  <meta name="theme-color" />
+
+  
+  
+  
+  <meta name="description" content="在单页应用越来越普及的今天,越来越多的项目都会采用这种方案,这几天用AngularJs做了一个PC端应用,有登录注册的功能,登录注册的功能是通过ajax实现的,在登录注册以后页面不刷新,只修改$rootScope下的某些属性值,然后在页面里面通过ng-if之类的指令来控制相关元素的显示隐藏。
+之前的大概实现如下:
+// js  var app = angular.module(&#34;app&#34;, []);  app.run([&#34;$rootScope&#34;, &#34;$http&#34;, function($rootScope, $http) {  $rootScope.isLogin = false;  $rootScope.$on(&#34;$routeChangeStart&#34;, function (event, next, current) {  $http.get(&#34;xxxx&#34;)  .success(function(res) {  $rootScope.isLogin = !!(res.isLogin);  // ...  })  .error(function() {  // ...  });  });  }]); &lt;div class=&#34;container&#34;&gt;  &lt;a href=&#34;/user/center&#34; ng-if=&#34;isLogin&#34;&gt;用户中心&lt;/a&gt;  &lt;a href=&#34;javascript:;&#34; ng-click=&#34;logout()&#34; ng-if=&#34;isLogin&#34;&gt;登出&lt;/a&gt;  &lt;a href=&#34;/login&#34; ng-if=&#34;!isLogin&#34;&gt;登录&lt;/a&gt; &lt;/div&gt; 后来发现在Chrome/Firefox下都是好的,到了IE下登录以后不刷新就显示不对。原来以为是ng-if在IE下重新渲染过慢的问题,改成ng-show以后还是不行,然后看http状态码,发现是304,想到可能和缓存有关系,后来改了配置中关键ajax请求那边的东西,发现可以了,核心代码如下:" />
+  <meta name="author" content="rwson" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="/main.min.css" />
+
+  
+  <script
+    defer
+    src="/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+   
+  <link rel="preload" as="image" href="/theme.png" />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/9476421" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="/github.svg" />
+  
+  <link rel="preload" as="image" href="/linkedin.svg" />
+  
+  <link rel="preload" as="image" href="/rss.svg" />
+  
+  
+
+  
+  
+
+  
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.96.0" />
+
+  
+  
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a
+      class="-translate-x-[1px] -translate-y-[1px] text-2xl font-semibold"
+      href="/"
+      >rwson</a
+    >
+    <div
+      class="btn-dark text-[0] ml-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+      role="button"
+      aria-label="Dark"
+    ></div>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#faf6f1"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    if (htmlClass.contains('dark')) {
+      setDark(true);
+    } else {
+      const darkVal = localStorage.getItem('dark');
+      setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+    }
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:ml-12 lg:mt-0 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./github.svg)"
+        href="https://github.com/rwson"
+        target="_blank"
+        rel="me"
+      >
+        github
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./linkedin.svg)"
+        href="https://linkedin.com/in/%e4%bb%81%e4%bc%9f-%e5%ae%8b-4049a9117"
+        target="_blank"
+        rel="me"
+      >
+        linkedin
+      </a>
+      
+      <a
+        class="h-8 w-8 text-[0] [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./rss.svg)"
+        href="/index.xml"
+        target="_blank"
+        rel="alternate"
+      >
+        rss
+      </a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pb-24 pt-16 dark:prose-invert"
+    >
+    <div class="-mt-2 mb-20 flex items-center">
+      
+      <div
+        class="mr-5 shrink-0 rounded-full border-[0.5px] border-black/10 bg-white/50 p-3 shadow-sm dark:bg-white/[15%]"
+      >
+      <a href="/">
+        <img
+            class="my-0 aspect-square w-16 rounded-full !bg-black/5 hover:animate-spin dark:!bg-black/80"
+            src="https://avatars.githubusercontent.com/u/9476421"
+            alt="rwson"
+          />
+      </a>
+      </div>
+      
+      
+      <div>
+        <h1 class="mb-2 mt-3 text-[1.6rem] font-bold">rwson</h1>
+        <div class="break-words">
+          一个前端开发
+        </div>
+      </div>
+      
+    </div>
+
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">IE下AngularJs中的ajax缓存</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Nov 2, 2016</time>
+      
+      
+      
+      
+    </div>
+    
+  </header>
+
+  <section><p>在单页应用越来越普及的今天,越来越多的项目都会采用这种方案,这几天用AngularJs做了一个PC端应用,有登录注册的功能,登录注册的功能是通过ajax实现的,在登录注册以后页面不刷新,只修改$rootScope下的某些属性值,然后在页面里面通过ng-if之类的指令来控制相关元素的显示隐藏。</p>
+<p>之前的大概实现如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">//  js
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">app</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">angular</span>.<span style="color:#a6e22e">module</span>(<span style="color:#e6db74">&#34;app&#34;</span>, []);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">run</span>([<span style="color:#e6db74">&#34;$rootScope&#34;</span>, <span style="color:#e6db74">&#34;$http&#34;</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">$rootScope</span>, <span style="color:#a6e22e">$http</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">$rootScope</span>.<span style="color:#a6e22e">isLogin</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">$rootScope</span>.<span style="color:#a6e22e">$on</span>(<span style="color:#e6db74">&#34;$routeChangeStart&#34;</span>, <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">event</span>, <span style="color:#a6e22e">next</span>, <span style="color:#a6e22e">current</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">$http</span>.<span style="color:#a6e22e">get</span>(<span style="color:#e6db74">&#34;xxxx&#34;</span>)
+</span></span><span style="display:flex;"><span>            .<span style="color:#a6e22e">success</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">res</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">$rootScope</span>.<span style="color:#a6e22e">isLogin</span> <span style="color:#f92672">=</span> <span style="color:#f92672">!!</span>(<span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">isLogin</span>);
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            })
+</span></span><span style="display:flex;"><span>            .<span style="color:#a6e22e">error</span>(<span style="color:#66d9ef">function</span>() {
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">//  ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            });
+</span></span><span style="display:flex;"><span>        });
+</span></span><span style="display:flex;"><span>    }]);
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>&lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;container&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">a</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/user/center&#34;</span> <span style="color:#a6e22e">ng-if</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;isLogin&#34;</span>&gt;用户中心&lt;/<span style="color:#f92672">a</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">a</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;javascript:;&#34;</span> <span style="color:#a6e22e">ng-click</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;logout()&#34;</span> <span style="color:#a6e22e">ng-if</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;isLogin&#34;</span>&gt;登出&lt;/<span style="color:#f92672">a</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">a</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/login&#34;</span> <span style="color:#a6e22e">ng-if</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;!isLogin&#34;</span>&gt;登录&lt;/<span style="color:#f92672">a</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">div</span>&gt;
+</span></span></code></pre></div><p>后来发现在Chrome/Firefox下都是好的,到了IE下登录以后不刷新就显示不对。原来以为是ng-if在IE下重新渲染过慢的问题,改成ng-show以后还是不行,然后看http状态码,发现是304,想到可能和缓存有关系,后来改了配置中关键ajax请求那边的东西,发现可以了,核心代码如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">config</span>([<span style="color:#e6db74">&#34;$routeProvider&#34;</span>, <span style="color:#e6db74">&#34;$httpProvider&#34;</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">$routeProvider</span>, <span style="color:#a6e22e">$httpProvider</span>){
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//  ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">$httpProvider</span>.<span style="color:#a6e22e">defaults</span>.<span style="color:#a6e22e">headers</span>.<span style="color:#a6e22e">get</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">$httpProvider</span>.<span style="color:#a6e22e">defaults</span>.<span style="color:#a6e22e">headers</span>.<span style="color:#a6e22e">get</span> <span style="color:#f92672">=</span> {};
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">$httpProvider</span>.<span style="color:#a6e22e">defaults</span>.<span style="color:#a6e22e">headers</span>.<span style="color:#a6e22e">common</span>[<span style="color:#e6db74">&#34;X-Requested-With&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;XMLHttpRequest&#34;</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">$httpProvider</span>.<span style="color:#a6e22e">defaults</span>.<span style="color:#a6e22e">headers</span>.<span style="color:#a6e22e">get</span>[<span style="color:#e6db74">&#34;Cache-Control&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;no-cache&#34;</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">$httpProvider</span>.<span style="color:#a6e22e">defaults</span>.<span style="color:#a6e22e">headers</span>.<span style="color:#a6e22e">get</span>[<span style="color:#e6db74">&#34;Pragma&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;no-cache&#34;</span>;
+</span></span><span style="display:flex;"><span>    }]);
+</span></span></code></pre></div></section>
+
+  
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    <a
+      class="flex w-1/2 items-center rounded-l-md p-6 pr-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2016-11-09-asyncawait-tourial/"
+      ><span class="mr-1.5">←</span><span>async/await学习</span></a
+    >
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end rounded-r-md p-6 pl-3 no-underline hover:bg-black/[2%] dark:hover:bg-white/[3%]"
+      href="/post/2016-09-17-javascript-serialize/"
+      ><span>javascript中的序列化</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer
+  class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60"
+>
+  <div class="mr-auto">
+    &copy; 2015-2023
+    <a class="link" href="/">rwson; all rights reserved.</a>
+  </div>
+</footer>
+
+  </body>
+</html>

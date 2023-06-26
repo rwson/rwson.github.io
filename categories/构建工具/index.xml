@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>构建工具 on rwson</title>
+    <link>/categories/%E6%9E%84%E5%BB%BA%E5%B7%A5%E5%85%B7/</link>
+    <description>Recent content in 构建工具 on rwson</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh</language>
+    <lastBuildDate>Wed, 18 Jan 2017 00:00:00 +0000</lastBuildDate><atom:link href="/categories/%E6%9E%84%E5%BB%BA%E5%B7%A5%E5%85%B7/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>实现一个webpack loader</title>
+      <link>/post/2017-01-18-wrire-a-webpack-loader/</link>
+      <pubDate>Wed, 18 Jan 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2017-01-18-wrire-a-webpack-loader/</guid>
+      <description>在React,ES6开发模式越来越普及的今天,webpack就成了前端构建的一个标配。webpack有两大重要部分组成: loader和plugin。loader是用在应用源码上的转换原件,比如最常用到的babel-loader/jsx-loader/file-loader/css-loader/url-loader等等。
+loader可链式执行,一种文件类型可以用多个loader(比如css文件,可能就需要用到css-loader和style-loader),loader之间用&amp;quot;!&amp;ldquo;分隔,当前loader处理完,把处理结果带到下一个loader,最后一个loader返回一个String或者String Buffer返回给compiler。
+loader调用方式大体有3种形式:
+  引用时调用
+ // a.js require(&amp;quot;style-loader/url!css-loader!./xxx.css&amp;quot;);    webpack直接调用
+ // webpack.config.js // ... module: { loaders: [ // ... { test: /\.css$/, loader: &amp;quot;style-loader!css-loader&amp;quot; } ] }    指定loaders数组
+ // webpack.config.js // ... module: { loaders: [ // ... { test: /\.css$/, loaders: [ &amp;quot;style-loader&amp;quot;, &amp;quot;css-loader&amp;quot; ] } ] }    webpack官网上说&amp;quot;A loader is a node module exporting a function&amp;rdquo;,也就是说一个loader就是一个暴露出去的node模块,既然是一个node module,也就基本可以写成下面的样子:</description>
+    </item>
+    
+    <item>
+      <title>Gulp插件的研究</title>
+      <link>/post/2016-11-29-gulp-plugin-tourial/</link>
+      <pubDate>Tue, 29 Nov 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2016-11-29-gulp-plugin-tourial/</guid>
+      <description>在网页端功能越来越繁杂的今天,随着功能的增多,代码量也必不可少的多个,代码量一多,web性能就显得尤为重要,尤其是加载方面,时间太长,可能用户就没心情等下去,所以现在的web项目一般都在发布的时候进行一版自动构建,从原来的grunt到gulp,再到现在的webpack。
+今天研究了下gulp插件,写点心得体会吧。看了两个gulp插件源码,发现里面都引入了through2这个包,官方的说法就是&amp;quot;Node Stream的简单封装，目的是让链式流操作更加简单;&amp;quot;,就也照葫芦画瓢,引用了这个包,简单实现一个gulp插件,功能就是压缩css,并且把css中的&amp;quot;background: url(xxxx.png)&amp;ldquo;中的&amp;quot;xxxx.png&amp;quot;转换成base64编码的形式,减少http请求数。
+ &amp;#34;use strict&amp;#34;;   const through = require(&amp;#34;through2&amp;#34;),  path = require(&amp;#34;path&amp;#34;),  fs = require(&amp;#34;fs&amp;#34;),   // 引用async/await,方便处理文件读写的异步操作  async = require(&amp;#34;asyncawait&amp;#34;).async,  await = require(&amp;#34;asyncawait&amp;#34;).await,   // 匹配url(../xxx.yyy)这种表达式  imgReg = /url\s*\((\s*[A-Za-z0-9\-\_\.\/\:]+\s*)\);?/gi,   // 将fs.readFile封装成Promise  readFile = (path) =&amp;gt; {  return new Promise((resolve, reject) =&amp;gt; {  fs.readFile(path, (ex, file) =&amp;gt; {  if (ex) {  reject(ex);  }  resolve(file);  });  });  };   let base, contents, match, tmp, url;   // 暴露出去的函数  module.</description>
+    </item>
+    
+  </channel>
+</rss>
