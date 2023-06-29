@@ -45,10 +45,7 @@
   <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, shrink-to-fit=no"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
   
   <title>javascript桥梁模式 - rwson</title>
@@ -79,11 +76,7 @@ function PublicClass(){ var name = &quot;张三&quot;; // 私有属性 this.gett
   <link rel="preload stylesheet" as="style" href="/main.min.css" />
 
   
-  <script
-    defer
-    src="/highlight.min.js"
-    onload="hljs.initHighlightingOnLoad();"
-  ></script>
+  <script defer src="/highlight.min.js" onload="hljs.initHighlightingOnLoad()"></script>
   
 
   
@@ -121,8 +114,56 @@ function PublicClass(){ var name = &quot;张三&quot;; // 私有属性 this.gett
 
   
   
-</head>
+  
+  
+  
+  
+  
+  <meta property="og:title" content="javascript桥梁模式" />
+<meta property="og:description" content="桥模式:
+桥梁模式可以用来弱化它与使用它的类和对象之间的耦合，就是将抽象与其实现隔离开来，以便二者独立变化；这种模式对于JavaScript中常见的时间驱动的编程有很大益处，桥梁模式最常见和实际的应用场合之一是时间监听器回调函数。
+可能我们平时写代码就用到了桥模式，比如看下面的例子：
+var btn = document.getElementById(&quot;btn&quot;); btn.onclick = function(){ bridgeHandle(); } function bridgeHandle(){ var msg = btn.value; sendRequest(msg); } // 这里情况，比如ajax请求 function sendRequest(msg){ console.log(msg); }  在上面的代码中，bridgeHandle就是一个桥梁，原来的sendRequest应该可以写在onclick事件里面，那么这样的写法有什么好处呢？个人认为有以下几点。
+1、 实现解耦：把原来要通过点击来触发的逻辑代码抽离出来，成为一个单独的部分； 2、方便做单元测试：我们可以单独调用sendRequest方法来测试ajax请求(假设)的返回等是否是我们预期的；
+3、功能模块化，符合现在前端发展的趋势，便于自己和他人维护。
+在桥模式中，还有一个概念叫“特权函数”，我们都知道在面向对象程序设计中，类的私有成员变量或者私有方法是不能被外部访问或者调用的，但是特权函数给我们提供了这一方便的接口。
+function PublicClass(){ var name = &quot;张三&quot;; // 私有属性 this.getter = function(){ return name; }; // 访问私有属性getter,特权函数 function _privateMethod(){ return &quot;我是私有方法！&quot;; } this.bridgeMethod = function(){ return privateMethod(); }; } var class = new PublicClass(); console.log(class.getter());	//	张三 console.log(class.bridgeMethod());	//	我是私有方法！  在上面的例子中，PublicClass中有name这个私有成员变量和_privateMethod这个私有方法，如果在没有特权函数的情况下我们是不能访问和调用的的，但是通过模式，我们就完成了对私有成员变量和私有方法的访问和调用。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/2015-06-03-js-design-mode-bridge/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2015-06-03T00:00:00+00:00" />
+<meta property="article:modified_time" content="2015-06-03T00:00:00+00:00" />
 
+
+  
+  <meta itemprop="name" content="javascript桥梁模式">
+<meta itemprop="description" content="桥模式:
+桥梁模式可以用来弱化它与使用它的类和对象之间的耦合，就是将抽象与其实现隔离开来，以便二者独立变化；这种模式对于JavaScript中常见的时间驱动的编程有很大益处，桥梁模式最常见和实际的应用场合之一是时间监听器回调函数。
+可能我们平时写代码就用到了桥模式，比如看下面的例子：
+var btn = document.getElementById(&quot;btn&quot;); btn.onclick = function(){ bridgeHandle(); } function bridgeHandle(){ var msg = btn.value; sendRequest(msg); } // 这里情况，比如ajax请求 function sendRequest(msg){ console.log(msg); }  在上面的代码中，bridgeHandle就是一个桥梁，原来的sendRequest应该可以写在onclick事件里面，那么这样的写法有什么好处呢？个人认为有以下几点。
+1、 实现解耦：把原来要通过点击来触发的逻辑代码抽离出来，成为一个单独的部分； 2、方便做单元测试：我们可以单独调用sendRequest方法来测试ajax请求(假设)的返回等是否是我们预期的；
+3、功能模块化，符合现在前端发展的趋势，便于自己和他人维护。
+在桥模式中，还有一个概念叫“特权函数”，我们都知道在面向对象程序设计中，类的私有成员变量或者私有方法是不能被外部访问或者调用的，但是特权函数给我们提供了这一方便的接口。
+function PublicClass(){ var name = &quot;张三&quot;; // 私有属性 this.getter = function(){ return name; }; // 访问私有属性getter,特权函数 function _privateMethod(){ return &quot;我是私有方法！&quot;; } this.bridgeMethod = function(){ return privateMethod(); }; } var class = new PublicClass(); console.log(class.getter());	//	张三 console.log(class.bridgeMethod());	//	我是私有方法！  在上面的例子中，PublicClass中有name这个私有成员变量和_privateMethod这个私有方法，如果在没有特权函数的情况下我们是不能访问和调用的的，但是通过模式，我们就完成了对私有成员变量和私有方法的访问和调用。"><meta itemprop="datePublished" content="2015-06-03T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2015-06-03T00:00:00+00:00" />
+<meta itemprop="wordCount" content="110">
+<meta itemprop="keywords" content="" />
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="javascript桥梁模式"/>
+<meta name="twitter:description" content="桥模式:
+桥梁模式可以用来弱化它与使用它的类和对象之间的耦合，就是将抽象与其实现隔离开来，以便二者独立变化；这种模式对于JavaScript中常见的时间驱动的编程有很大益处，桥梁模式最常见和实际的应用场合之一是时间监听器回调函数。
+可能我们平时写代码就用到了桥模式，比如看下面的例子：
+var btn = document.getElementById(&quot;btn&quot;); btn.onclick = function(){ bridgeHandle(); } function bridgeHandle(){ var msg = btn.value; sendRequest(msg); } // 这里情况，比如ajax请求 function sendRequest(msg){ console.log(msg); }  在上面的代码中，bridgeHandle就是一个桥梁，原来的sendRequest应该可以写在onclick事件里面，那么这样的写法有什么好处呢？个人认为有以下几点。
+1、 实现解耦：把原来要通过点击来触发的逻辑代码抽离出来，成为一个单独的部分； 2、方便做单元测试：我们可以单独调用sendRequest方法来测试ajax请求(假设)的返回等是否是我们预期的；
+3、功能模块化，符合现在前端发展的趋势，便于自己和他人维护。
+在桥模式中，还有一个概念叫“特权函数”，我们都知道在面向对象程序设计中，类的私有成员变量或者私有方法是不能被外部访问或者调用的，但是特权函数给我们提供了这一方便的接口。
+function PublicClass(){ var name = &quot;张三&quot;; // 私有属性 this.getter = function(){ return name; }; // 访问私有属性getter,特权函数 function _privateMethod(){ return &quot;我是私有方法！&quot;; } this.bridgeMethod = function(){ return privateMethod(); }; } var class = new PublicClass(); console.log(class.getter());	//	张三 console.log(class.bridgeMethod());	//	我是私有方法！  在上面的例子中，PublicClass中有name这个私有成员变量和_privateMethod这个私有方法，如果在没有特权函数的情况下我们是不能访问和调用的的，但是通过模式，我们就完成了对私有成员变量和私有方法的访问和调用。"/>
+
+  
+  
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles-confetti@2.10.1/tsparticles.confetti.bundle.min.js"></script>
+  <script>const emojConfig={spread:360,ticks:200,gravity:1,decay:.94,startVelocity:30,particleCount:100,scalar:2,shapes:["image"]},randomInRange=(t,e)=>Math.random()*(e-t)+t,fireDefault=()=>confetti({angle:randomInRange(55,125),spread:randomInRange(50,70),particleCount:randomInRange(50,100),origin:{y:.6}}),fireDog=()=>confetti({...emojConfig,shapeOptions:{image:new Array(parseInt(randomInRange(10,20))).fill({src:"https://avatars.githubusercontent.com/u/9476421",width:16,height:16})}}),fireEmoj=()=>confetti({...emojConfig,shapeOptions:{image:[{src:"https://particles.js.org/images/fruits/apple.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/avocado.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/banana.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/berries.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/cherry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/grapes.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/lemon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/orange.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/peach.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pear.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pepper.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/plum.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/star.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/strawberry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon_slice.png",width:32,height:32}]}}),fireRealistic=()=>{const t={origin:{y:.7}},e=(e,s)=>{confetti(Object.assign({},t,s,{particleCount:Math.floor(200*e)}))};e(.25,{spread:26,startVelocity:55}),e(.2,{spread:60}),e(.35,{spread:100,decay:.91,scalar:.8}),e(.1,{spread:120,startVelocity:25,decay:.92,scalar:1.2}),e(.1,{spread:120,startVelocity:45})};window.addEventListener("DOMContentLoaded",()=>{document.addEventListener("click",t=>{if("A"===t.target.tagName&&Boolean(e.target.href))return;const s=Math.floor(100*Math.random());return s<=25?fireDefault():s<=50?fireDog():s<=75?fireEmoj():void fireRealistic()})});</script>
+</head>
   <body class="text-black duration-200 ease-out dark:text-white">
     <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
   <div class="relative z-50 mr-auto flex items-center">

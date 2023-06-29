@@ -45,10 +45,7 @@
   <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, shrink-to-fit=no"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
   
   <title>javascript中arguments对象 - rwson</title>
@@ -79,11 +76,7 @@ function test3(num){ if(num &lt;= 1){ return 1; }else{ // return num * test3(num
   <link rel="preload stylesheet" as="style" href="/main.min.css" />
 
   
-  <script
-    defer
-    src="/highlight.min.js"
-    onload="hljs.initHighlightingOnLoad();"
-  ></script>
+  <script defer src="/highlight.min.js" onload="hljs.initHighlightingOnLoad()"></script>
   
 
   
@@ -121,8 +114,56 @@ function test3(num){ if(num &lt;= 1){ return 1; }else{ // return num * test3(num
 
   
   
-</head>
+  
+  
+  
+  
+  
+  <meta property="og:title" content="javascript中arguments对象" />
+<meta property="og:description" content="arguments对象 定义：
+arguments是传进实参的集合,可理解为数组类型,但是又不是数组类型
+常用属性arguments.callee,该属性像一个指针,指向函数自己,但是该属性在严格模式下被禁用了,意味着在严格模式下无法在匿名函数内部调用自身。
+在js中,允许函数的实参和形参个数不同,即使这样,在函数运行时也不会报错,看下面的例子：
+function test(a,b,c,d){ return a &#43; b &#43; c &#43; d; } console.log(test(1,2,3,4,5)); //	打印出10,因为接收到的参数为(1,2,3,4) console.log(test(1,2,3)); //	打印出NaN,因为接收到的参数为(1,2,3,undefuned)  所以,为了避免上面的情况,我们有必要在函数运行之前对函数的实参和形参个数是否相等进行判断,这里就可以用到我们的arguments对象。
+首先我们取得函数形参个数,有两种方法(函数名.length/arguments.callee.length),然后我们可以取得函数的实参个数,具体为arguments.length。下面用一个累加实现一下对函数实参和形参个数的验证,如果两种不相等,则抛出异常;如果验证通过,则执行正确的函数体。
+function test1(a,b,c,d){ if(arguments.callee.length !== arguments.length){ //	前者也可写为test1.length,不过建议写为arguments.callee.length,具体原因下文解释 throw &quot;参数个数不正确!&quot;; }else{ return function(a){ var res = 0; for(var i = 0;i &lt; a.length;i &#43;&#43;){ res &#43;= a[i]; } return res; }(arguments); //	验证通过,执行函数体 } } console.log(test1(1,2)); //	抛出&quot;参数个数不正确！&quot;的异常 console.log(test1(1,2,3,4)); //	验证通过,打印出10  在实际js中,arguments对象用的最多的可能就是递归操作了,下面用一个阶乘实现简单的递归操作。
+function test3(num){ if(num &lt;= 1){ return 1; }else{ // return num * test3(num -1); //	如果我们把test3置空,在进行递归操作时,会报&quot;object is not a function&quot;的错误 return num * arguments." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/2015-03-07-arguments/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2015-03-07T00:00:00+00:00" />
+<meta property="article:modified_time" content="2015-03-07T00:00:00+00:00" />
 
+
+  
+  <meta itemprop="name" content="javascript中arguments对象">
+<meta itemprop="description" content="arguments对象 定义：
+arguments是传进实参的集合,可理解为数组类型,但是又不是数组类型
+常用属性arguments.callee,该属性像一个指针,指向函数自己,但是该属性在严格模式下被禁用了,意味着在严格模式下无法在匿名函数内部调用自身。
+在js中,允许函数的实参和形参个数不同,即使这样,在函数运行时也不会报错,看下面的例子：
+function test(a,b,c,d){ return a &#43; b &#43; c &#43; d; } console.log(test(1,2,3,4,5)); //	打印出10,因为接收到的参数为(1,2,3,4) console.log(test(1,2,3)); //	打印出NaN,因为接收到的参数为(1,2,3,undefuned)  所以,为了避免上面的情况,我们有必要在函数运行之前对函数的实参和形参个数是否相等进行判断,这里就可以用到我们的arguments对象。
+首先我们取得函数形参个数,有两种方法(函数名.length/arguments.callee.length),然后我们可以取得函数的实参个数,具体为arguments.length。下面用一个累加实现一下对函数实参和形参个数的验证,如果两种不相等,则抛出异常;如果验证通过,则执行正确的函数体。
+function test1(a,b,c,d){ if(arguments.callee.length !== arguments.length){ //	前者也可写为test1.length,不过建议写为arguments.callee.length,具体原因下文解释 throw &quot;参数个数不正确!&quot;; }else{ return function(a){ var res = 0; for(var i = 0;i &lt; a.length;i &#43;&#43;){ res &#43;= a[i]; } return res; }(arguments); //	验证通过,执行函数体 } } console.log(test1(1,2)); //	抛出&quot;参数个数不正确！&quot;的异常 console.log(test1(1,2,3,4)); //	验证通过,打印出10  在实际js中,arguments对象用的最多的可能就是递归操作了,下面用一个阶乘实现简单的递归操作。
+function test3(num){ if(num &lt;= 1){ return 1; }else{ // return num * test3(num -1); //	如果我们把test3置空,在进行递归操作时,会报&quot;object is not a function&quot;的错误 return num * arguments."><meta itemprop="datePublished" content="2015-03-07T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2015-03-07T00:00:00+00:00" />
+<meta itemprop="wordCount" content="109">
+<meta itemprop="keywords" content="" />
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="javascript中arguments对象"/>
+<meta name="twitter:description" content="arguments对象 定义：
+arguments是传进实参的集合,可理解为数组类型,但是又不是数组类型
+常用属性arguments.callee,该属性像一个指针,指向函数自己,但是该属性在严格模式下被禁用了,意味着在严格模式下无法在匿名函数内部调用自身。
+在js中,允许函数的实参和形参个数不同,即使这样,在函数运行时也不会报错,看下面的例子：
+function test(a,b,c,d){ return a &#43; b &#43; c &#43; d; } console.log(test(1,2,3,4,5)); //	打印出10,因为接收到的参数为(1,2,3,4) console.log(test(1,2,3)); //	打印出NaN,因为接收到的参数为(1,2,3,undefuned)  所以,为了避免上面的情况,我们有必要在函数运行之前对函数的实参和形参个数是否相等进行判断,这里就可以用到我们的arguments对象。
+首先我们取得函数形参个数,有两种方法(函数名.length/arguments.callee.length),然后我们可以取得函数的实参个数,具体为arguments.length。下面用一个累加实现一下对函数实参和形参个数的验证,如果两种不相等,则抛出异常;如果验证通过,则执行正确的函数体。
+function test1(a,b,c,d){ if(arguments.callee.length !== arguments.length){ //	前者也可写为test1.length,不过建议写为arguments.callee.length,具体原因下文解释 throw &quot;参数个数不正确!&quot;; }else{ return function(a){ var res = 0; for(var i = 0;i &lt; a.length;i &#43;&#43;){ res &#43;= a[i]; } return res; }(arguments); //	验证通过,执行函数体 } } console.log(test1(1,2)); //	抛出&quot;参数个数不正确！&quot;的异常 console.log(test1(1,2,3,4)); //	验证通过,打印出10  在实际js中,arguments对象用的最多的可能就是递归操作了,下面用一个阶乘实现简单的递归操作。
+function test3(num){ if(num &lt;= 1){ return 1; }else{ // return num * test3(num -1); //	如果我们把test3置空,在进行递归操作时,会报&quot;object is not a function&quot;的错误 return num * arguments."/>
+
+  
+  
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles-confetti@2.10.1/tsparticles.confetti.bundle.min.js"></script>
+  <script>const emojConfig={spread:360,ticks:200,gravity:1,decay:.94,startVelocity:30,particleCount:100,scalar:2,shapes:["image"]},randomInRange=(t,e)=>Math.random()*(e-t)+t,fireDefault=()=>confetti({angle:randomInRange(55,125),spread:randomInRange(50,70),particleCount:randomInRange(50,100),origin:{y:.6}}),fireDog=()=>confetti({...emojConfig,shapeOptions:{image:new Array(parseInt(randomInRange(10,20))).fill({src:"https://avatars.githubusercontent.com/u/9476421",width:16,height:16})}}),fireEmoj=()=>confetti({...emojConfig,shapeOptions:{image:[{src:"https://particles.js.org/images/fruits/apple.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/avocado.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/banana.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/berries.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/cherry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/grapes.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/lemon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/orange.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/peach.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pear.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pepper.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/plum.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/star.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/strawberry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon_slice.png",width:32,height:32}]}}),fireRealistic=()=>{const t={origin:{y:.7}},e=(e,s)=>{confetti(Object.assign({},t,s,{particleCount:Math.floor(200*e)}))};e(.25,{spread:26,startVelocity:55}),e(.2,{spread:60}),e(.35,{spread:100,decay:.91,scalar:.8}),e(.1,{spread:120,startVelocity:25,decay:.92,scalar:1.2}),e(.1,{spread:120,startVelocity:45})};window.addEventListener("DOMContentLoaded",()=>{document.addEventListener("click",t=>{if("A"===t.target.tagName&&Boolean(e.target.href))return;const s=Math.floor(100*Math.random());return s<=25?fireDefault():s<=50?fireDog():s<=75?fireEmoj():void fireRealistic()})});</script>
+</head>
   <body class="text-black duration-200 ease-out dark:text-white">
     <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
   <div class="relative z-50 mr-auto flex items-center">

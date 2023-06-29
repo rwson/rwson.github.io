@@ -45,10 +45,7 @@
   <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, shrink-to-fit=no"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
   
   <title>React组件生命周期 - rwson</title>
@@ -94,11 +91,7 @@ componentWillUnmount  比如我们在该组件中设置了一个定时器，添�
   <link rel="preload stylesheet" as="style" href="/main.min.css" />
 
   
-  <script
-    defer
-    src="/highlight.min.js"
-    onload="hljs.initHighlightingOnLoad();"
-  ></script>
+  <script defer src="/highlight.min.js" onload="hljs.initHighlightingOnLoad()"></script>
   
 
   
@@ -136,8 +129,101 @@ componentWillUnmount  比如我们在该组件中设置了一个定时器，添�
 
   
   
-</head>
+  
+  
+  
+  
+  
+  <meta property="og:title" content="React组件生命周期" />
+<meta property="og:description" content="在React的组件生命周期中，随着该组件的props活着state发生改变，对应的DOM也随着变换，一个组件对于特定的输入，它将返回一致的输出。
+在React中，对于每个组件都提供了相应的钩子去响应：
+ 创建时(实例化) 存在期(活动期) 销毁期   实例化 在React的一个组件被实例化时，将依次调用以下一些方法
+getDefaultProps:  对于某个组件类，该方法只会被调用一次。对于那些没有被父组件指定props属性的组件来说，该方法返回默认的props
+getInitialState  对于该组件的每个实例来说，该方法有且只能被调用一次，在这里，我们可以对每个组件的状态进行初始化，和getDefaultProps不同的是，getInitialState在每次被实例化时都会被调用(个人感觉这一点感觉和js面向对象中的构造方法和原型类似，getDefaultProps相当于一个原型，getInitialState相当于构造方法，然后所有实例都享有同一个原型)，由于getDefaultProps在该方法之前被调用，所以此时我们已经可以访问到this.props了
+componentWillMount  该方法在首次完成渲染之前被渲染，在这个方法里面，我们可以修改组件的一些state，需要注意的是，这是该组件完成实例化之前的最后一次修改
+render  渲染虚拟DOM，对应一个组件来说，render方法是唯一一个必须实现的，并且遵循以下特殊的几个规则：
+  只能通过this.props和this.state来访问数据
+  可以返回null，boolean值或者任何形式的组件
+  只能出现一个顶级组件(不能返回多个一级标签并列)
+componentDidMount 组件被实例化完成(render执行成功)后调用，可以在该方法中用this.getDOMNode()来访问到该组件，在这个方法中，比如我们要运行我们自定义的一个jQuery插件时，就可以直接写在里面，但是如果React运行在服务端，该方法将不会被调用
+  活动期 随着组件的一些状态(比如鼠标点击、键盘输入等)发生改变，将依次调用以下一些方法
+componentWillReciveProps  在任意时刻，组件的props都可以通过父辈组件来修改，此时将调用该方法，我们可以在该方法对组件的state进行更新
+showComponentUpdate  当props或者state发生改变，我们可以在该方法中进行比较修改前和修改后的数据，返回一个boolean值，React会根据这个来判断是否需要重新进行渲染
+componentWillUpdate  和上一阶段的componentWillMount类似，只不过该方法是在重新进行渲染之前被调用
+render  重新渲染虚拟DOM
+componentDidUpdate  也和componentDidMount类似，只不过是在完成重新渲染之后被调用
+销毁期 最后该组件被使用完成，下面的方法将会给这个组件提供自身清理的机会
+componentWillUnmount  比如我们在该组件中设置了一个定时器，添加了某些事件绑定等等，该方法就负责把定时器清除，移除事件监听的
+以上就是React中一个组件的生命周期
+ 反模式:把计算后的值赋值给state 在getInitialState方法中，我们可以访问到this.props，通过this.props来创建state就是一种反模式。 比如:在组件中,把当前事件转换成字符串格式，就只能在渲染时进行 反模式的写法是不恰当的
+反模式中的写法:
+... getDefault:function(){ return { &quot;date&quot;:new Date() }; }, getInitialState:function(){ return { &quot;day&quot;:this." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/2015-12-01-react-component-life-time/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2015-12-01T00:00:00+00:00" />
+<meta property="article:modified_time" content="2015-12-01T00:00:00+00:00" />
 
+
+  
+  <meta itemprop="name" content="React组件生命周期">
+<meta itemprop="description" content="在React的组件生命周期中，随着该组件的props活着state发生改变，对应的DOM也随着变换，一个组件对于特定的输入，它将返回一致的输出。
+在React中，对于每个组件都提供了相应的钩子去响应：
+ 创建时(实例化) 存在期(活动期) 销毁期   实例化 在React的一个组件被实例化时，将依次调用以下一些方法
+getDefaultProps:  对于某个组件类，该方法只会被调用一次。对于那些没有被父组件指定props属性的组件来说，该方法返回默认的props
+getInitialState  对于该组件的每个实例来说，该方法有且只能被调用一次，在这里，我们可以对每个组件的状态进行初始化，和getDefaultProps不同的是，getInitialState在每次被实例化时都会被调用(个人感觉这一点感觉和js面向对象中的构造方法和原型类似，getDefaultProps相当于一个原型，getInitialState相当于构造方法，然后所有实例都享有同一个原型)，由于getDefaultProps在该方法之前被调用，所以此时我们已经可以访问到this.props了
+componentWillMount  该方法在首次完成渲染之前被渲染，在这个方法里面，我们可以修改组件的一些state，需要注意的是，这是该组件完成实例化之前的最后一次修改
+render  渲染虚拟DOM，对应一个组件来说，render方法是唯一一个必须实现的，并且遵循以下特殊的几个规则：
+  只能通过this.props和this.state来访问数据
+  可以返回null，boolean值或者任何形式的组件
+  只能出现一个顶级组件(不能返回多个一级标签并列)
+componentDidMount 组件被实例化完成(render执行成功)后调用，可以在该方法中用this.getDOMNode()来访问到该组件，在这个方法中，比如我们要运行我们自定义的一个jQuery插件时，就可以直接写在里面，但是如果React运行在服务端，该方法将不会被调用
+  活动期 随着组件的一些状态(比如鼠标点击、键盘输入等)发生改变，将依次调用以下一些方法
+componentWillReciveProps  在任意时刻，组件的props都可以通过父辈组件来修改，此时将调用该方法，我们可以在该方法对组件的state进行更新
+showComponentUpdate  当props或者state发生改变，我们可以在该方法中进行比较修改前和修改后的数据，返回一个boolean值，React会根据这个来判断是否需要重新进行渲染
+componentWillUpdate  和上一阶段的componentWillMount类似，只不过该方法是在重新进行渲染之前被调用
+render  重新渲染虚拟DOM
+componentDidUpdate  也和componentDidMount类似，只不过是在完成重新渲染之后被调用
+销毁期 最后该组件被使用完成，下面的方法将会给这个组件提供自身清理的机会
+componentWillUnmount  比如我们在该组件中设置了一个定时器，添加了某些事件绑定等等，该方法就负责把定时器清除，移除事件监听的
+以上就是React中一个组件的生命周期
+ 反模式:把计算后的值赋值给state 在getInitialState方法中，我们可以访问到this.props，通过this.props来创建state就是一种反模式。 比如:在组件中,把当前事件转换成字符串格式，就只能在渲染时进行 反模式的写法是不恰当的
+反模式中的写法:
+... getDefault:function(){ return { &quot;date&quot;:new Date() }; }, getInitialState:function(){ return { &quot;day&quot;:this."><meta itemprop="datePublished" content="2015-12-01T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2015-12-01T00:00:00+00:00" />
+<meta itemprop="wordCount" content="80">
+<meta itemprop="keywords" content="" />
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="React组件生命周期"/>
+<meta name="twitter:description" content="在React的组件生命周期中，随着该组件的props活着state发生改变，对应的DOM也随着变换，一个组件对于特定的输入，它将返回一致的输出。
+在React中，对于每个组件都提供了相应的钩子去响应：
+ 创建时(实例化) 存在期(活动期) 销毁期   实例化 在React的一个组件被实例化时，将依次调用以下一些方法
+getDefaultProps:  对于某个组件类，该方法只会被调用一次。对于那些没有被父组件指定props属性的组件来说，该方法返回默认的props
+getInitialState  对于该组件的每个实例来说，该方法有且只能被调用一次，在这里，我们可以对每个组件的状态进行初始化，和getDefaultProps不同的是，getInitialState在每次被实例化时都会被调用(个人感觉这一点感觉和js面向对象中的构造方法和原型类似，getDefaultProps相当于一个原型，getInitialState相当于构造方法，然后所有实例都享有同一个原型)，由于getDefaultProps在该方法之前被调用，所以此时我们已经可以访问到this.props了
+componentWillMount  该方法在首次完成渲染之前被渲染，在这个方法里面，我们可以修改组件的一些state，需要注意的是，这是该组件完成实例化之前的最后一次修改
+render  渲染虚拟DOM，对应一个组件来说，render方法是唯一一个必须实现的，并且遵循以下特殊的几个规则：
+  只能通过this.props和this.state来访问数据
+  可以返回null，boolean值或者任何形式的组件
+  只能出现一个顶级组件(不能返回多个一级标签并列)
+componentDidMount 组件被实例化完成(render执行成功)后调用，可以在该方法中用this.getDOMNode()来访问到该组件，在这个方法中，比如我们要运行我们自定义的一个jQuery插件时，就可以直接写在里面，但是如果React运行在服务端，该方法将不会被调用
+  活动期 随着组件的一些状态(比如鼠标点击、键盘输入等)发生改变，将依次调用以下一些方法
+componentWillReciveProps  在任意时刻，组件的props都可以通过父辈组件来修改，此时将调用该方法，我们可以在该方法对组件的state进行更新
+showComponentUpdate  当props或者state发生改变，我们可以在该方法中进行比较修改前和修改后的数据，返回一个boolean值，React会根据这个来判断是否需要重新进行渲染
+componentWillUpdate  和上一阶段的componentWillMount类似，只不过该方法是在重新进行渲染之前被调用
+render  重新渲染虚拟DOM
+componentDidUpdate  也和componentDidMount类似，只不过是在完成重新渲染之后被调用
+销毁期 最后该组件被使用完成，下面的方法将会给这个组件提供自身清理的机会
+componentWillUnmount  比如我们在该组件中设置了一个定时器，添加了某些事件绑定等等，该方法就负责把定时器清除，移除事件监听的
+以上就是React中一个组件的生命周期
+ 反模式:把计算后的值赋值给state 在getInitialState方法中，我们可以访问到this.props，通过this.props来创建state就是一种反模式。 比如:在组件中,把当前事件转换成字符串格式，就只能在渲染时进行 反模式的写法是不恰当的
+反模式中的写法:
+... getDefault:function(){ return { &quot;date&quot;:new Date() }; }, getInitialState:function(){ return { &quot;day&quot;:this."/>
+
+  
+  
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles-confetti@2.10.1/tsparticles.confetti.bundle.min.js"></script>
+  <script>const emojConfig={spread:360,ticks:200,gravity:1,decay:.94,startVelocity:30,particleCount:100,scalar:2,shapes:["image"]},randomInRange=(t,e)=>Math.random()*(e-t)+t,fireDefault=()=>confetti({angle:randomInRange(55,125),spread:randomInRange(50,70),particleCount:randomInRange(50,100),origin:{y:.6}}),fireDog=()=>confetti({...emojConfig,shapeOptions:{image:new Array(parseInt(randomInRange(10,20))).fill({src:"https://avatars.githubusercontent.com/u/9476421",width:16,height:16})}}),fireEmoj=()=>confetti({...emojConfig,shapeOptions:{image:[{src:"https://particles.js.org/images/fruits/apple.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/avocado.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/banana.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/berries.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/cherry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/grapes.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/lemon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/orange.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/peach.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pear.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pepper.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/plum.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/star.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/strawberry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon_slice.png",width:32,height:32}]}}),fireRealistic=()=>{const t={origin:{y:.7}},e=(e,s)=>{confetti(Object.assign({},t,s,{particleCount:Math.floor(200*e)}))};e(.25,{spread:26,startVelocity:55}),e(.2,{spread:60}),e(.35,{spread:100,decay:.91,scalar:.8}),e(.1,{spread:120,startVelocity:25,decay:.92,scalar:1.2}),e(.1,{spread:120,startVelocity:45})};window.addEventListener("DOMContentLoaded",()=>{document.addEventListener("click",t=>{if("A"===t.target.tagName&&Boolean(e.target.href))return;const s=Math.floor(100*Math.random());return s<=25?fireDefault():s<=50?fireDog():s<=75?fireEmoj():void fireRealistic()})});</script>
+</head>
   <body class="text-black duration-200 ease-out dark:text-white">
     <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
   <div class="relative z-50 mr-auto flex items-center">

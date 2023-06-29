@@ -45,10 +45,7 @@
   <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, shrink-to-fit=no"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
   
   <title>javascript装饰者模式 - rwson</title>
@@ -78,11 +75,7 @@
   <link rel="preload stylesheet" as="style" href="/main.min.css" />
 
   
-  <script
-    defer
-    src="/highlight.min.js"
-    onload="hljs.initHighlightingOnLoad();"
-  ></script>
+  <script defer src="/highlight.min.js" onload="hljs.initHighlightingOnLoad()"></script>
   
 
   
@@ -120,8 +113,53 @@
 
   
   
-</head>
+  
+  
+  
+  
+  
+  <meta property="og:title" content="javascript装饰者模式" />
+<meta property="og:description" content="js装饰者模式可以把一个对象(类/函数)透明地包装在另外一个对象上,完成对被装饰者添加一些新功能的作用。
+装饰者模式的特点:
+ 不修改原对象的原本结构来进行功能添加; 装饰对象和原对象具有相同的接口，可以使客户以与原对象相同的方式使用装饰对象; 装饰对象中包含原对象的引用，即装饰对象为真正的原对象在此包装的对象。  先看个小例子:
+ function getDate(){ var date = new Date(); return date.toString(); } function toUpperCaseDecorator(fn){ return (function(f){ return f.apply(this,arguments).toUpperCase(); })(fn); } console.log(getDate()); // Thu Jun 25 2015 23:05:04 GMT&#43;0800 (CST) console.log(toUpperCaseDecorator(getDate)); // THU JUN 25 2015 23:05:04 GMT&#43;0800 (CST)  在上面的例子中,getDate作为一个被装饰者(完成获取当前时间的字符串形式),toUpperCaseDecorator作为一个装饰者,在原来的基础上把原来的小写字母改成了大小,在这里就相当于添加了一个新功能。
+下面我们就还是拿汽车来模拟一个具体的场景:
+需求:现在要造一辆车,既然是车嘛,肯定有很多的零部件,这里就拿车载冰箱和车灯来说吧;比如我的车主结构20000元,车载冰箱10000元,车灯10000元,那我肯定在组装的时候就把价格给它加上去,来看具体的代码。
+ var CarInterface = new commonUtil.Interface(&quot;CarInterface&quot;,[&quot;getPrice&quot;,&quot;assenble&quot;]); // 定义 function Car(car){ this.car = car; // 为了让子类继承(让子类多一个父类的引用) commonUtil.Interface.ensureImplement(this,CarInterface); // 检测接口 } commonUtil.wrap(Car.prototype,{ &quot;constructor&quot;:Car, &quot;getPrice&quot;:function(){ return 200000; }, &quot;assenble&quot;:function(){ console." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/2015-07-15-js-design-mode-decorator/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2015-07-15T00:00:00+00:00" />
+<meta property="article:modified_time" content="2015-07-15T00:00:00+00:00" />
 
+
+  
+  <meta itemprop="name" content="javascript装饰者模式">
+<meta itemprop="description" content="js装饰者模式可以把一个对象(类/函数)透明地包装在另外一个对象上,完成对被装饰者添加一些新功能的作用。
+装饰者模式的特点:
+ 不修改原对象的原本结构来进行功能添加; 装饰对象和原对象具有相同的接口，可以使客户以与原对象相同的方式使用装饰对象; 装饰对象中包含原对象的引用，即装饰对象为真正的原对象在此包装的对象。  先看个小例子:
+ function getDate(){ var date = new Date(); return date.toString(); } function toUpperCaseDecorator(fn){ return (function(f){ return f.apply(this,arguments).toUpperCase(); })(fn); } console.log(getDate()); // Thu Jun 25 2015 23:05:04 GMT&#43;0800 (CST) console.log(toUpperCaseDecorator(getDate)); // THU JUN 25 2015 23:05:04 GMT&#43;0800 (CST)  在上面的例子中,getDate作为一个被装饰者(完成获取当前时间的字符串形式),toUpperCaseDecorator作为一个装饰者,在原来的基础上把原来的小写字母改成了大小,在这里就相当于添加了一个新功能。
+下面我们就还是拿汽车来模拟一个具体的场景:
+需求:现在要造一辆车,既然是车嘛,肯定有很多的零部件,这里就拿车载冰箱和车灯来说吧;比如我的车主结构20000元,车载冰箱10000元,车灯10000元,那我肯定在组装的时候就把价格给它加上去,来看具体的代码。
+ var CarInterface = new commonUtil.Interface(&quot;CarInterface&quot;,[&quot;getPrice&quot;,&quot;assenble&quot;]); // 定义 function Car(car){ this.car = car; // 为了让子类继承(让子类多一个父类的引用) commonUtil.Interface.ensureImplement(this,CarInterface); // 检测接口 } commonUtil.wrap(Car.prototype,{ &quot;constructor&quot;:Car, &quot;getPrice&quot;:function(){ return 200000; }, &quot;assenble&quot;:function(){ console."><meta itemprop="datePublished" content="2015-07-15T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2015-07-15T00:00:00+00:00" />
+<meta itemprop="wordCount" content="165">
+<meta itemprop="keywords" content="" />
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="javascript装饰者模式"/>
+<meta name="twitter:description" content="js装饰者模式可以把一个对象(类/函数)透明地包装在另外一个对象上,完成对被装饰者添加一些新功能的作用。
+装饰者模式的特点:
+ 不修改原对象的原本结构来进行功能添加; 装饰对象和原对象具有相同的接口，可以使客户以与原对象相同的方式使用装饰对象; 装饰对象中包含原对象的引用，即装饰对象为真正的原对象在此包装的对象。  先看个小例子:
+ function getDate(){ var date = new Date(); return date.toString(); } function toUpperCaseDecorator(fn){ return (function(f){ return f.apply(this,arguments).toUpperCase(); })(fn); } console.log(getDate()); // Thu Jun 25 2015 23:05:04 GMT&#43;0800 (CST) console.log(toUpperCaseDecorator(getDate)); // THU JUN 25 2015 23:05:04 GMT&#43;0800 (CST)  在上面的例子中,getDate作为一个被装饰者(完成获取当前时间的字符串形式),toUpperCaseDecorator作为一个装饰者,在原来的基础上把原来的小写字母改成了大小,在这里就相当于添加了一个新功能。
+下面我们就还是拿汽车来模拟一个具体的场景:
+需求:现在要造一辆车,既然是车嘛,肯定有很多的零部件,这里就拿车载冰箱和车灯来说吧;比如我的车主结构20000元,车载冰箱10000元,车灯10000元,那我肯定在组装的时候就把价格给它加上去,来看具体的代码。
+ var CarInterface = new commonUtil.Interface(&quot;CarInterface&quot;,[&quot;getPrice&quot;,&quot;assenble&quot;]); // 定义 function Car(car){ this.car = car; // 为了让子类继承(让子类多一个父类的引用) commonUtil.Interface.ensureImplement(this,CarInterface); // 检测接口 } commonUtil.wrap(Car.prototype,{ &quot;constructor&quot;:Car, &quot;getPrice&quot;:function(){ return 200000; }, &quot;assenble&quot;:function(){ console."/>
+
+  
+  
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles-confetti@2.10.1/tsparticles.confetti.bundle.min.js"></script>
+  <script>const emojConfig={spread:360,ticks:200,gravity:1,decay:.94,startVelocity:30,particleCount:100,scalar:2,shapes:["image"]},randomInRange=(t,e)=>Math.random()*(e-t)+t,fireDefault=()=>confetti({angle:randomInRange(55,125),spread:randomInRange(50,70),particleCount:randomInRange(50,100),origin:{y:.6}}),fireDog=()=>confetti({...emojConfig,shapeOptions:{image:new Array(parseInt(randomInRange(10,20))).fill({src:"https://avatars.githubusercontent.com/u/9476421",width:16,height:16})}}),fireEmoj=()=>confetti({...emojConfig,shapeOptions:{image:[{src:"https://particles.js.org/images/fruits/apple.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/avocado.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/banana.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/berries.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/cherry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/grapes.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/lemon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/orange.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/peach.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pear.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pepper.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/plum.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/star.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/strawberry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon_slice.png",width:32,height:32}]}}),fireRealistic=()=>{const t={origin:{y:.7}},e=(e,s)=>{confetti(Object.assign({},t,s,{particleCount:Math.floor(200*e)}))};e(.25,{spread:26,startVelocity:55}),e(.2,{spread:60}),e(.35,{spread:100,decay:.91,scalar:.8}),e(.1,{spread:120,startVelocity:25,decay:.92,scalar:1.2}),e(.1,{spread:120,startVelocity:45})};window.addEventListener("DOMContentLoaded",()=>{document.addEventListener("click",t=>{if("A"===t.target.tagName&&Boolean(e.target.href))return;const s=Math.floor(100*Math.random());return s<=25?fireDefault():s<=50?fireDog():s<=75?fireEmoj():void fireRealistic()})});</script>
+</head>
   <body class="text-black duration-200 ease-out dark:text-white">
     <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
   <div class="relative z-50 mr-auto flex items-center">

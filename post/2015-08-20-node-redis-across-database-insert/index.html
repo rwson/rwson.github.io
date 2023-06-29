@@ -45,10 +45,7 @@
   <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, shrink-to-fit=no"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
   
   <title>NodeJs中redis窜库插入 - rwson</title>
@@ -74,11 +71,7 @@ var redis = require(&#39;redis&#39;), client = redis.createClient(); /** * 扔�
   <link rel="preload stylesheet" as="style" href="/main.min.css" />
 
   
-  <script
-    defer
-    src="/highlight.min.js"
-    onload="hljs.initHighlightingOnLoad();"
-  ></script>
+  <script defer src="/highlight.min.js" onload="hljs.initHighlightingOnLoad()"></script>
   
 
   
@@ -116,8 +109,41 @@ var redis = require(&#39;redis&#39;), client = redis.createClient(); /** * 扔�
 
   
   
-</head>
+  
+  
+  
+  
+  
+  <meta property="og:title" content="NodeJs中redis窜库插入" />
+<meta property="og:description" content="最近在用NodeJs&#43;redis搭建一个类似漂流瓶的服务器,有个需求如下:根据漂流瓶的类型来将数据用hash的方式插入到数据库中,这边类型主要根据性别(male/female)来区分,当类型为male时插入到0号数据库,female时插入到1号数据库。
+先贴代码:
+var redis = require(&#39;redis&#39;), client = redis.createClient(); /** * 扔一个漂流瓶,随机分配一个id当存入redis的建,然后根据不同的类型存放到不同的数据库 * @param {[type]} bottle [description] * @param {Function} callback [description] * @return {[type]} [description] */ exports.throw = function (bottle, callback) { bottle.time = bottle.time || Date.now(); var bottleId = Math.random().toString(16), //	为每个瓶子随机生成一个id type = { &#39;male&#39;: 0, &#39;female&#39;: 1 }; //	根据不同类型将不同漂流瓶保存到不同的数据库 console.log(&#39;现在应该选择&#39; &#43; type[bottle.type] &#43; &#39;号数据库进行插入&#39;); client.SELECT(type[bottle.type], function () { client.HMSET(bottleId, bottle, function (err, res) { //	以hash类型保存漂流瓶对象 if (err) { return callback({ &#39;code&#39;: 0, &#39;msg&#39;: &#39;过会再试吧!" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/2015-08-20-node-redis-across-database-insert/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2015-08-20T00:00:00+00:00" />
+<meta property="article:modified_time" content="2015-08-20T00:00:00+00:00" />
 
+
+  
+  <meta itemprop="name" content="NodeJs中redis窜库插入">
+<meta itemprop="description" content="最近在用NodeJs&#43;redis搭建一个类似漂流瓶的服务器,有个需求如下:根据漂流瓶的类型来将数据用hash的方式插入到数据库中,这边类型主要根据性别(male/female)来区分,当类型为male时插入到0号数据库,female时插入到1号数据库。
+先贴代码:
+var redis = require(&#39;redis&#39;), client = redis.createClient(); /** * 扔一个漂流瓶,随机分配一个id当存入redis的建,然后根据不同的类型存放到不同的数据库 * @param {[type]} bottle [description] * @param {Function} callback [description] * @return {[type]} [description] */ exports.throw = function (bottle, callback) { bottle.time = bottle.time || Date.now(); var bottleId = Math.random().toString(16), //	为每个瓶子随机生成一个id type = { &#39;male&#39;: 0, &#39;female&#39;: 1 }; //	根据不同类型将不同漂流瓶保存到不同的数据库 console.log(&#39;现在应该选择&#39; &#43; type[bottle.type] &#43; &#39;号数据库进行插入&#39;); client.SELECT(type[bottle.type], function () { client.HMSET(bottleId, bottle, function (err, res) { //	以hash类型保存漂流瓶对象 if (err) { return callback({ &#39;code&#39;: 0, &#39;msg&#39;: &#39;过会再试吧!"><meta itemprop="datePublished" content="2015-08-20T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2015-08-20T00:00:00+00:00" />
+<meta itemprop="wordCount" content="306">
+<meta itemprop="keywords" content="" />
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="NodeJs中redis窜库插入"/>
+<meta name="twitter:description" content="最近在用NodeJs&#43;redis搭建一个类似漂流瓶的服务器,有个需求如下:根据漂流瓶的类型来将数据用hash的方式插入到数据库中,这边类型主要根据性别(male/female)来区分,当类型为male时插入到0号数据库,female时插入到1号数据库。
+先贴代码:
+var redis = require(&#39;redis&#39;), client = redis.createClient(); /** * 扔一个漂流瓶,随机分配一个id当存入redis的建,然后根据不同的类型存放到不同的数据库 * @param {[type]} bottle [description] * @param {Function} callback [description] * @return {[type]} [description] */ exports.throw = function (bottle, callback) { bottle.time = bottle.time || Date.now(); var bottleId = Math.random().toString(16), //	为每个瓶子随机生成一个id type = { &#39;male&#39;: 0, &#39;female&#39;: 1 }; //	根据不同类型将不同漂流瓶保存到不同的数据库 console.log(&#39;现在应该选择&#39; &#43; type[bottle.type] &#43; &#39;号数据库进行插入&#39;); client.SELECT(type[bottle.type], function () { client.HMSET(bottleId, bottle, function (err, res) { //	以hash类型保存漂流瓶对象 if (err) { return callback({ &#39;code&#39;: 0, &#39;msg&#39;: &#39;过会再试吧!"/>
+
+  
+  
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles-confetti@2.10.1/tsparticles.confetti.bundle.min.js"></script>
+  <script>const emojConfig={spread:360,ticks:200,gravity:1,decay:.94,startVelocity:30,particleCount:100,scalar:2,shapes:["image"]},randomInRange=(t,e)=>Math.random()*(e-t)+t,fireDefault=()=>confetti({angle:randomInRange(55,125),spread:randomInRange(50,70),particleCount:randomInRange(50,100),origin:{y:.6}}),fireDog=()=>confetti({...emojConfig,shapeOptions:{image:new Array(parseInt(randomInRange(10,20))).fill({src:"https://avatars.githubusercontent.com/u/9476421",width:16,height:16})}}),fireEmoj=()=>confetti({...emojConfig,shapeOptions:{image:[{src:"https://particles.js.org/images/fruits/apple.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/avocado.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/banana.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/berries.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/cherry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/grapes.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/lemon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/orange.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/peach.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pear.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pepper.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/plum.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/star.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/strawberry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon_slice.png",width:32,height:32}]}}),fireRealistic=()=>{const t={origin:{y:.7}},e=(e,s)=>{confetti(Object.assign({},t,s,{particleCount:Math.floor(200*e)}))};e(.25,{spread:26,startVelocity:55}),e(.2,{spread:60}),e(.35,{spread:100,decay:.91,scalar:.8}),e(.1,{spread:120,startVelocity:25,decay:.92,scalar:1.2}),e(.1,{spread:120,startVelocity:45})};window.addEventListener("DOMContentLoaded",()=>{document.addEventListener("click",t=>{if("A"===t.target.tagName&&Boolean(e.target.href))return;const s=Math.floor(100*Math.random());return s<=25?fireDefault():s<=50?fireDog():s<=75?fireEmoj():void fireRealistic()})});</script>
+</head>
   <body class="text-black duration-200 ease-out dark:text-white">
     <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
   <div class="relative z-50 mr-auto flex items-center">

@@ -45,10 +45,7 @@
   <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, shrink-to-fit=no"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
   
   <title>javascript的高阶函数 - rwson</title>
@@ -78,11 +75,7 @@ function func(p1){ var self = this; function fd(p2) { this.add1 = function (p3) 
   <link rel="preload stylesheet" as="style" href="/main.min.css" />
 
   
-  <script
-    defer
-    src="/highlight.min.js"
-    onload="hljs.initHighlightingOnLoad();"
-  ></script>
+  <script defer src="/highlight.min.js" onload="hljs.initHighlightingOnLoad()"></script>
   
 
   
@@ -120,8 +113,53 @@ function func(p1){ var self = this; function fd(p2) { this.add1 = function (p3) 
 
   
   
-</head>
+  
+  
+  
+  
+  
+  <meta property="og:title" content="javascript的高阶函数" />
+<meta property="og:description" content="高阶函数:听到高阶感觉很高大上的一个词,但是实现起来并不是那么难。
+记得有一次在看js面试题相关资料时,看到类似于下面一个题目,实现一个函数,能有如下写法,实现两个值相加并返回,写法大概是这样的:
+add(10)(5);  以前没见过这种写法,相信大家对下面的写法肯定不陌生:
+function add(){ return function(a,b){ return a &#43; b; }; } // 然后调用的时候写成下面的样子 add()(10,5); // 最后返回15  仔细观察这两种写法,发现它们在写法上差别很小,第一种写法是一个括号里放一个参数,而第二种写法是把两个参数放在同一个括号里,既然写法类似,实现起来肯定区别也不是特别大,且看下面的实现:
+function add(a){ return function(b){ return a &#43; b; } }  这样我们就实现了一个高阶函数。在上面两个例子中,调用add并没有立即返回一个计算后的值,而是返回了一个函数,调用该返回的函数后,才会返回具体计算后的值,这样就有了第二对括号。
+再来看个例子:
+function func(p1){ var self = this; function fd(p2) { this.add1 = function (p3) { return p1 &#43; &quot;,&quot; &#43; p2 &#43; &quot; &quot; &#43; p3; }; } self.add = function (p2){ fd.call(this, p2); return this.add1; }; return self." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/2016-01-16-javascript-higher-order-functions/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2016-01-16T00:00:00+00:00" />
+<meta property="article:modified_time" content="2016-01-16T00:00:00+00:00" />
 
+
+  
+  <meta itemprop="name" content="javascript的高阶函数">
+<meta itemprop="description" content="高阶函数:听到高阶感觉很高大上的一个词,但是实现起来并不是那么难。
+记得有一次在看js面试题相关资料时,看到类似于下面一个题目,实现一个函数,能有如下写法,实现两个值相加并返回,写法大概是这样的:
+add(10)(5);  以前没见过这种写法,相信大家对下面的写法肯定不陌生:
+function add(){ return function(a,b){ return a &#43; b; }; } // 然后调用的时候写成下面的样子 add()(10,5); // 最后返回15  仔细观察这两种写法,发现它们在写法上差别很小,第一种写法是一个括号里放一个参数,而第二种写法是把两个参数放在同一个括号里,既然写法类似,实现起来肯定区别也不是特别大,且看下面的实现:
+function add(a){ return function(b){ return a &#43; b; } }  这样我们就实现了一个高阶函数。在上面两个例子中,调用add并没有立即返回一个计算后的值,而是返回了一个函数,调用该返回的函数后,才会返回具体计算后的值,这样就有了第二对括号。
+再来看个例子:
+function func(p1){ var self = this; function fd(p2) { this.add1 = function (p3) { return p1 &#43; &quot;,&quot; &#43; p2 &#43; &quot; &quot; &#43; p3; }; } self.add = function (p2){ fd.call(this, p2); return this.add1; }; return self."><meta itemprop="datePublished" content="2016-01-16T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2016-01-16T00:00:00+00:00" />
+<meta itemprop="wordCount" content="94">
+<meta itemprop="keywords" content="" />
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="javascript的高阶函数"/>
+<meta name="twitter:description" content="高阶函数:听到高阶感觉很高大上的一个词,但是实现起来并不是那么难。
+记得有一次在看js面试题相关资料时,看到类似于下面一个题目,实现一个函数,能有如下写法,实现两个值相加并返回,写法大概是这样的:
+add(10)(5);  以前没见过这种写法,相信大家对下面的写法肯定不陌生:
+function add(){ return function(a,b){ return a &#43; b; }; } // 然后调用的时候写成下面的样子 add()(10,5); // 最后返回15  仔细观察这两种写法,发现它们在写法上差别很小,第一种写法是一个括号里放一个参数,而第二种写法是把两个参数放在同一个括号里,既然写法类似,实现起来肯定区别也不是特别大,且看下面的实现:
+function add(a){ return function(b){ return a &#43; b; } }  这样我们就实现了一个高阶函数。在上面两个例子中,调用add并没有立即返回一个计算后的值,而是返回了一个函数,调用该返回的函数后,才会返回具体计算后的值,这样就有了第二对括号。
+再来看个例子:
+function func(p1){ var self = this; function fd(p2) { this.add1 = function (p3) { return p1 &#43; &quot;,&quot; &#43; p2 &#43; &quot; &quot; &#43; p3; }; } self.add = function (p2){ fd.call(this, p2); return this.add1; }; return self."/>
+
+  
+  
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles-confetti@2.10.1/tsparticles.confetti.bundle.min.js"></script>
+  <script>const emojConfig={spread:360,ticks:200,gravity:1,decay:.94,startVelocity:30,particleCount:100,scalar:2,shapes:["image"]},randomInRange=(t,e)=>Math.random()*(e-t)+t,fireDefault=()=>confetti({angle:randomInRange(55,125),spread:randomInRange(50,70),particleCount:randomInRange(50,100),origin:{y:.6}}),fireDog=()=>confetti({...emojConfig,shapeOptions:{image:new Array(parseInt(randomInRange(10,20))).fill({src:"https://avatars.githubusercontent.com/u/9476421",width:16,height:16})}}),fireEmoj=()=>confetti({...emojConfig,shapeOptions:{image:[{src:"https://particles.js.org/images/fruits/apple.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/avocado.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/banana.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/berries.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/cherry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/grapes.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/lemon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/orange.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/peach.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pear.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pepper.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/plum.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/star.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/strawberry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon_slice.png",width:32,height:32}]}}),fireRealistic=()=>{const t={origin:{y:.7}},e=(e,s)=>{confetti(Object.assign({},t,s,{particleCount:Math.floor(200*e)}))};e(.25,{spread:26,startVelocity:55}),e(.2,{spread:60}),e(.35,{spread:100,decay:.91,scalar:.8}),e(.1,{spread:120,startVelocity:25,decay:.92,scalar:1.2}),e(.1,{spread:120,startVelocity:45})};window.addEventListener("DOMContentLoaded",()=>{document.addEventListener("click",t=>{if("A"===t.target.tagName&&Boolean(e.target.href))return;const s=Math.floor(100*Math.random());return s<=25?fireDefault():s<=50?fireDog():s<=75?fireEmoj():void fireRealistic()})});</script>
+</head>
   <body class="text-black duration-200 ease-out dark:text-white">
     <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
   <div class="relative z-50 mr-auto flex items-center">

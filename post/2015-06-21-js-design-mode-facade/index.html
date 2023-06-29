@@ -45,10 +45,7 @@
   <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, shrink-to-fit=no"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
   
   <title>javascript门面模式 - rwson</title>
@@ -77,11 +74,7 @@ window.onload = function(){ setStyle([&quot;div1&quot;,&quot;div2&quot;,&quot;di
   <link rel="preload stylesheet" as="style" href="/main.min.css" />
 
   
-  <script
-    defer
-    src="/highlight.min.js"
-    onload="hljs.initHighlightingOnLoad();"
-  ></script>
+  <script defer src="/highlight.min.js" onload="hljs.initHighlightingOnLoad()"></script>
   
 
   
@@ -119,8 +112,50 @@ window.onload = function(){ setStyle([&quot;div1&quot;,&quot;div2&quot;,&quot;di
 
   
   
-</head>
+  
+  
+  
+  
+  
+  <meta property="og:title" content="javascript门面模式" />
+<meta property="og:description" content="在javascript中，门面模式常常是开发人员最亲密的朋友。它是几乎所有javascript库的核心原则。通过创建一些使得方法让复杂系统变得更加简单易用,门面模式可以使库提供的工具更容易理解。
+先来看看门面模式的写法:
+function a(x){ // do something... } function b(y){ // do something... } /** * 把a和b封装成一个方法(在一个方法里同时调用a、b) * @param x * @param y */ function facadeAB(x,y){ a(x); b(y); }  在我们平时开发中,可能就用到了门面模式,比如我们现在封装一个绑定事件的方法:
+function bindEvent(el,ev,fn){ if(el.addEventListner){ el.addEventListener(ev,fn,false); }else if(el.attachEvent){ el.attachEvent(&quot;on&quot; &#43; ev,fn); }else{ el[&quot;on&quot; &#43; ev] = fn; } };  这个就是一个门面模式,里面对于事件的绑定是隐蔽的,只提供bindEvent给其他地方调用。
+再来看个例子,这次我们给一个dom元素给些css样式,就可以用下面的方法实现:
+window.onload = function(){ setStyle([&quot;div1&quot;,&quot;div2&quot;,&quot;div3&quot;],{ &quot;width&quot;:&quot;300px&quot;, &quot;height&quot;:&quot;300px&quot;, &quot;backgroundColor&quot;:&quot;red&quot;, &quot;font-size&quot;:&quot;70px&quot; }); }; /** * 简单的门面模式 * @param ele * @param css */ function setStyle(ele,css){ for(var i = 0;i &lt; ele." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/2015-06-21-js-design-mode-facade/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2015-06-21T00:00:00+00:00" />
+<meta property="article:modified_time" content="2015-06-21T00:00:00+00:00" />
 
+
+  
+  <meta itemprop="name" content="javascript门面模式">
+<meta itemprop="description" content="在javascript中，门面模式常常是开发人员最亲密的朋友。它是几乎所有javascript库的核心原则。通过创建一些使得方法让复杂系统变得更加简单易用,门面模式可以使库提供的工具更容易理解。
+先来看看门面模式的写法:
+function a(x){ // do something... } function b(y){ // do something... } /** * 把a和b封装成一个方法(在一个方法里同时调用a、b) * @param x * @param y */ function facadeAB(x,y){ a(x); b(y); }  在我们平时开发中,可能就用到了门面模式,比如我们现在封装一个绑定事件的方法:
+function bindEvent(el,ev,fn){ if(el.addEventListner){ el.addEventListener(ev,fn,false); }else if(el.attachEvent){ el.attachEvent(&quot;on&quot; &#43; ev,fn); }else{ el[&quot;on&quot; &#43; ev] = fn; } };  这个就是一个门面模式,里面对于事件的绑定是隐蔽的,只提供bindEvent给其他地方调用。
+再来看个例子,这次我们给一个dom元素给些css样式,就可以用下面的方法实现:
+window.onload = function(){ setStyle([&quot;div1&quot;,&quot;div2&quot;,&quot;div3&quot;],{ &quot;width&quot;:&quot;300px&quot;, &quot;height&quot;:&quot;300px&quot;, &quot;backgroundColor&quot;:&quot;red&quot;, &quot;font-size&quot;:&quot;70px&quot; }); }; /** * 简单的门面模式 * @param ele * @param css */ function setStyle(ele,css){ for(var i = 0;i &lt; ele."><meta itemprop="datePublished" content="2015-06-21T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2015-06-21T00:00:00+00:00" />
+<meta itemprop="wordCount" content="134">
+<meta itemprop="keywords" content="" />
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="javascript门面模式"/>
+<meta name="twitter:description" content="在javascript中，门面模式常常是开发人员最亲密的朋友。它是几乎所有javascript库的核心原则。通过创建一些使得方法让复杂系统变得更加简单易用,门面模式可以使库提供的工具更容易理解。
+先来看看门面模式的写法:
+function a(x){ // do something... } function b(y){ // do something... } /** * 把a和b封装成一个方法(在一个方法里同时调用a、b) * @param x * @param y */ function facadeAB(x,y){ a(x); b(y); }  在我们平时开发中,可能就用到了门面模式,比如我们现在封装一个绑定事件的方法:
+function bindEvent(el,ev,fn){ if(el.addEventListner){ el.addEventListener(ev,fn,false); }else if(el.attachEvent){ el.attachEvent(&quot;on&quot; &#43; ev,fn); }else{ el[&quot;on&quot; &#43; ev] = fn; } };  这个就是一个门面模式,里面对于事件的绑定是隐蔽的,只提供bindEvent给其他地方调用。
+再来看个例子,这次我们给一个dom元素给些css样式,就可以用下面的方法实现:
+window.onload = function(){ setStyle([&quot;div1&quot;,&quot;div2&quot;,&quot;div3&quot;],{ &quot;width&quot;:&quot;300px&quot;, &quot;height&quot;:&quot;300px&quot;, &quot;backgroundColor&quot;:&quot;red&quot;, &quot;font-size&quot;:&quot;70px&quot; }); }; /** * 简单的门面模式 * @param ele * @param css */ function setStyle(ele,css){ for(var i = 0;i &lt; ele."/>
+
+  
+  
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles-confetti@2.10.1/tsparticles.confetti.bundle.min.js"></script>
+  <script>const emojConfig={spread:360,ticks:200,gravity:1,decay:.94,startVelocity:30,particleCount:100,scalar:2,shapes:["image"]},randomInRange=(t,e)=>Math.random()*(e-t)+t,fireDefault=()=>confetti({angle:randomInRange(55,125),spread:randomInRange(50,70),particleCount:randomInRange(50,100),origin:{y:.6}}),fireDog=()=>confetti({...emojConfig,shapeOptions:{image:new Array(parseInt(randomInRange(10,20))).fill({src:"https://avatars.githubusercontent.com/u/9476421",width:16,height:16})}}),fireEmoj=()=>confetti({...emojConfig,shapeOptions:{image:[{src:"https://particles.js.org/images/fruits/apple.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/avocado.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/banana.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/berries.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/cherry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/grapes.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/lemon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/orange.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/peach.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pear.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pepper.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/plum.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/star.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/strawberry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon_slice.png",width:32,height:32}]}}),fireRealistic=()=>{const t={origin:{y:.7}},e=(e,s)=>{confetti(Object.assign({},t,s,{particleCount:Math.floor(200*e)}))};e(.25,{spread:26,startVelocity:55}),e(.2,{spread:60}),e(.35,{spread:100,decay:.91,scalar:.8}),e(.1,{spread:120,startVelocity:25,decay:.92,scalar:1.2}),e(.1,{spread:120,startVelocity:45})};window.addEventListener("DOMContentLoaded",()=>{document.addEventListener("click",t=>{if("A"===t.target.tagName&&Boolean(e.target.href))return;const s=Math.floor(100*Math.random());return s<=25?fireDefault():s<=50?fireDog():s<=75?fireEmoj():void fireRealistic()})});</script>
+</head>
   <body class="text-black duration-200 ease-out dark:text-white">
     <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
   <div class="relative z-50 mr-auto flex items-center">

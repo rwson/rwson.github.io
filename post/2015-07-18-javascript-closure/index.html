@@ -45,10 +45,7 @@
   <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, shrink-to-fit=no"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
   
   <title>javascript闭包 - rwson</title>
@@ -81,11 +78,7 @@ function A() { var variable1 = &quot;variable1&quot;; return function() { consol
   <link rel="preload stylesheet" as="style" href="/main.min.css" />
 
   
-  <script
-    defer
-    src="/highlight.min.js"
-    onload="hljs.initHighlightingOnLoad();"
-  ></script>
+  <script defer src="/highlight.min.js" onload="hljs.initHighlightingOnLoad()"></script>
   
 
   
@@ -123,8 +116,62 @@ function A() { var variable1 = &quot;variable1&quot;; return function() { consol
 
   
   
-</head>
+  
+  
+  
+  
+  
+  <meta property="og:title" content="javascript闭包" />
+<meta property="og:description" content="本文讨论的javascript不包含ES6标准。
+javascript在作用域和其他大多数语言不同, 没有局部变量的的概念,一个变量的作用范围就是它所在的函数,且没有块级作用域的概念。
+我们可以通过下面的代码理解下上面的话:
+var variable1 = 1; function A() { console.log(variable1); if(true) { var variable2 = &quot;variable2&quot;; } console.log(variable2); } A(); // 最终打印出1和variable2这个字符串  可能类似的代码放到其他语言中,我们在if外面访问variable2时,就会报错,但在javascript中不会。
+刚才说&quot;一个变量的作用范围就是它所在的函数&quot;,可以通过下面的代码验证下:
+function A() { var variable1 = &quot;variable1&quot;; } A(); console.log(variable1); // Uncaught ReferenceError: variable1 is not defined  此时在函数外部就无法访问函数内定义的变量。
+但是如果不用var关键字的话,情况就不一样了
+function A() { variable1 = &quot;variable1&quot;; } A(); console.log(variable1); // 最终打印出variable1这个字符串  因为不用var的话,就相当于声明了一个全局变量。
+但是有时候,我们就是想读取函数内部变量,该怎么做呢?可以像下面这样:
+function A() { var variable1 = &quot;variable1&quot;; return function() { console." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/2015-07-18-javascript-closure/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2015-07-18T00:00:00+00:00" />
+<meta property="article:modified_time" content="2015-07-18T00:00:00+00:00" />
 
+
+  
+  <meta itemprop="name" content="javascript闭包">
+<meta itemprop="description" content="本文讨论的javascript不包含ES6标准。
+javascript在作用域和其他大多数语言不同, 没有局部变量的的概念,一个变量的作用范围就是它所在的函数,且没有块级作用域的概念。
+我们可以通过下面的代码理解下上面的话:
+var variable1 = 1; function A() { console.log(variable1); if(true) { var variable2 = &quot;variable2&quot;; } console.log(variable2); } A(); // 最终打印出1和variable2这个字符串  可能类似的代码放到其他语言中,我们在if外面访问variable2时,就会报错,但在javascript中不会。
+刚才说&quot;一个变量的作用范围就是它所在的函数&quot;,可以通过下面的代码验证下:
+function A() { var variable1 = &quot;variable1&quot;; } A(); console.log(variable1); // Uncaught ReferenceError: variable1 is not defined  此时在函数外部就无法访问函数内定义的变量。
+但是如果不用var关键字的话,情况就不一样了
+function A() { variable1 = &quot;variable1&quot;; } A(); console.log(variable1); // 最终打印出variable1这个字符串  因为不用var的话,就相当于声明了一个全局变量。
+但是有时候,我们就是想读取函数内部变量,该怎么做呢?可以像下面这样:
+function A() { var variable1 = &quot;variable1&quot;; return function() { console."><meta itemprop="datePublished" content="2015-07-18T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2015-07-18T00:00:00+00:00" />
+<meta itemprop="wordCount" content="265">
+<meta itemprop="keywords" content="" />
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="javascript闭包"/>
+<meta name="twitter:description" content="本文讨论的javascript不包含ES6标准。
+javascript在作用域和其他大多数语言不同, 没有局部变量的的概念,一个变量的作用范围就是它所在的函数,且没有块级作用域的概念。
+我们可以通过下面的代码理解下上面的话:
+var variable1 = 1; function A() { console.log(variable1); if(true) { var variable2 = &quot;variable2&quot;; } console.log(variable2); } A(); // 最终打印出1和variable2这个字符串  可能类似的代码放到其他语言中,我们在if外面访问variable2时,就会报错,但在javascript中不会。
+刚才说&quot;一个变量的作用范围就是它所在的函数&quot;,可以通过下面的代码验证下:
+function A() { var variable1 = &quot;variable1&quot;; } A(); console.log(variable1); // Uncaught ReferenceError: variable1 is not defined  此时在函数外部就无法访问函数内定义的变量。
+但是如果不用var关键字的话,情况就不一样了
+function A() { variable1 = &quot;variable1&quot;; } A(); console.log(variable1); // 最终打印出variable1这个字符串  因为不用var的话,就相当于声明了一个全局变量。
+但是有时候,我们就是想读取函数内部变量,该怎么做呢?可以像下面这样:
+function A() { var variable1 = &quot;variable1&quot;; return function() { console."/>
+
+  
+  
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles-confetti@2.10.1/tsparticles.confetti.bundle.min.js"></script>
+  <script>const emojConfig={spread:360,ticks:200,gravity:1,decay:.94,startVelocity:30,particleCount:100,scalar:2,shapes:["image"]},randomInRange=(t,e)=>Math.random()*(e-t)+t,fireDefault=()=>confetti({angle:randomInRange(55,125),spread:randomInRange(50,70),particleCount:randomInRange(50,100),origin:{y:.6}}),fireDog=()=>confetti({...emojConfig,shapeOptions:{image:new Array(parseInt(randomInRange(10,20))).fill({src:"https://avatars.githubusercontent.com/u/9476421",width:16,height:16})}}),fireEmoj=()=>confetti({...emojConfig,shapeOptions:{image:[{src:"https://particles.js.org/images/fruits/apple.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/avocado.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/banana.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/berries.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/cherry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/grapes.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/lemon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/orange.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/peach.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pear.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pepper.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/plum.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/star.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/strawberry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon_slice.png",width:32,height:32}]}}),fireRealistic=()=>{const t={origin:{y:.7}},e=(e,s)=>{confetti(Object.assign({},t,s,{particleCount:Math.floor(200*e)}))};e(.25,{spread:26,startVelocity:55}),e(.2,{spread:60}),e(.35,{spread:100,decay:.91,scalar:.8}),e(.1,{spread:120,startVelocity:25,decay:.92,scalar:1.2}),e(.1,{spread:120,startVelocity:45})};window.addEventListener("DOMContentLoaded",()=>{document.addEventListener("click",t=>{if("A"===t.target.tagName&&Boolean(e.target.href))return;const s=Math.floor(100*Math.random());return s<=25?fireDefault():s<=50?fireDog():s<=75?fireEmoj():void fireRealistic()})});</script>
+</head>
   <body class="text-black duration-200 ease-out dark:text-white">
     <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
   <div class="relative z-50 mr-auto flex items-center">

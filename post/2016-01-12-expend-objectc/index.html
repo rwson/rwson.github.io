@@ -45,10 +45,7 @@
   <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, shrink-to-fit=no"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
   
   <title>React Native自定义原生模块 - rwson</title>
@@ -89,11 +86,7 @@
   <link rel="preload stylesheet" as="style" href="/main.min.css" />
 
   
-  <script
-    defer
-    src="/highlight.min.js"
-    onload="hljs.initHighlightingOnLoad();"
-  ></script>
+  <script defer src="/highlight.min.js" onload="hljs.initHighlightingOnLoad()"></script>
   
 
   
@@ -131,8 +124,86 @@
 
   
   
-</head>
+  
+  
+  
+  
+  
+  <meta property="og:title" content="React Native自定义原生模块" />
+<meta property="og:description" content="现如今，越来越多的移动开发者选择用React Native来开发他们的app。虽然React Native提供了强大的API供我们调用，但是对于一些功能(比如第三方支付、文件上传之类的)，原生模块中并没有提供给我们相关的API，这时候就需要我们来自己封装一些东西来给js端调用。这边以ios端的为例来介绍。
+ 模块配置表 在RN加载的时候，所有注册并且符合规范的模块都会被导出并且生成相应的模块数据类RCTModuleData，而模块数据中缓存了模块的对象实例，以及模块索引id。
+最后大概生成一个如下的模块配置表:
+{ &quot;remoteModuleConfig&quot;: { &quot;className&quot;: { &quot;methods&quot;: { &quot;method&quot;: { &quot;type&quot;: &quot;remote&quot;, &quot;methodID&quot;: 0 }, ... }, &quot;moduleID&quot;: 4 }, ... }, }  通信流程 先看一个js调用OC的下的方法走了哪些步骤:
+1.JS端调用某个OC模块暴露出来的方法。
+2.把上一步的调用分解为ModuleName,MethodName,arguments，再扔给MessageQueue处理。
+3.在这一步把JS的callback函数缓存在MessageQueue的一个成员变量里，用CallbackID代表callback。在通过保存在MessageQueue的模块配置表把上一步传进来的ModuleName和MethodName转为ModuleID和MethodID。
+4.把上述步骤得到的ModuleID,MethodId,CallbackID和其他参数argus传给OC。至于具体是怎么传的，后面再说。
+5.OC接收到消息，通过模块配置表拿到对应的模块和方法。
+6.RCTModuleMethod对JS传过来的每一个参数进行处理。
+7.OC模块方法调用完，执行block回调。
+8.调用到第6步说明的RCTModuleMethod生成的block。
+9.block里带着CallbackID和block传过来的参数去调JS里MessageQueue的方法invokeCallbackAndReturnFlushedQueue。
+10.MessageQueue通过CallbackID找到相应的JS callback方法。
+11.调用callback方法，并把OC带过来的参数一起传过去，完成回调。
+整个流程就是这样，简单概括下，差不多就是：JS函数调用转ModuleID/MethodID -&gt; callback转CallbackID -&gt; OC根据ID拿到方法 -&gt; 处理参数 -&gt; 调用OC方法 -&gt; 回调CallbackID -&gt; JS通过CallbackID拿到callback执行
+下面就简单分享一个从OC暴露方法到JS端调用的例子：
+// OC(RCTDeviceExtension.m) #import &quot;RCTBridgeModule.h&quot; #import &quot;RCTUtils.h&quot; // RCTScreenSize用到 @interface RCTDeviceExtension : NSObject &lt;RCTBridgeModule&gt; @end @implementation RCTDeviceExtension RCT_EXPORT_MODULE(); // 暴露一个模块 /** 获取设备的相关信息 **/ static NSDictionary *DynamicDimesions(){ CGFloat width = MIN(RCTScreenSize()." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/2016-01-12-expend-objectc/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2016-01-12T00:00:00+00:00" />
+<meta property="article:modified_time" content="2016-01-12T00:00:00+00:00" />
 
+
+  
+  <meta itemprop="name" content="React Native自定义原生模块">
+<meta itemprop="description" content="现如今，越来越多的移动开发者选择用React Native来开发他们的app。虽然React Native提供了强大的API供我们调用，但是对于一些功能(比如第三方支付、文件上传之类的)，原生模块中并没有提供给我们相关的API，这时候就需要我们来自己封装一些东西来给js端调用。这边以ios端的为例来介绍。
+ 模块配置表 在RN加载的时候，所有注册并且符合规范的模块都会被导出并且生成相应的模块数据类RCTModuleData，而模块数据中缓存了模块的对象实例，以及模块索引id。
+最后大概生成一个如下的模块配置表:
+{ &quot;remoteModuleConfig&quot;: { &quot;className&quot;: { &quot;methods&quot;: { &quot;method&quot;: { &quot;type&quot;: &quot;remote&quot;, &quot;methodID&quot;: 0 }, ... }, &quot;moduleID&quot;: 4 }, ... }, }  通信流程 先看一个js调用OC的下的方法走了哪些步骤:
+1.JS端调用某个OC模块暴露出来的方法。
+2.把上一步的调用分解为ModuleName,MethodName,arguments，再扔给MessageQueue处理。
+3.在这一步把JS的callback函数缓存在MessageQueue的一个成员变量里，用CallbackID代表callback。在通过保存在MessageQueue的模块配置表把上一步传进来的ModuleName和MethodName转为ModuleID和MethodID。
+4.把上述步骤得到的ModuleID,MethodId,CallbackID和其他参数argus传给OC。至于具体是怎么传的，后面再说。
+5.OC接收到消息，通过模块配置表拿到对应的模块和方法。
+6.RCTModuleMethod对JS传过来的每一个参数进行处理。
+7.OC模块方法调用完，执行block回调。
+8.调用到第6步说明的RCTModuleMethod生成的block。
+9.block里带着CallbackID和block传过来的参数去调JS里MessageQueue的方法invokeCallbackAndReturnFlushedQueue。
+10.MessageQueue通过CallbackID找到相应的JS callback方法。
+11.调用callback方法，并把OC带过来的参数一起传过去，完成回调。
+整个流程就是这样，简单概括下，差不多就是：JS函数调用转ModuleID/MethodID -&gt; callback转CallbackID -&gt; OC根据ID拿到方法 -&gt; 处理参数 -&gt; 调用OC方法 -&gt; 回调CallbackID -&gt; JS通过CallbackID拿到callback执行
+下面就简单分享一个从OC暴露方法到JS端调用的例子：
+// OC(RCTDeviceExtension.m) #import &quot;RCTBridgeModule.h&quot; #import &quot;RCTUtils.h&quot; // RCTScreenSize用到 @interface RCTDeviceExtension : NSObject &lt;RCTBridgeModule&gt; @end @implementation RCTDeviceExtension RCT_EXPORT_MODULE(); // 暴露一个模块 /** 获取设备的相关信息 **/ static NSDictionary *DynamicDimesions(){ CGFloat width = MIN(RCTScreenSize()."><meta itemprop="datePublished" content="2016-01-12T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2016-01-12T00:00:00+00:00" />
+<meta itemprop="wordCount" content="135">
+<meta itemprop="keywords" content="" />
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="React Native自定义原生模块"/>
+<meta name="twitter:description" content="现如今，越来越多的移动开发者选择用React Native来开发他们的app。虽然React Native提供了强大的API供我们调用，但是对于一些功能(比如第三方支付、文件上传之类的)，原生模块中并没有提供给我们相关的API，这时候就需要我们来自己封装一些东西来给js端调用。这边以ios端的为例来介绍。
+ 模块配置表 在RN加载的时候，所有注册并且符合规范的模块都会被导出并且生成相应的模块数据类RCTModuleData，而模块数据中缓存了模块的对象实例，以及模块索引id。
+最后大概生成一个如下的模块配置表:
+{ &quot;remoteModuleConfig&quot;: { &quot;className&quot;: { &quot;methods&quot;: { &quot;method&quot;: { &quot;type&quot;: &quot;remote&quot;, &quot;methodID&quot;: 0 }, ... }, &quot;moduleID&quot;: 4 }, ... }, }  通信流程 先看一个js调用OC的下的方法走了哪些步骤:
+1.JS端调用某个OC模块暴露出来的方法。
+2.把上一步的调用分解为ModuleName,MethodName,arguments，再扔给MessageQueue处理。
+3.在这一步把JS的callback函数缓存在MessageQueue的一个成员变量里，用CallbackID代表callback。在通过保存在MessageQueue的模块配置表把上一步传进来的ModuleName和MethodName转为ModuleID和MethodID。
+4.把上述步骤得到的ModuleID,MethodId,CallbackID和其他参数argus传给OC。至于具体是怎么传的，后面再说。
+5.OC接收到消息，通过模块配置表拿到对应的模块和方法。
+6.RCTModuleMethod对JS传过来的每一个参数进行处理。
+7.OC模块方法调用完，执行block回调。
+8.调用到第6步说明的RCTModuleMethod生成的block。
+9.block里带着CallbackID和block传过来的参数去调JS里MessageQueue的方法invokeCallbackAndReturnFlushedQueue。
+10.MessageQueue通过CallbackID找到相应的JS callback方法。
+11.调用callback方法，并把OC带过来的参数一起传过去，完成回调。
+整个流程就是这样，简单概括下，差不多就是：JS函数调用转ModuleID/MethodID -&gt; callback转CallbackID -&gt; OC根据ID拿到方法 -&gt; 处理参数 -&gt; 调用OC方法 -&gt; 回调CallbackID -&gt; JS通过CallbackID拿到callback执行
+下面就简单分享一个从OC暴露方法到JS端调用的例子：
+// OC(RCTDeviceExtension.m) #import &quot;RCTBridgeModule.h&quot; #import &quot;RCTUtils.h&quot; // RCTScreenSize用到 @interface RCTDeviceExtension : NSObject &lt;RCTBridgeModule&gt; @end @implementation RCTDeviceExtension RCT_EXPORT_MODULE(); // 暴露一个模块 /** 获取设备的相关信息 **/ static NSDictionary *DynamicDimesions(){ CGFloat width = MIN(RCTScreenSize()."/>
+
+  
+  
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles-confetti@2.10.1/tsparticles.confetti.bundle.min.js"></script>
+  <script>const emojConfig={spread:360,ticks:200,gravity:1,decay:.94,startVelocity:30,particleCount:100,scalar:2,shapes:["image"]},randomInRange=(t,e)=>Math.random()*(e-t)+t,fireDefault=()=>confetti({angle:randomInRange(55,125),spread:randomInRange(50,70),particleCount:randomInRange(50,100),origin:{y:.6}}),fireDog=()=>confetti({...emojConfig,shapeOptions:{image:new Array(parseInt(randomInRange(10,20))).fill({src:"https://avatars.githubusercontent.com/u/9476421",width:16,height:16})}}),fireEmoj=()=>confetti({...emojConfig,shapeOptions:{image:[{src:"https://particles.js.org/images/fruits/apple.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/avocado.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/banana.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/berries.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/cherry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/grapes.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/lemon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/orange.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/peach.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pear.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pepper.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/plum.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/star.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/strawberry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon_slice.png",width:32,height:32}]}}),fireRealistic=()=>{const t={origin:{y:.7}},e=(e,s)=>{confetti(Object.assign({},t,s,{particleCount:Math.floor(200*e)}))};e(.25,{spread:26,startVelocity:55}),e(.2,{spread:60}),e(.35,{spread:100,decay:.91,scalar:.8}),e(.1,{spread:120,startVelocity:25,decay:.92,scalar:1.2}),e(.1,{spread:120,startVelocity:45})};window.addEventListener("DOMContentLoaded",()=>{document.addEventListener("click",t=>{if("A"===t.target.tagName&&Boolean(e.target.href))return;const s=Math.floor(100*Math.random());return s<=25?fireDefault():s<=50?fireDog():s<=75?fireEmoj():void fireRealistic()})});</script>
+</head>
   <body class="text-black duration-200 ease-out dark:text-white">
     <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
   <div class="relative z-50 mr-auto flex items-center">

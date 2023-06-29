@@ -45,10 +45,7 @@
   <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, shrink-to-fit=no"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
   
   <title>javascript函数节流和函数去抖 - rwson</title>
@@ -78,11 +75,7 @@ throttle 我们需要给input绑定一个keyup事件,然后根据它的value操�
   <link rel="preload stylesheet" as="style" href="/main.min.css" />
 
   
-  <script
-    defer
-    src="/highlight.min.js"
-    onload="hljs.initHighlightingOnLoad();"
-  ></script>
+  <script defer src="/highlight.min.js" onload="hljs.initHighlightingOnLoad()"></script>
   
 
   
@@ -120,8 +113,53 @@ throttle 我们需要给input绑定一个keyup事件,然后根据它的value操�
 
   
   
-</head>
+  
+  
+  
+  
+  
+  <meta property="og:title" content="javascript函数节流和函数去抖" />
+<meta property="og:description" content="在underscore这个库中提供了两个关于控制函数执行频率的方法, throttle和debounce。
+throttle和debounce是解决请求和响应速度不匹配问题的两个方案。差异在于选择不同的策略。
+比如生活中的最常见的电梯, 分别用这两种策略解释下:
+ throttle: 开门按钮按下 -&gt; 有人进来 -(等10秒, 不管有没有人进来)-&gt; 准时关门运行 debounce: 开门按钮按下 -&gt; 有人进来, 关门按钮按下 -(开始计时10秒)-&gt; 开门按钮按下, 又有人进来, 关门按钮按下 -&gt; 重新计时 -(开始计时10秒) -&gt; 10秒时间到, 关门运行  如果我们需要做一个过滤的功能,类似于下面这个效果
+throttle 我们需要给input绑定一个keyup事件,然后根据它的value操作页面或者过滤数据重新渲染页面,但是在数据比较多的时候, 如果在keyup里面不做一定限制的话, 在性能方面就会有一些影响, 这时候, 就需要&quot;函数节流&quot;这个东西, 限制在多少秒内触发一次某个函数。
+就拿我们上面的效果来说:
+	// HTML &lt;input type=&#34;text&#34; id=&#34;input&#34; /&gt; &lt;ul id=&#34;ul&#34;&gt; &lt;li&gt;111111111&lt;/li&gt; &lt;li&gt;22222222&lt;/li&gt; &lt;li&gt;333333&lt;/li&gt; &lt;li&gt;4444&lt;/li&gt; &lt;li&gt;1234&lt;/li&gt; &lt;li&gt;5678&lt;/li&gt; &lt;li&gt;9999&lt;/li&gt; &lt;li&gt;6789&lt;/li&gt; &lt;li&gt;01234&lt;/li&gt; &lt;/ul&gt; // javascript window.onload = function() { var input = document.getElementById(&#34;input&#34;); var ul = document." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/2016-07-20-javascript-function-throttle-debounce/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2016-07-20T00:00:00+00:00" />
+<meta property="article:modified_time" content="2016-07-20T00:00:00+00:00" />
 
+
+  
+  <meta itemprop="name" content="javascript函数节流和函数去抖">
+<meta itemprop="description" content="在underscore这个库中提供了两个关于控制函数执行频率的方法, throttle和debounce。
+throttle和debounce是解决请求和响应速度不匹配问题的两个方案。差异在于选择不同的策略。
+比如生活中的最常见的电梯, 分别用这两种策略解释下:
+ throttle: 开门按钮按下 -&gt; 有人进来 -(等10秒, 不管有没有人进来)-&gt; 准时关门运行 debounce: 开门按钮按下 -&gt; 有人进来, 关门按钮按下 -(开始计时10秒)-&gt; 开门按钮按下, 又有人进来, 关门按钮按下 -&gt; 重新计时 -(开始计时10秒) -&gt; 10秒时间到, 关门运行  如果我们需要做一个过滤的功能,类似于下面这个效果
+throttle 我们需要给input绑定一个keyup事件,然后根据它的value操作页面或者过滤数据重新渲染页面,但是在数据比较多的时候, 如果在keyup里面不做一定限制的话, 在性能方面就会有一些影响, 这时候, 就需要&quot;函数节流&quot;这个东西, 限制在多少秒内触发一次某个函数。
+就拿我们上面的效果来说:
+	// HTML &lt;input type=&#34;text&#34; id=&#34;input&#34; /&gt; &lt;ul id=&#34;ul&#34;&gt; &lt;li&gt;111111111&lt;/li&gt; &lt;li&gt;22222222&lt;/li&gt; &lt;li&gt;333333&lt;/li&gt; &lt;li&gt;4444&lt;/li&gt; &lt;li&gt;1234&lt;/li&gt; &lt;li&gt;5678&lt;/li&gt; &lt;li&gt;9999&lt;/li&gt; &lt;li&gt;6789&lt;/li&gt; &lt;li&gt;01234&lt;/li&gt; &lt;/ul&gt; // javascript window.onload = function() { var input = document.getElementById(&#34;input&#34;); var ul = document."><meta itemprop="datePublished" content="2016-07-20T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2016-07-20T00:00:00+00:00" />
+<meta itemprop="wordCount" content="374">
+<meta itemprop="keywords" content="" />
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="javascript函数节流和函数去抖"/>
+<meta name="twitter:description" content="在underscore这个库中提供了两个关于控制函数执行频率的方法, throttle和debounce。
+throttle和debounce是解决请求和响应速度不匹配问题的两个方案。差异在于选择不同的策略。
+比如生活中的最常见的电梯, 分别用这两种策略解释下:
+ throttle: 开门按钮按下 -&gt; 有人进来 -(等10秒, 不管有没有人进来)-&gt; 准时关门运行 debounce: 开门按钮按下 -&gt; 有人进来, 关门按钮按下 -(开始计时10秒)-&gt; 开门按钮按下, 又有人进来, 关门按钮按下 -&gt; 重新计时 -(开始计时10秒) -&gt; 10秒时间到, 关门运行  如果我们需要做一个过滤的功能,类似于下面这个效果
+throttle 我们需要给input绑定一个keyup事件,然后根据它的value操作页面或者过滤数据重新渲染页面,但是在数据比较多的时候, 如果在keyup里面不做一定限制的话, 在性能方面就会有一些影响, 这时候, 就需要&quot;函数节流&quot;这个东西, 限制在多少秒内触发一次某个函数。
+就拿我们上面的效果来说:
+	// HTML &lt;input type=&#34;text&#34; id=&#34;input&#34; /&gt; &lt;ul id=&#34;ul&#34;&gt; &lt;li&gt;111111111&lt;/li&gt; &lt;li&gt;22222222&lt;/li&gt; &lt;li&gt;333333&lt;/li&gt; &lt;li&gt;4444&lt;/li&gt; &lt;li&gt;1234&lt;/li&gt; &lt;li&gt;5678&lt;/li&gt; &lt;li&gt;9999&lt;/li&gt; &lt;li&gt;6789&lt;/li&gt; &lt;li&gt;01234&lt;/li&gt; &lt;/ul&gt; // javascript window.onload = function() { var input = document.getElementById(&#34;input&#34;); var ul = document."/>
+
+  
+  
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles-confetti@2.10.1/tsparticles.confetti.bundle.min.js"></script>
+  <script>const emojConfig={spread:360,ticks:200,gravity:1,decay:.94,startVelocity:30,particleCount:100,scalar:2,shapes:["image"]},randomInRange=(t,e)=>Math.random()*(e-t)+t,fireDefault=()=>confetti({angle:randomInRange(55,125),spread:randomInRange(50,70),particleCount:randomInRange(50,100),origin:{y:.6}}),fireDog=()=>confetti({...emojConfig,shapeOptions:{image:new Array(parseInt(randomInRange(10,20))).fill({src:"https://avatars.githubusercontent.com/u/9476421",width:16,height:16})}}),fireEmoj=()=>confetti({...emojConfig,shapeOptions:{image:[{src:"https://particles.js.org/images/fruits/apple.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/avocado.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/banana.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/berries.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/cherry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/grapes.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/lemon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/orange.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/peach.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pear.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pepper.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/plum.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/star.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/strawberry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon_slice.png",width:32,height:32}]}}),fireRealistic=()=>{const t={origin:{y:.7}},e=(e,s)=>{confetti(Object.assign({},t,s,{particleCount:Math.floor(200*e)}))};e(.25,{spread:26,startVelocity:55}),e(.2,{spread:60}),e(.35,{spread:100,decay:.91,scalar:.8}),e(.1,{spread:120,startVelocity:25,decay:.92,scalar:1.2}),e(.1,{spread:120,startVelocity:45})};window.addEventListener("DOMContentLoaded",()=>{document.addEventListener("click",t=>{if("A"===t.target.tagName&&Boolean(e.target.href))return;const s=Math.floor(100*Math.random());return s<=25?fireDefault():s<=50?fireDog():s<=75?fireEmoj():void fireRealistic()})});</script>
+</head>
   <body class="text-black duration-200 ease-out dark:text-white">
     <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
   <div class="relative z-50 mr-auto flex items-center">

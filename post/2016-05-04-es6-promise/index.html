@@ -45,10 +45,7 @@
   <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, shrink-to-fit=no"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
   
   <title>ES6中的Promise - rwson</title>
@@ -77,11 +74,7 @@ function _ajax(url, method, args) { let promise = new Promise((resolve, reject) 
   <link rel="preload stylesheet" as="style" href="/main.min.css" />
 
   
-  <script
-    defer
-    src="/highlight.min.js"
-    onload="hljs.initHighlightingOnLoad();"
-  ></script>
+  <script defer src="/highlight.min.js" onload="hljs.initHighlightingOnLoad()"></script>
   
 
   
@@ -119,8 +112,50 @@ function _ajax(url, method, args) { let promise = new Promise((resolve, reject) 
 
   
   
-</head>
+  
+  
+  
+  
+  
+  <meta property="og:title" content="ES6中的Promise" />
+<meta property="og:description" content="在执行一些异步操作(典型的有JavaScript中的ajax/NodeJs中读取文件等等)的时候,我们不知道该操作什么时候完成,所以就需要在不同的时候写上回调,等到有返回的时候,再执行下一步操作,下面就用jQuery中的一个ajax来做示例:
+$.ajax({ &quot;url&quot;: &quot;xxx&quot;, &quot;type&quot;: &quot;GET&quot;, &quot;dataType&quot;: &quot;&quot;JSON, &quot;success&quot;: function(res){}, &quot;error&quot;: function(ex){ // do some thing } });  最基础的一个ajax示例,当我们有多个ajax嵌套请求的时候,就中了所谓的&quot;回调地狱&quot;,类似于下面的写法:
+$.ajax({ // some configs &quot;success&quot;: function(res){ $.ajax({ // ... &quot;success&quot;: function(res){ $.ajax({ // ... &quot;success&quot;:function(res){ . . . } }); } }); } });  一层套着一层,代码可读性很差,且不容易后期的维护
+这时候就需要一个比前者好的解决方案来解决该问题,ES6中的Promise一定程度上解决了该问题:
+我们可以利用Promise对ajax进行一层封装
+function _ajax(url, method, args) { let promise = new Promise((resolve, reject) =&gt; { let client = new XMLHttpRequest(); let uri = url; if (args &amp;&amp; (method == &quot;POST&quot; || method == &quot;PUT&quot;)) { let argcount = 0; uri &#43;= &quot;?" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/2016-05-04-es6-promise/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2016-05-04T00:00:00+00:00" />
+<meta property="article:modified_time" content="2016-05-04T00:00:00+00:00" />
 
+
+  
+  <meta itemprop="name" content="ES6中的Promise">
+<meta itemprop="description" content="在执行一些异步操作(典型的有JavaScript中的ajax/NodeJs中读取文件等等)的时候,我们不知道该操作什么时候完成,所以就需要在不同的时候写上回调,等到有返回的时候,再执行下一步操作,下面就用jQuery中的一个ajax来做示例:
+$.ajax({ &quot;url&quot;: &quot;xxx&quot;, &quot;type&quot;: &quot;GET&quot;, &quot;dataType&quot;: &quot;&quot;JSON, &quot;success&quot;: function(res){}, &quot;error&quot;: function(ex){ // do some thing } });  最基础的一个ajax示例,当我们有多个ajax嵌套请求的时候,就中了所谓的&quot;回调地狱&quot;,类似于下面的写法:
+$.ajax({ // some configs &quot;success&quot;: function(res){ $.ajax({ // ... &quot;success&quot;: function(res){ $.ajax({ // ... &quot;success&quot;:function(res){ . . . } }); } }); } });  一层套着一层,代码可读性很差,且不容易后期的维护
+这时候就需要一个比前者好的解决方案来解决该问题,ES6中的Promise一定程度上解决了该问题:
+我们可以利用Promise对ajax进行一层封装
+function _ajax(url, method, args) { let promise = new Promise((resolve, reject) =&gt; { let client = new XMLHttpRequest(); let uri = url; if (args &amp;&amp; (method == &quot;POST&quot; || method == &quot;PUT&quot;)) { let argcount = 0; uri &#43;= &quot;?"><meta itemprop="datePublished" content="2016-05-04T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2016-05-04T00:00:00+00:00" />
+<meta itemprop="wordCount" content="306">
+<meta itemprop="keywords" content="" />
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="ES6中的Promise"/>
+<meta name="twitter:description" content="在执行一些异步操作(典型的有JavaScript中的ajax/NodeJs中读取文件等等)的时候,我们不知道该操作什么时候完成,所以就需要在不同的时候写上回调,等到有返回的时候,再执行下一步操作,下面就用jQuery中的一个ajax来做示例:
+$.ajax({ &quot;url&quot;: &quot;xxx&quot;, &quot;type&quot;: &quot;GET&quot;, &quot;dataType&quot;: &quot;&quot;JSON, &quot;success&quot;: function(res){}, &quot;error&quot;: function(ex){ // do some thing } });  最基础的一个ajax示例,当我们有多个ajax嵌套请求的时候,就中了所谓的&quot;回调地狱&quot;,类似于下面的写法:
+$.ajax({ // some configs &quot;success&quot;: function(res){ $.ajax({ // ... &quot;success&quot;: function(res){ $.ajax({ // ... &quot;success&quot;:function(res){ . . . } }); } }); } });  一层套着一层,代码可读性很差,且不容易后期的维护
+这时候就需要一个比前者好的解决方案来解决该问题,ES6中的Promise一定程度上解决了该问题:
+我们可以利用Promise对ajax进行一层封装
+function _ajax(url, method, args) { let promise = new Promise((resolve, reject) =&gt; { let client = new XMLHttpRequest(); let uri = url; if (args &amp;&amp; (method == &quot;POST&quot; || method == &quot;PUT&quot;)) { let argcount = 0; uri &#43;= &quot;?"/>
+
+  
+  
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles-confetti@2.10.1/tsparticles.confetti.bundle.min.js"></script>
+  <script>const emojConfig={spread:360,ticks:200,gravity:1,decay:.94,startVelocity:30,particleCount:100,scalar:2,shapes:["image"]},randomInRange=(t,e)=>Math.random()*(e-t)+t,fireDefault=()=>confetti({angle:randomInRange(55,125),spread:randomInRange(50,70),particleCount:randomInRange(50,100),origin:{y:.6}}),fireDog=()=>confetti({...emojConfig,shapeOptions:{image:new Array(parseInt(randomInRange(10,20))).fill({src:"https://avatars.githubusercontent.com/u/9476421",width:16,height:16})}}),fireEmoj=()=>confetti({...emojConfig,shapeOptions:{image:[{src:"https://particles.js.org/images/fruits/apple.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/avocado.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/banana.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/berries.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/cherry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/grapes.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/lemon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/orange.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/peach.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pear.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pepper.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/plum.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/star.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/strawberry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon_slice.png",width:32,height:32}]}}),fireRealistic=()=>{const t={origin:{y:.7}},e=(e,s)=>{confetti(Object.assign({},t,s,{particleCount:Math.floor(200*e)}))};e(.25,{spread:26,startVelocity:55}),e(.2,{spread:60}),e(.35,{spread:100,decay:.91,scalar:.8}),e(.1,{spread:120,startVelocity:25,decay:.92,scalar:1.2}),e(.1,{spread:120,startVelocity:45})};window.addEventListener("DOMContentLoaded",()=>{document.addEventListener("click",t=>{if("A"===t.target.tagName&&Boolean(e.target.href))return;const s=Math.floor(100*Math.random());return s<=25?fireDefault():s<=50?fireDog():s<=75?fireEmoj():void fireRealistic()})});</script>
+</head>
   <body class="text-black duration-200 ease-out dark:text-white">
     <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
   <div class="relative z-50 mr-auto flex items-center">

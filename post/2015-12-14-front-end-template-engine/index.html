@@ -45,10 +45,7 @@
   <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, shrink-to-fit=no"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
   
   <title>实现一个简单的模板引擎 - rwson</title>
@@ -76,11 +73,7 @@
   <link rel="preload stylesheet" as="style" href="/main.min.css" />
 
   
-  <script
-    defer
-    src="/highlight.min.js"
-    onload="hljs.initHighlightingOnLoad();"
-  ></script>
+  <script defer src="/highlight.min.js" onload="hljs.initHighlightingOnLoad()"></script>
   
 
   
@@ -118,8 +111,47 @@
 
   
   
-</head>
+  
+  
+  
+  
+  
+  <meta property="og:title" content="实现一个简单的模板引擎" />
+<meta property="og:description" content="在最开始想要把数据显示到页面上,我们可以需要用到一些后端的模板引擎(比如java中的Freemarker等),随着技术的发展,前端会把数据从后端取回来,用拼接HTML或者模板引擎的方式来呈现页面,如果布局结构简单还好,但是如果碰到复杂结构的时候,前者可能显得比较吃力,且容易出错。
+比较著名的一些前端模板引擎有Handlebars、Underscore.js(一个javascript工具库的集合,带模板引擎)等等。各自也有各自的语法。
+前端模板引擎带来了很多嚎头,(预)编译、缓存、渲染等等,下面我们实现一个简单的模板引擎。
+首先想一下,在用模板引擎和拼接字符串时最大的区别是什么?就是一个是通过手动的绑定属性,一个是像写HTML一样把属性绑定好:
+// 比如有这么一段数据 var data = [ { name: &quot;foo&quot;, age: 23 }, { name: &quot;bar&quot;, age: 25 } ]; // 字符串拼接的写法 var html = &quot;&quot;; for(var i = 0, len = data.length; i &lt; len; i &#43;&#43;) { html &#43;= &quot;&lt;div class=&#39;item&#39;&gt;&lt;span class=&#39;name&#39;&gt;&quot; &#43; data[i].name &#43; &quot;&lt;/span&gt;&lt;span class=&#39;age&#39;&gt;&quot; &#43; data[i].age &#43; &quot;&lt;/span&gt;&lt;/div&gt;&quot;; } document.getElementById(&quot;target&quot;).innerHTML = html; // 模板引擎 &lt;script type=&quot;text/template&quot;&gt; &lt;% for(var i in obj) %&gt; &lt;div class=&quot;item&quot;&gt; &lt;span class=&quot;name&quot;&gt; &lt;%= obj[i]." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/2015-12-14-front-end-template-engine/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2015-12-14T00:00:00+00:00" />
+<meta property="article:modified_time" content="2015-12-14T00:00:00+00:00" />
 
+
+  
+  <meta itemprop="name" content="实现一个简单的模板引擎">
+<meta itemprop="description" content="在最开始想要把数据显示到页面上,我们可以需要用到一些后端的模板引擎(比如java中的Freemarker等),随着技术的发展,前端会把数据从后端取回来,用拼接HTML或者模板引擎的方式来呈现页面,如果布局结构简单还好,但是如果碰到复杂结构的时候,前者可能显得比较吃力,且容易出错。
+比较著名的一些前端模板引擎有Handlebars、Underscore.js(一个javascript工具库的集合,带模板引擎)等等。各自也有各自的语法。
+前端模板引擎带来了很多嚎头,(预)编译、缓存、渲染等等,下面我们实现一个简单的模板引擎。
+首先想一下,在用模板引擎和拼接字符串时最大的区别是什么?就是一个是通过手动的绑定属性,一个是像写HTML一样把属性绑定好:
+// 比如有这么一段数据 var data = [ { name: &quot;foo&quot;, age: 23 }, { name: &quot;bar&quot;, age: 25 } ]; // 字符串拼接的写法 var html = &quot;&quot;; for(var i = 0, len = data.length; i &lt; len; i &#43;&#43;) { html &#43;= &quot;&lt;div class=&#39;item&#39;&gt;&lt;span class=&#39;name&#39;&gt;&quot; &#43; data[i].name &#43; &quot;&lt;/span&gt;&lt;span class=&#39;age&#39;&gt;&quot; &#43; data[i].age &#43; &quot;&lt;/span&gt;&lt;/div&gt;&quot;; } document.getElementById(&quot;target&quot;).innerHTML = html; // 模板引擎 &lt;script type=&quot;text/template&quot;&gt; &lt;% for(var i in obj) %&gt; &lt;div class=&quot;item&quot;&gt; &lt;span class=&quot;name&quot;&gt; &lt;%= obj[i]."><meta itemprop="datePublished" content="2015-12-14T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2015-12-14T00:00:00+00:00" />
+<meta itemprop="wordCount" content="389">
+<meta itemprop="keywords" content="" />
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="实现一个简单的模板引擎"/>
+<meta name="twitter:description" content="在最开始想要把数据显示到页面上,我们可以需要用到一些后端的模板引擎(比如java中的Freemarker等),随着技术的发展,前端会把数据从后端取回来,用拼接HTML或者模板引擎的方式来呈现页面,如果布局结构简单还好,但是如果碰到复杂结构的时候,前者可能显得比较吃力,且容易出错。
+比较著名的一些前端模板引擎有Handlebars、Underscore.js(一个javascript工具库的集合,带模板引擎)等等。各自也有各自的语法。
+前端模板引擎带来了很多嚎头,(预)编译、缓存、渲染等等,下面我们实现一个简单的模板引擎。
+首先想一下,在用模板引擎和拼接字符串时最大的区别是什么?就是一个是通过手动的绑定属性,一个是像写HTML一样把属性绑定好:
+// 比如有这么一段数据 var data = [ { name: &quot;foo&quot;, age: 23 }, { name: &quot;bar&quot;, age: 25 } ]; // 字符串拼接的写法 var html = &quot;&quot;; for(var i = 0, len = data.length; i &lt; len; i &#43;&#43;) { html &#43;= &quot;&lt;div class=&#39;item&#39;&gt;&lt;span class=&#39;name&#39;&gt;&quot; &#43; data[i].name &#43; &quot;&lt;/span&gt;&lt;span class=&#39;age&#39;&gt;&quot; &#43; data[i].age &#43; &quot;&lt;/span&gt;&lt;/div&gt;&quot;; } document.getElementById(&quot;target&quot;).innerHTML = html; // 模板引擎 &lt;script type=&quot;text/template&quot;&gt; &lt;% for(var i in obj) %&gt; &lt;div class=&quot;item&quot;&gt; &lt;span class=&quot;name&quot;&gt; &lt;%= obj[i]."/>
+
+  
+  
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles-confetti@2.10.1/tsparticles.confetti.bundle.min.js"></script>
+  <script>const emojConfig={spread:360,ticks:200,gravity:1,decay:.94,startVelocity:30,particleCount:100,scalar:2,shapes:["image"]},randomInRange=(t,e)=>Math.random()*(e-t)+t,fireDefault=()=>confetti({angle:randomInRange(55,125),spread:randomInRange(50,70),particleCount:randomInRange(50,100),origin:{y:.6}}),fireDog=()=>confetti({...emojConfig,shapeOptions:{image:new Array(parseInt(randomInRange(10,20))).fill({src:"https://avatars.githubusercontent.com/u/9476421",width:16,height:16})}}),fireEmoj=()=>confetti({...emojConfig,shapeOptions:{image:[{src:"https://particles.js.org/images/fruits/apple.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/avocado.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/banana.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/berries.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/cherry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/grapes.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/lemon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/orange.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/peach.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pear.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pepper.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/plum.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/star.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/strawberry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon_slice.png",width:32,height:32}]}}),fireRealistic=()=>{const t={origin:{y:.7}},e=(e,s)=>{confetti(Object.assign({},t,s,{particleCount:Math.floor(200*e)}))};e(.25,{spread:26,startVelocity:55}),e(.2,{spread:60}),e(.35,{spread:100,decay:.91,scalar:.8}),e(.1,{spread:120,startVelocity:25,decay:.92,scalar:1.2}),e(.1,{spread:120,startVelocity:45})};window.addEventListener("DOMContentLoaded",()=>{document.addEventListener("click",t=>{if("A"===t.target.tagName&&Boolean(e.target.href))return;const s=Math.floor(100*Math.random());return s<=25?fireDefault():s<=50?fireDog():s<=75?fireEmoj():void fireRealistic()})});</script>
+</head>
   <body class="text-black duration-200 ease-out dark:text-white">
     <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
   <div class="relative z-50 mr-auto flex items-center">

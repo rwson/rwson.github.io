@@ -45,10 +45,7 @@
   <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, shrink-to-fit=no"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
   
   <title>javascript中Date细节 - rwson</title>
@@ -77,11 +74,7 @@ var date = new Date(&quot;2016/10/31&quot;); date.setMonth(date.getMonth() &#43;
   <link rel="preload stylesheet" as="style" href="/main.min.css" />
 
   
-  <script
-    defer
-    src="/highlight.min.js"
-    onload="hljs.initHighlightingOnLoad();"
-  ></script>
+  <script defer src="/highlight.min.js" onload="hljs.initHighlightingOnLoad()"></script>
   
 
   
@@ -119,8 +112,50 @@ var date = new Date(&quot;2016/10/31&quot;); date.setMonth(date.getMonth() &#43;
 
   
   
-</head>
+  
+  
+  
+  
+  
+  <meta property="og:title" content="javascript中Date细节" />
+<meta property="og:description" content="Safri浏览器new Date(&ldquo;yyyy-mm-dd&rdquo;)返回invalid Date 许多时候我们需要初始化一个具体某天的日期对象的时候,会用到new Date(),这个方法,我们可以传入一个字符串作为参数来指定具体的日期,而一般我们会传入一个&quot;yyyy-mm-dd hh:ii:ss&quot;这种格式作为一个初始日期,但到了Safri浏览器下,就会返回一个invalid Date,调用该Date实例下的所有方法都会返回NaN值,原因是Safri不能正常解析中间的&quot;-&ldquo;分隔符,解决办法也很简单,有两种:
+直接
+var myDate1 = Date.parseExact(&quot;29-11-2010&quot;, &quot;dd-MM-yyyy&quot;); var myDate2 = Date.parseExact(&quot;11-29-2010&quot;, &quot;MM-dd-yyyy&quot;); var myDate3 = Date.parseExact(&quot;2010-11-29&quot;, &quot;yyyy-MM-dd&quot;); var myDate4 = Date.parseExact(&quot;2010-29-11&quot;, &quot;yyyy-dd-MM&quot;);  或者
+new Date(&quot;2011-04-12&quot;.replace(/-/g, &quot;/&quot;));  setMonth溢出问题 实例化一个Date对象,通过如下的方式,然后调用该实例的setMonth方法,把当前月份加1,就像下面这样
+var date = new Date(&quot;2016/01/30&quot;); date.setMonth(date.getMonth() &#43; 1); console.log(date.getMonth()); // Tue Mar 01 2016 00:00:00 GMT&#43;0800 (CST)  或者
+var date = new Date(&quot;2016/10/31&quot;); date.setMonth(date.getMonth() &#43; 1); console.log(date); // Thu Dec 01 2016 00:00:00 GMT&#43;0800 (CST)  上面两段我们都希望是返回的是2月和11月,但是真正返回了3月和12月" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/2016-08-30-something-about-javascript-date/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2016-08-30T00:00:00+00:00" />
+<meta property="article:modified_time" content="2016-08-30T00:00:00+00:00" />
 
+
+  
+  <meta itemprop="name" content="javascript中Date细节">
+<meta itemprop="description" content="Safri浏览器new Date(&ldquo;yyyy-mm-dd&rdquo;)返回invalid Date 许多时候我们需要初始化一个具体某天的日期对象的时候,会用到new Date(),这个方法,我们可以传入一个字符串作为参数来指定具体的日期,而一般我们会传入一个&quot;yyyy-mm-dd hh:ii:ss&quot;这种格式作为一个初始日期,但到了Safri浏览器下,就会返回一个invalid Date,调用该Date实例下的所有方法都会返回NaN值,原因是Safri不能正常解析中间的&quot;-&ldquo;分隔符,解决办法也很简单,有两种:
+直接
+var myDate1 = Date.parseExact(&quot;29-11-2010&quot;, &quot;dd-MM-yyyy&quot;); var myDate2 = Date.parseExact(&quot;11-29-2010&quot;, &quot;MM-dd-yyyy&quot;); var myDate3 = Date.parseExact(&quot;2010-11-29&quot;, &quot;yyyy-MM-dd&quot;); var myDate4 = Date.parseExact(&quot;2010-29-11&quot;, &quot;yyyy-dd-MM&quot;);  或者
+new Date(&quot;2011-04-12&quot;.replace(/-/g, &quot;/&quot;));  setMonth溢出问题 实例化一个Date对象,通过如下的方式,然后调用该实例的setMonth方法,把当前月份加1,就像下面这样
+var date = new Date(&quot;2016/01/30&quot;); date.setMonth(date.getMonth() &#43; 1); console.log(date.getMonth()); // Tue Mar 01 2016 00:00:00 GMT&#43;0800 (CST)  或者
+var date = new Date(&quot;2016/10/31&quot;); date.setMonth(date.getMonth() &#43; 1); console.log(date); // Thu Dec 01 2016 00:00:00 GMT&#43;0800 (CST)  上面两段我们都希望是返回的是2月和11月,但是真正返回了3月和12月"><meta itemprop="datePublished" content="2016-08-30T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2016-08-30T00:00:00+00:00" />
+<meta itemprop="wordCount" content="72">
+<meta itemprop="keywords" content="" />
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="javascript中Date细节"/>
+<meta name="twitter:description" content="Safri浏览器new Date(&ldquo;yyyy-mm-dd&rdquo;)返回invalid Date 许多时候我们需要初始化一个具体某天的日期对象的时候,会用到new Date(),这个方法,我们可以传入一个字符串作为参数来指定具体的日期,而一般我们会传入一个&quot;yyyy-mm-dd hh:ii:ss&quot;这种格式作为一个初始日期,但到了Safri浏览器下,就会返回一个invalid Date,调用该Date实例下的所有方法都会返回NaN值,原因是Safri不能正常解析中间的&quot;-&ldquo;分隔符,解决办法也很简单,有两种:
+直接
+var myDate1 = Date.parseExact(&quot;29-11-2010&quot;, &quot;dd-MM-yyyy&quot;); var myDate2 = Date.parseExact(&quot;11-29-2010&quot;, &quot;MM-dd-yyyy&quot;); var myDate3 = Date.parseExact(&quot;2010-11-29&quot;, &quot;yyyy-MM-dd&quot;); var myDate4 = Date.parseExact(&quot;2010-29-11&quot;, &quot;yyyy-dd-MM&quot;);  或者
+new Date(&quot;2011-04-12&quot;.replace(/-/g, &quot;/&quot;));  setMonth溢出问题 实例化一个Date对象,通过如下的方式,然后调用该实例的setMonth方法,把当前月份加1,就像下面这样
+var date = new Date(&quot;2016/01/30&quot;); date.setMonth(date.getMonth() &#43; 1); console.log(date.getMonth()); // Tue Mar 01 2016 00:00:00 GMT&#43;0800 (CST)  或者
+var date = new Date(&quot;2016/10/31&quot;); date.setMonth(date.getMonth() &#43; 1); console.log(date); // Thu Dec 01 2016 00:00:00 GMT&#43;0800 (CST)  上面两段我们都希望是返回的是2月和11月,但是真正返回了3月和12月"/>
+
+  
+  
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles-confetti@2.10.1/tsparticles.confetti.bundle.min.js"></script>
+  <script>const emojConfig={spread:360,ticks:200,gravity:1,decay:.94,startVelocity:30,particleCount:100,scalar:2,shapes:["image"]},randomInRange=(t,e)=>Math.random()*(e-t)+t,fireDefault=()=>confetti({angle:randomInRange(55,125),spread:randomInRange(50,70),particleCount:randomInRange(50,100),origin:{y:.6}}),fireDog=()=>confetti({...emojConfig,shapeOptions:{image:new Array(parseInt(randomInRange(10,20))).fill({src:"https://avatars.githubusercontent.com/u/9476421",width:16,height:16})}}),fireEmoj=()=>confetti({...emojConfig,shapeOptions:{image:[{src:"https://particles.js.org/images/fruits/apple.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/avocado.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/banana.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/berries.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/cherry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/grapes.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/lemon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/orange.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/peach.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pear.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pepper.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/plum.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/star.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/strawberry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon_slice.png",width:32,height:32}]}}),fireRealistic=()=>{const t={origin:{y:.7}},e=(e,s)=>{confetti(Object.assign({},t,s,{particleCount:Math.floor(200*e)}))};e(.25,{spread:26,startVelocity:55}),e(.2,{spread:60}),e(.35,{spread:100,decay:.91,scalar:.8}),e(.1,{spread:120,startVelocity:25,decay:.92,scalar:1.2}),e(.1,{spread:120,startVelocity:45})};window.addEventListener("DOMContentLoaded",()=>{document.addEventListener("click",t=>{if("A"===t.target.tagName&&Boolean(e.target.href))return;const s=Math.floor(100*Math.random());return s<=25?fireDefault():s<=50?fireDog():s<=75?fireEmoj():void fireRealistic()})});</script>
+</head>
   <body class="text-black duration-200 ease-out dark:text-white">
     <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
   <div class="relative z-50 mr-auto flex items-center">

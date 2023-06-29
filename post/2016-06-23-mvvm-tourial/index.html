@@ -45,10 +45,7 @@
   <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, shrink-to-fit=no"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
   
   <title>实现一个迷你MVVM - rwson</title>
@@ -73,11 +70,7 @@
   <link rel="preload stylesheet" as="style" href="/main.min.css" />
 
   
-  <script
-    defer
-    src="/highlight.min.js"
-    onload="hljs.initHighlightingOnLoad();"
-  ></script>
+  <script defer src="/highlight.min.js" onload="hljs.initHighlightingOnLoad()"></script>
   
 
   
@@ -115,8 +108,38 @@
 
   
   
-</head>
+  
+  
+  
+  
+  
+  <meta property="og:title" content="实现一个迷你MVVM" />
+<meta property="og:description" content="在近几年,MVVM模式一直很火热,其全称为&quot;Model-View-ViewModel&quot;,MVVM火的主要原因就是在用这种模式开发的,更多的只需要关注数据层的东西,不需要花额外的时间去维护视图,包括angular/Vue都是这种开发模式,但是两者的原理是截然不同的,现在参考Vue的实现原理,简单实现一个MVVM框架,支持的指令有&quot;vm-modle&quot;、&ldquo;vm-click&rdquo;、&ldquo;vm-bind&rdquo;,代码量大概在300行左右,先来看下用法:
+// HTML ... &lt;div id=&quot;app&quot;&gt; &lt;input type=&quot;text&quot; class=&quot;text-filed&quot; vm-model=&quot;text&quot; /&gt; &lt;p class=&quot;bind-text&quot; vm-bind=&quot;text&quot;&gt;&lt;/p&gt; &lt;div class=&quot;click-area&quot; vm-click=&quot;clicked()&quot;&gt;点我&lt;/div&gt; &lt;div class=&quot;click-area&quot; vm-click=&quot;clickWitharguments(text)&quot;&gt;点我(带参数)&lt;/div&gt; &lt;/div&gt; ... // javascript window.onload = function() { var clickTimes = 0, e; // 调用MVVM MVVM({ el: document.querySelector(&quot;#app&quot;), data: { text: &quot;I&#39;m an attribute named &#39;text&#39; under data&quot; }, methods: { clicked: function () { e = event; clickTimes &#43;&#43;; e.target.innerHTML &#43;= &quot;&lt;p&gt;第&quot; &#43; clickTimes &#43; &quot;次点击 - &quot; &#43; Date." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/2016-06-23-mvvm-tourial/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2016-06-23T00:00:00+00:00" />
+<meta property="article:modified_time" content="2016-06-23T00:00:00+00:00" />
 
+
+  
+  <meta itemprop="name" content="实现一个迷你MVVM">
+<meta itemprop="description" content="在近几年,MVVM模式一直很火热,其全称为&quot;Model-View-ViewModel&quot;,MVVM火的主要原因就是在用这种模式开发的,更多的只需要关注数据层的东西,不需要花额外的时间去维护视图,包括angular/Vue都是这种开发模式,但是两者的原理是截然不同的,现在参考Vue的实现原理,简单实现一个MVVM框架,支持的指令有&quot;vm-modle&quot;、&ldquo;vm-click&rdquo;、&ldquo;vm-bind&rdquo;,代码量大概在300行左右,先来看下用法:
+// HTML ... &lt;div id=&quot;app&quot;&gt; &lt;input type=&quot;text&quot; class=&quot;text-filed&quot; vm-model=&quot;text&quot; /&gt; &lt;p class=&quot;bind-text&quot; vm-bind=&quot;text&quot;&gt;&lt;/p&gt; &lt;div class=&quot;click-area&quot; vm-click=&quot;clicked()&quot;&gt;点我&lt;/div&gt; &lt;div class=&quot;click-area&quot; vm-click=&quot;clickWitharguments(text)&quot;&gt;点我(带参数)&lt;/div&gt; &lt;/div&gt; ... // javascript window.onload = function() { var clickTimes = 0, e; // 调用MVVM MVVM({ el: document.querySelector(&quot;#app&quot;), data: { text: &quot;I&#39;m an attribute named &#39;text&#39; under data&quot; }, methods: { clicked: function () { e = event; clickTimes &#43;&#43;; e.target.innerHTML &#43;= &quot;&lt;p&gt;第&quot; &#43; clickTimes &#43; &quot;次点击 - &quot; &#43; Date."><meta itemprop="datePublished" content="2016-06-23T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2016-06-23T00:00:00+00:00" />
+<meta itemprop="wordCount" content="848">
+<meta itemprop="keywords" content="" />
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="实现一个迷你MVVM"/>
+<meta name="twitter:description" content="在近几年,MVVM模式一直很火热,其全称为&quot;Model-View-ViewModel&quot;,MVVM火的主要原因就是在用这种模式开发的,更多的只需要关注数据层的东西,不需要花额外的时间去维护视图,包括angular/Vue都是这种开发模式,但是两者的原理是截然不同的,现在参考Vue的实现原理,简单实现一个MVVM框架,支持的指令有&quot;vm-modle&quot;、&ldquo;vm-click&rdquo;、&ldquo;vm-bind&rdquo;,代码量大概在300行左右,先来看下用法:
+// HTML ... &lt;div id=&quot;app&quot;&gt; &lt;input type=&quot;text&quot; class=&quot;text-filed&quot; vm-model=&quot;text&quot; /&gt; &lt;p class=&quot;bind-text&quot; vm-bind=&quot;text&quot;&gt;&lt;/p&gt; &lt;div class=&quot;click-area&quot; vm-click=&quot;clicked()&quot;&gt;点我&lt;/div&gt; &lt;div class=&quot;click-area&quot; vm-click=&quot;clickWitharguments(text)&quot;&gt;点我(带参数)&lt;/div&gt; &lt;/div&gt; ... // javascript window.onload = function() { var clickTimes = 0, e; // 调用MVVM MVVM({ el: document.querySelector(&quot;#app&quot;), data: { text: &quot;I&#39;m an attribute named &#39;text&#39; under data&quot; }, methods: { clicked: function () { e = event; clickTimes &#43;&#43;; e.target.innerHTML &#43;= &quot;&lt;p&gt;第&quot; &#43; clickTimes &#43; &quot;次点击 - &quot; &#43; Date."/>
+
+  
+  
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles-confetti@2.10.1/tsparticles.confetti.bundle.min.js"></script>
+  <script>const emojConfig={spread:360,ticks:200,gravity:1,decay:.94,startVelocity:30,particleCount:100,scalar:2,shapes:["image"]},randomInRange=(t,e)=>Math.random()*(e-t)+t,fireDefault=()=>confetti({angle:randomInRange(55,125),spread:randomInRange(50,70),particleCount:randomInRange(50,100),origin:{y:.6}}),fireDog=()=>confetti({...emojConfig,shapeOptions:{image:new Array(parseInt(randomInRange(10,20))).fill({src:"https://avatars.githubusercontent.com/u/9476421",width:16,height:16})}}),fireEmoj=()=>confetti({...emojConfig,shapeOptions:{image:[{src:"https://particles.js.org/images/fruits/apple.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/avocado.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/banana.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/berries.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/cherry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/grapes.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/lemon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/orange.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/peach.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pear.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pepper.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/plum.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/star.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/strawberry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon_slice.png",width:32,height:32}]}}),fireRealistic=()=>{const t={origin:{y:.7}},e=(e,s)=>{confetti(Object.assign({},t,s,{particleCount:Math.floor(200*e)}))};e(.25,{spread:26,startVelocity:55}),e(.2,{spread:60}),e(.35,{spread:100,decay:.91,scalar:.8}),e(.1,{spread:120,startVelocity:25,decay:.92,scalar:1.2}),e(.1,{spread:120,startVelocity:45})};window.addEventListener("DOMContentLoaded",()=>{document.addEventListener("click",t=>{if("A"===t.target.tagName&&Boolean(e.target.href))return;const s=Math.floor(100*Math.random());return s<=25?fireDefault():s<=50?fireDog():s<=75?fireEmoj():void fireRealistic()})});</script>
+</head>
   <body class="text-black duration-200 ease-out dark:text-white">
     <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
   <div class="relative z-50 mr-auto flex items-center">

@@ -45,10 +45,7 @@
   <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, shrink-to-fit=no"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
   
   <title>javascript中事件代理和取消 - rwson</title>
@@ -76,11 +73,7 @@ window.onload = function() {  var container = document.querySelector(&#34;.selec
   <link rel="preload stylesheet" as="style" href="/main.min.css" />
 
   
-  <script
-    defer
-    src="/highlight.min.js"
-    onload="hljs.initHighlightingOnLoad();"
-  ></script>
+  <script defer src="/highlight.min.js" onload="hljs.initHighlightingOnLoad()"></script>
   
 
   
@@ -118,8 +111,47 @@ window.onload = function() {  var container = document.querySelector(&#34;.selec
 
   
   
-</head>
+  
+  
+  
+  
+  
+  <meta property="og:title" content="javascript中事件代理和取消" />
+<meta property="og:description" content="在日常前端开发中，事件是必不可少的一部分，有时候我们需要根据后端接口的返回来动态输出HTML，这时候直接用jQuery中的click之类的方法已经不能达到目的，需要重新绑定或者用事件代理来实现事件绑定。
+事件代理的原理很简单: 事件冒泡会触发容器 dom 的相关事件并执行监听函数。
+比如我们有这样一段HTML:
+ &lt;div class=&#34;container&#34;&gt;  &lt;div class=&#34;block1&#34;&gt;&lt;/div&gt;  &lt;div class=&#34;block2&#34;&gt;&lt;/div&gt;  &lt;div class=&#34;block3&#34;&gt;&lt;/div&gt;  &lt;div class=&#34;block4&#34;&gt;&lt;/div&gt;  &lt;/div&gt; 我们想给class中带有block的元素绑定一个点击事件：
+window.onload = function() {  var container = document.querySelector(&#34;.selector&#34;);   container.addEventListener(&#34;click&#34;, function(e) {  var ev = e || window.event,  target = ev.target,  classList = target.classList;  if (classList.contains(&#34;block1&#34;) || classList.contains(&#34;block2&#34;) || classList.contains(&#34;block3&#34;) || classList.contains(&#34;block4&#34;)) {  console.log(&#34;target clicked,&#34; &#43; classList[0]);  }  }); }; 如上我们就实现一个事件代理。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/2016-04-05-javascript-event-delegate/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2016-04-05T00:00:00+00:00" />
+<meta property="article:modified_time" content="2016-04-05T00:00:00+00:00" />
 
+
+  
+  <meta itemprop="name" content="javascript中事件代理和取消">
+<meta itemprop="description" content="在日常前端开发中，事件是必不可少的一部分，有时候我们需要根据后端接口的返回来动态输出HTML，这时候直接用jQuery中的click之类的方法已经不能达到目的，需要重新绑定或者用事件代理来实现事件绑定。
+事件代理的原理很简单: 事件冒泡会触发容器 dom 的相关事件并执行监听函数。
+比如我们有这样一段HTML:
+ &lt;div class=&#34;container&#34;&gt;  &lt;div class=&#34;block1&#34;&gt;&lt;/div&gt;  &lt;div class=&#34;block2&#34;&gt;&lt;/div&gt;  &lt;div class=&#34;block3&#34;&gt;&lt;/div&gt;  &lt;div class=&#34;block4&#34;&gt;&lt;/div&gt;  &lt;/div&gt; 我们想给class中带有block的元素绑定一个点击事件：
+window.onload = function() {  var container = document.querySelector(&#34;.selector&#34;);   container.addEventListener(&#34;click&#34;, function(e) {  var ev = e || window.event,  target = ev.target,  classList = target.classList;  if (classList.contains(&#34;block1&#34;) || classList.contains(&#34;block2&#34;) || classList.contains(&#34;block3&#34;) || classList.contains(&#34;block4&#34;)) {  console.log(&#34;target clicked,&#34; &#43; classList[0]);  }  }); }; 如上我们就实现一个事件代理。"><meta itemprop="datePublished" content="2016-04-05T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2016-04-05T00:00:00+00:00" />
+<meta itemprop="wordCount" content="314">
+<meta itemprop="keywords" content="" />
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="javascript中事件代理和取消"/>
+<meta name="twitter:description" content="在日常前端开发中，事件是必不可少的一部分，有时候我们需要根据后端接口的返回来动态输出HTML，这时候直接用jQuery中的click之类的方法已经不能达到目的，需要重新绑定或者用事件代理来实现事件绑定。
+事件代理的原理很简单: 事件冒泡会触发容器 dom 的相关事件并执行监听函数。
+比如我们有这样一段HTML:
+ &lt;div class=&#34;container&#34;&gt;  &lt;div class=&#34;block1&#34;&gt;&lt;/div&gt;  &lt;div class=&#34;block2&#34;&gt;&lt;/div&gt;  &lt;div class=&#34;block3&#34;&gt;&lt;/div&gt;  &lt;div class=&#34;block4&#34;&gt;&lt;/div&gt;  &lt;/div&gt; 我们想给class中带有block的元素绑定一个点击事件：
+window.onload = function() {  var container = document.querySelector(&#34;.selector&#34;);   container.addEventListener(&#34;click&#34;, function(e) {  var ev = e || window.event,  target = ev.target,  classList = target.classList;  if (classList.contains(&#34;block1&#34;) || classList.contains(&#34;block2&#34;) || classList.contains(&#34;block3&#34;) || classList.contains(&#34;block4&#34;)) {  console.log(&#34;target clicked,&#34; &#43; classList[0]);  }  }); }; 如上我们就实现一个事件代理。"/>
+
+  
+  
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles-confetti@2.10.1/tsparticles.confetti.bundle.min.js"></script>
+  <script>const emojConfig={spread:360,ticks:200,gravity:1,decay:.94,startVelocity:30,particleCount:100,scalar:2,shapes:["image"]},randomInRange=(t,e)=>Math.random()*(e-t)+t,fireDefault=()=>confetti({angle:randomInRange(55,125),spread:randomInRange(50,70),particleCount:randomInRange(50,100),origin:{y:.6}}),fireDog=()=>confetti({...emojConfig,shapeOptions:{image:new Array(parseInt(randomInRange(10,20))).fill({src:"https://avatars.githubusercontent.com/u/9476421",width:16,height:16})}}),fireEmoj=()=>confetti({...emojConfig,shapeOptions:{image:[{src:"https://particles.js.org/images/fruits/apple.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/avocado.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/banana.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/berries.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/cherry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/grapes.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/lemon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/orange.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/peach.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pear.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pepper.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/plum.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/star.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/strawberry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon_slice.png",width:32,height:32}]}}),fireRealistic=()=>{const t={origin:{y:.7}},e=(e,s)=>{confetti(Object.assign({},t,s,{particleCount:Math.floor(200*e)}))};e(.25,{spread:26,startVelocity:55}),e(.2,{spread:60}),e(.35,{spread:100,decay:.91,scalar:.8}),e(.1,{spread:120,startVelocity:25,decay:.92,scalar:1.2}),e(.1,{spread:120,startVelocity:45})};window.addEventListener("DOMContentLoaded",()=>{document.addEventListener("click",t=>{if("A"===t.target.tagName&&Boolean(e.target.href))return;const s=Math.floor(100*Math.random());return s<=25?fireDefault():s<=50?fireDog():s<=75?fireEmoj():void fireRealistic()})});</script>
+</head>
   <body class="text-black duration-200 ease-out dark:text-white">
     <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
   <div class="relative z-50 mr-auto flex items-center">

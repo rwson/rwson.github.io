@@ -45,10 +45,7 @@
   <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, shrink-to-fit=no"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
   
   <title>javascript创建类的常用模式 - rwson</title>
@@ -77,11 +74,7 @@ function Person(name){ this.name = name; } Person.prototype = { &quot;constructo
   <link rel="preload stylesheet" as="style" href="/main.min.css" />
 
   
-  <script
-    defer
-    src="/highlight.min.js"
-    onload="hljs.initHighlightingOnLoad();"
-  ></script>
+  <script defer src="/highlight.min.js" onload="hljs.initHighlightingOnLoad()"></script>
   
 
   
@@ -119,8 +112,50 @@ function Person(name){ this.name = name; } Person.prototype = { &quot;constructo
 
   
   
-</head>
+  
+  
+  
+  
+  
+  <meta property="og:title" content="javascript创建类的常用模式" />
+<meta property="og:description" content="javaScript创建类的常用模式: 严格意义上,在ECMAScript6出来之前,js中是没有类的概念的,但是聪明的人类想到了用方法和原型类模拟类的一些特性,比如一个对象经过new关键字实例化以后就具有了某些属性,方法。
+下面我们就看下常用的创建类的一些常用模式:
+1.工厂模式
+function Person(name,sex,age){ var obj = { &quot;name&quot;:name, &quot;sex&quot;:sex, &quot;age&quot;:age, &quot;say&quot;:function(){ console.log(&quot;hello world!&quot;); } }; return obj; } //	工厂模式就是在构造方法里面定义一个对象,给这个对象赋予相应的属性、方法,最后返回这个对象  2.构造方法模式
+function CrearePerson(name,sex,age){ this.name = name; this.age = sex; this.age = age; this.say = function(){ console.log(&quot;你好！我是:&quot; &#43; this.name); }; } //	构造方法,就是给当前对象指定一些属性,方法  3.构造方法 &#43; 原型模式
+function Person(name){ this.name = name; } Person.prototype = { &quot;constructor&quot;:Person, // 指定原型对象的构造器 &quot;name&quot;:&quot;小宋&quot;, &quot;age&quot;:20, &quot;job&quot;:&quot;程序员&quot;, &quot;say&quot;:function(){ console.log(&quot;我是原型的函数&quot;); } };  在前面2种创建类的模式中，我们每次实例化一个对象都会重新声明出一些东西,对象个数少可能没什么关系,但是当对象个数达到一定数量时,就会对性能造成一定的影响。所以,就出来了第三种&quot;构造方法 &#43; 原型模式&quot;,构造方法的作用是为实例化出来的对象定义一些私有属性,原型的作用就是绑定一些公共属性方法,让所有实例化出来的对象都可以共,只有在第一次实例化的时候进行初始化,往后就不会再初始化了。这样,当在写大型Web程序时,性能会相对较好。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/2015-03-10-js-object-create-class-mode/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2015-03-10T00:00:00+00:00" />
+<meta property="article:modified_time" content="2015-03-10T00:00:00+00:00" />
 
+
+  
+  <meta itemprop="name" content="javascript创建类的常用模式">
+<meta itemprop="description" content="javaScript创建类的常用模式: 严格意义上,在ECMAScript6出来之前,js中是没有类的概念的,但是聪明的人类想到了用方法和原型类模拟类的一些特性,比如一个对象经过new关键字实例化以后就具有了某些属性,方法。
+下面我们就看下常用的创建类的一些常用模式:
+1.工厂模式
+function Person(name,sex,age){ var obj = { &quot;name&quot;:name, &quot;sex&quot;:sex, &quot;age&quot;:age, &quot;say&quot;:function(){ console.log(&quot;hello world!&quot;); } }; return obj; } //	工厂模式就是在构造方法里面定义一个对象,给这个对象赋予相应的属性、方法,最后返回这个对象  2.构造方法模式
+function CrearePerson(name,sex,age){ this.name = name; this.age = sex; this.age = age; this.say = function(){ console.log(&quot;你好！我是:&quot; &#43; this.name); }; } //	构造方法,就是给当前对象指定一些属性,方法  3.构造方法 &#43; 原型模式
+function Person(name){ this.name = name; } Person.prototype = { &quot;constructor&quot;:Person, // 指定原型对象的构造器 &quot;name&quot;:&quot;小宋&quot;, &quot;age&quot;:20, &quot;job&quot;:&quot;程序员&quot;, &quot;say&quot;:function(){ console.log(&quot;我是原型的函数&quot;); } };  在前面2种创建类的模式中，我们每次实例化一个对象都会重新声明出一些东西,对象个数少可能没什么关系,但是当对象个数达到一定数量时,就会对性能造成一定的影响。所以,就出来了第三种&quot;构造方法 &#43; 原型模式&quot;,构造方法的作用是为实例化出来的对象定义一些私有属性,原型的作用就是绑定一些公共属性方法,让所有实例化出来的对象都可以共,只有在第一次实例化的时候进行初始化,往后就不会再初始化了。这样,当在写大型Web程序时,性能会相对较好。"><meta itemprop="datePublished" content="2015-03-10T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2015-03-10T00:00:00+00:00" />
+<meta itemprop="wordCount" content="190">
+<meta itemprop="keywords" content="" />
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="javascript创建类的常用模式"/>
+<meta name="twitter:description" content="javaScript创建类的常用模式: 严格意义上,在ECMAScript6出来之前,js中是没有类的概念的,但是聪明的人类想到了用方法和原型类模拟类的一些特性,比如一个对象经过new关键字实例化以后就具有了某些属性,方法。
+下面我们就看下常用的创建类的一些常用模式:
+1.工厂模式
+function Person(name,sex,age){ var obj = { &quot;name&quot;:name, &quot;sex&quot;:sex, &quot;age&quot;:age, &quot;say&quot;:function(){ console.log(&quot;hello world!&quot;); } }; return obj; } //	工厂模式就是在构造方法里面定义一个对象,给这个对象赋予相应的属性、方法,最后返回这个对象  2.构造方法模式
+function CrearePerson(name,sex,age){ this.name = name; this.age = sex; this.age = age; this.say = function(){ console.log(&quot;你好！我是:&quot; &#43; this.name); }; } //	构造方法,就是给当前对象指定一些属性,方法  3.构造方法 &#43; 原型模式
+function Person(name){ this.name = name; } Person.prototype = { &quot;constructor&quot;:Person, // 指定原型对象的构造器 &quot;name&quot;:&quot;小宋&quot;, &quot;age&quot;:20, &quot;job&quot;:&quot;程序员&quot;, &quot;say&quot;:function(){ console.log(&quot;我是原型的函数&quot;); } };  在前面2种创建类的模式中，我们每次实例化一个对象都会重新声明出一些东西,对象个数少可能没什么关系,但是当对象个数达到一定数量时,就会对性能造成一定的影响。所以,就出来了第三种&quot;构造方法 &#43; 原型模式&quot;,构造方法的作用是为实例化出来的对象定义一些私有属性,原型的作用就是绑定一些公共属性方法,让所有实例化出来的对象都可以共,只有在第一次实例化的时候进行初始化,往后就不会再初始化了。这样,当在写大型Web程序时,性能会相对较好。"/>
+
+  
+  
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles-confetti@2.10.1/tsparticles.confetti.bundle.min.js"></script>
+  <script>const emojConfig={spread:360,ticks:200,gravity:1,decay:.94,startVelocity:30,particleCount:100,scalar:2,shapes:["image"]},randomInRange=(t,e)=>Math.random()*(e-t)+t,fireDefault=()=>confetti({angle:randomInRange(55,125),spread:randomInRange(50,70),particleCount:randomInRange(50,100),origin:{y:.6}}),fireDog=()=>confetti({...emojConfig,shapeOptions:{image:new Array(parseInt(randomInRange(10,20))).fill({src:"https://avatars.githubusercontent.com/u/9476421",width:16,height:16})}}),fireEmoj=()=>confetti({...emojConfig,shapeOptions:{image:[{src:"https://particles.js.org/images/fruits/apple.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/avocado.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/banana.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/berries.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/cherry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/grapes.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/lemon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/orange.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/peach.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pear.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pepper.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/plum.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/star.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/strawberry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon_slice.png",width:32,height:32}]}}),fireRealistic=()=>{const t={origin:{y:.7}},e=(e,s)=>{confetti(Object.assign({},t,s,{particleCount:Math.floor(200*e)}))};e(.25,{spread:26,startVelocity:55}),e(.2,{spread:60}),e(.35,{spread:100,decay:.91,scalar:.8}),e(.1,{spread:120,startVelocity:25,decay:.92,scalar:1.2}),e(.1,{spread:120,startVelocity:45})};window.addEventListener("DOMContentLoaded",()=>{document.addEventListener("click",t=>{if("A"===t.target.tagName&&Boolean(e.target.href))return;const s=Math.floor(100*Math.random());return s<=25?fireDefault():s<=50?fireDog():s<=75?fireEmoj():void fireRealistic()})});</script>
+</head>
   <body class="text-black duration-200 ease-out dark:text-white">
     <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
   <div class="relative z-50 mr-auto flex items-center">

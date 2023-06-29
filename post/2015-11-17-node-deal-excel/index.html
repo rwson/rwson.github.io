@@ -45,10 +45,7 @@
   <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, shrink-to-fit=no"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
   
   <title>NodeJs处理excel返回json - rwson</title>
@@ -81,11 +78,7 @@ var xlsx2json = require(&#39;xlsx-json&#39;), // 加载xlsx-json模块 task = re
   <link rel="preload stylesheet" as="style" href="/main.min.css" />
 
   
-  <script
-    defer
-    src="/highlight.min.js"
-    onload="hljs.initHighlightingOnLoad();"
-  ></script>
+  <script defer src="/highlight.min.js" onload="hljs.initHighlightingOnLoad()"></script>
   
 
   
@@ -123,8 +116,62 @@ var xlsx2json = require(&#39;xlsx-json&#39;), // 加载xlsx-json模块 task = re
 
   
   
-</head>
+  
+  
+  
+  
+  
+  <meta property="og:title" content="NodeJs处理excel返回json" />
+<meta property="og:description" content="快3个月没写博客了，感觉好生疏。
+由于最近在做一个乐队投票活动，每个乐队都有几个预览图片，但是运营上传图片的时候没有考虑顺序问题，后端也没做类似于拖拽排序的功能，为了快速改出来，乐队预览图的url格式是&quot;http://api.juhuaba.com/api/file/z2/图片id&quot;, 然后一想，前端可以根据指定的id的顺序来显示，然后运营那边就给了我一个excel表格，每个乐队的id和图片，然后，看了一眼excel表格，好几百条数据，感觉手动处理太烦，而且容易出错，所以就想搞个办法让程序来处理。
+先上一张excel的图
+然后开始从网上找办法，很多都是说用一个&quot;node-xlsx&quot;的插件，但是我试了下，可能是excel表格的问题吧，报了个很奇怪的错，就放弃了。后来去npm上找到一个&quot;xlsx-json&quot;的插件，试了下，确实可以取得表格里的数据做为一个数组，每一项都有，只不过如果是空单元格或者被合并的单元格都会显示null,所以还是得自己处理下。
+首先肯定是执行&quot;npm install xlsx-json&quot;啦
+然后这个插件需要有个配置文件，暂且叫task.json吧，下面是task.json中的内容。
+[ { &quot;input&quot;: &quot;data.xlsx&quot;, &quot;sheet&quot;: &quot;Sheet1&quot;, &quot;range&quot;: &quot;A1:C240&quot;, &quot;raw&quot;: true, &quot;output&quot;: &quot;data.json&quot; } ] //	该数组接受多个对象，每个对象的基本格式是上面那种 //	input代表是哪个文件 //	sheet代表一个工作簿 //	range代表要转换的一个区域 //	row代表逐行读取 //	output代表输出到哪个文件  下面是调用代码
+var xlsx2json = require(&#39;xlsx-json&#39;); xlsx2json(task, function(err, jsonArr) { if (err) { console.error(err); return; } });  虽然配置了这些参数，但是读取出来的不如人意，就像下面这样：
+然后就对转换出来数组的进行了处理，下面是完整代码，前台浏览器访问http://localhost:3000,直接返回json给前台
+var xlsx2json = require(&#39;xlsx-json&#39;), // 加载xlsx-json模块 task = require(&#39;./task.json&#39;), // 配置文件 express = require(&quot;express&quot;), app = express(), jsonData, // 临时变量,存储转转出来的数据 tmpObj = {}, // 对象,循环时用 lastTmp = {}, // 对象,循环用,存储每个乐队的完整对象 result = []; // 由完整乐队对象构成的数组 xlsx2json(task, function (err, jsonArr) { if (err) { console." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/2015-11-17-node-deal-excel/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2015-11-17T00:00:00+00:00" />
+<meta property="article:modified_time" content="2015-11-17T00:00:00+00:00" />
 
+
+  
+  <meta itemprop="name" content="NodeJs处理excel返回json">
+<meta itemprop="description" content="快3个月没写博客了，感觉好生疏。
+由于最近在做一个乐队投票活动，每个乐队都有几个预览图片，但是运营上传图片的时候没有考虑顺序问题，后端也没做类似于拖拽排序的功能，为了快速改出来，乐队预览图的url格式是&quot;http://api.juhuaba.com/api/file/z2/图片id&quot;, 然后一想，前端可以根据指定的id的顺序来显示，然后运营那边就给了我一个excel表格，每个乐队的id和图片，然后，看了一眼excel表格，好几百条数据，感觉手动处理太烦，而且容易出错，所以就想搞个办法让程序来处理。
+先上一张excel的图
+然后开始从网上找办法，很多都是说用一个&quot;node-xlsx&quot;的插件，但是我试了下，可能是excel表格的问题吧，报了个很奇怪的错，就放弃了。后来去npm上找到一个&quot;xlsx-json&quot;的插件，试了下，确实可以取得表格里的数据做为一个数组，每一项都有，只不过如果是空单元格或者被合并的单元格都会显示null,所以还是得自己处理下。
+首先肯定是执行&quot;npm install xlsx-json&quot;啦
+然后这个插件需要有个配置文件，暂且叫task.json吧，下面是task.json中的内容。
+[ { &quot;input&quot;: &quot;data.xlsx&quot;, &quot;sheet&quot;: &quot;Sheet1&quot;, &quot;range&quot;: &quot;A1:C240&quot;, &quot;raw&quot;: true, &quot;output&quot;: &quot;data.json&quot; } ] //	该数组接受多个对象，每个对象的基本格式是上面那种 //	input代表是哪个文件 //	sheet代表一个工作簿 //	range代表要转换的一个区域 //	row代表逐行读取 //	output代表输出到哪个文件  下面是调用代码
+var xlsx2json = require(&#39;xlsx-json&#39;); xlsx2json(task, function(err, jsonArr) { if (err) { console.error(err); return; } });  虽然配置了这些参数，但是读取出来的不如人意，就像下面这样：
+然后就对转换出来数组的进行了处理，下面是完整代码，前台浏览器访问http://localhost:3000,直接返回json给前台
+var xlsx2json = require(&#39;xlsx-json&#39;), // 加载xlsx-json模块 task = require(&#39;./task.json&#39;), // 配置文件 express = require(&quot;express&quot;), app = express(), jsonData, // 临时变量,存储转转出来的数据 tmpObj = {}, // 对象,循环时用 lastTmp = {}, // 对象,循环用,存储每个乐队的完整对象 result = []; // 由完整乐队对象构成的数组 xlsx2json(task, function (err, jsonArr) { if (err) { console."><meta itemprop="datePublished" content="2015-11-17T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2015-11-17T00:00:00+00:00" />
+<meta itemprop="wordCount" content="234">
+<meta itemprop="keywords" content="" />
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="NodeJs处理excel返回json"/>
+<meta name="twitter:description" content="快3个月没写博客了，感觉好生疏。
+由于最近在做一个乐队投票活动，每个乐队都有几个预览图片，但是运营上传图片的时候没有考虑顺序问题，后端也没做类似于拖拽排序的功能，为了快速改出来，乐队预览图的url格式是&quot;http://api.juhuaba.com/api/file/z2/图片id&quot;, 然后一想，前端可以根据指定的id的顺序来显示，然后运营那边就给了我一个excel表格，每个乐队的id和图片，然后，看了一眼excel表格，好几百条数据，感觉手动处理太烦，而且容易出错，所以就想搞个办法让程序来处理。
+先上一张excel的图
+然后开始从网上找办法，很多都是说用一个&quot;node-xlsx&quot;的插件，但是我试了下，可能是excel表格的问题吧，报了个很奇怪的错，就放弃了。后来去npm上找到一个&quot;xlsx-json&quot;的插件，试了下，确实可以取得表格里的数据做为一个数组，每一项都有，只不过如果是空单元格或者被合并的单元格都会显示null,所以还是得自己处理下。
+首先肯定是执行&quot;npm install xlsx-json&quot;啦
+然后这个插件需要有个配置文件，暂且叫task.json吧，下面是task.json中的内容。
+[ { &quot;input&quot;: &quot;data.xlsx&quot;, &quot;sheet&quot;: &quot;Sheet1&quot;, &quot;range&quot;: &quot;A1:C240&quot;, &quot;raw&quot;: true, &quot;output&quot;: &quot;data.json&quot; } ] //	该数组接受多个对象，每个对象的基本格式是上面那种 //	input代表是哪个文件 //	sheet代表一个工作簿 //	range代表要转换的一个区域 //	row代表逐行读取 //	output代表输出到哪个文件  下面是调用代码
+var xlsx2json = require(&#39;xlsx-json&#39;); xlsx2json(task, function(err, jsonArr) { if (err) { console.error(err); return; } });  虽然配置了这些参数，但是读取出来的不如人意，就像下面这样：
+然后就对转换出来数组的进行了处理，下面是完整代码，前台浏览器访问http://localhost:3000,直接返回json给前台
+var xlsx2json = require(&#39;xlsx-json&#39;), // 加载xlsx-json模块 task = require(&#39;./task.json&#39;), // 配置文件 express = require(&quot;express&quot;), app = express(), jsonData, // 临时变量,存储转转出来的数据 tmpObj = {}, // 对象,循环时用 lastTmp = {}, // 对象,循环用,存储每个乐队的完整对象 result = []; // 由完整乐队对象构成的数组 xlsx2json(task, function (err, jsonArr) { if (err) { console."/>
+
+  
+  
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles-confetti@2.10.1/tsparticles.confetti.bundle.min.js"></script>
+  <script>const emojConfig={spread:360,ticks:200,gravity:1,decay:.94,startVelocity:30,particleCount:100,scalar:2,shapes:["image"]},randomInRange=(t,e)=>Math.random()*(e-t)+t,fireDefault=()=>confetti({angle:randomInRange(55,125),spread:randomInRange(50,70),particleCount:randomInRange(50,100),origin:{y:.6}}),fireDog=()=>confetti({...emojConfig,shapeOptions:{image:new Array(parseInt(randomInRange(10,20))).fill({src:"https://avatars.githubusercontent.com/u/9476421",width:16,height:16})}}),fireEmoj=()=>confetti({...emojConfig,shapeOptions:{image:[{src:"https://particles.js.org/images/fruits/apple.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/avocado.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/banana.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/berries.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/cherry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/grapes.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/lemon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/orange.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/peach.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pear.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pepper.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/plum.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/star.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/strawberry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon_slice.png",width:32,height:32}]}}),fireRealistic=()=>{const t={origin:{y:.7}},e=(e,s)=>{confetti(Object.assign({},t,s,{particleCount:Math.floor(200*e)}))};e(.25,{spread:26,startVelocity:55}),e(.2,{spread:60}),e(.35,{spread:100,decay:.91,scalar:.8}),e(.1,{spread:120,startVelocity:25,decay:.92,scalar:1.2}),e(.1,{spread:120,startVelocity:45})};window.addEventListener("DOMContentLoaded",()=>{document.addEventListener("click",t=>{if("A"===t.target.tagName&&Boolean(e.target.href))return;const s=Math.floor(100*Math.random());return s<=25?fireDefault():s<=50?fireDog():s<=75?fireEmoj():void fireRealistic()})});</script>
+</head>
   <body class="text-black duration-200 ease-out dark:text-white">
     <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
   <div class="relative z-50 mr-auto flex items-center">

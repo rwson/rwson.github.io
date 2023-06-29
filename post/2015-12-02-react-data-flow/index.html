@@ -45,10 +45,7 @@
   <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, shrink-to-fit=no"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
   
   <title>React中的数据流 - rwson</title>
@@ -84,11 +81,7 @@ JSX中props的几种使用
   <link rel="preload stylesheet" as="style" href="/main.min.css" />
 
   
-  <script
-    defer
-    src="/highlight.min.js"
-    onload="hljs.initHighlightingOnLoad();"
-  ></script>
+  <script defer src="/highlight.min.js" onload="hljs.initHighlightingOnLoad()"></script>
   
 
   
@@ -126,8 +119,71 @@ JSX中props的几种使用
 
   
   
-</head>
+  
+  
+  
+  
+  
+  <meta property="og:title" content="React中的数据流" />
+<meta property="og:description" content="昨天学习完组件的生命周期，今天学习学习React中的数据流。
+在React中，数据流是单向的(由父节点传递到子节点)，因此组件变得简单且易于把握，它们只需要从父节点中获取props来渲染即可，某个组件顶层的props发生改变，React会递归遍历整个组件树，并且重新渲染使用这个属性的组件。
+在React组件内部，还具有自己的状态，但是只能在组件内部进行修改。
+React中的props: props就是properties的缩写，接收任意类型的数据。
+设置组件的props有两种方法:
+  可以在挂载组件的时候设置
+ var surveys = [ { &quot;title&quot;:&quot;some value&quot; } ]; &lt;ListSurveys surveys={surveys} /&gt;    或者调用组件实例的setProps方法
+var surveys = [ { &quot;title&quot;:&quot;some value&quot; } ]; var listSurveys = React.render(&lt;ListSurveys/&gt;,document.body); listSurveys.setProps({&quot;surveys&quot;:surveys});    需要注意的是，只能在子组件或者组件树外面调用setProps方法，但是不能用this.setProps，如果非要这样，可以用state来代替。
+可以通过this.props来访问props，但是不能修改，组件不能对自己的props进行修改。
+JSX中props的几种使用
+  把props设置成字符串
+ &lt;a href=&quot;/a/b&quot;&gt;&lt;/a&gt;    用JSX中的展开语法({&hellip;obj})把props设置成一个对象
+ var aComponent = React.createClass({ render:function(){ var props = { &quot;a&quot;:&quot;foo&quot;, &quot;b&quot;:&quot;bar&quot; }; return ( &lt;aComponent {." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/2015-12-02-react-data-flow/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2015-12-02T00:00:00+00:00" />
+<meta property="article:modified_time" content="2015-12-02T00:00:00+00:00" />
 
+
+  
+  <meta itemprop="name" content="React中的数据流">
+<meta itemprop="description" content="昨天学习完组件的生命周期，今天学习学习React中的数据流。
+在React中，数据流是单向的(由父节点传递到子节点)，因此组件变得简单且易于把握，它们只需要从父节点中获取props来渲染即可，某个组件顶层的props发生改变，React会递归遍历整个组件树，并且重新渲染使用这个属性的组件。
+在React组件内部，还具有自己的状态，但是只能在组件内部进行修改。
+React中的props: props就是properties的缩写，接收任意类型的数据。
+设置组件的props有两种方法:
+  可以在挂载组件的时候设置
+ var surveys = [ { &quot;title&quot;:&quot;some value&quot; } ]; &lt;ListSurveys surveys={surveys} /&gt;    或者调用组件实例的setProps方法
+var surveys = [ { &quot;title&quot;:&quot;some value&quot; } ]; var listSurveys = React.render(&lt;ListSurveys/&gt;,document.body); listSurveys.setProps({&quot;surveys&quot;:surveys});    需要注意的是，只能在子组件或者组件树外面调用setProps方法，但是不能用this.setProps，如果非要这样，可以用state来代替。
+可以通过this.props来访问props，但是不能修改，组件不能对自己的props进行修改。
+JSX中props的几种使用
+  把props设置成字符串
+ &lt;a href=&quot;/a/b&quot;&gt;&lt;/a&gt;    用JSX中的展开语法({&hellip;obj})把props设置成一个对象
+ var aComponent = React.createClass({ render:function(){ var props = { &quot;a&quot;:&quot;foo&quot;, &quot;b&quot;:&quot;bar&quot; }; return ( &lt;aComponent {."><meta itemprop="datePublished" content="2015-12-02T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2015-12-02T00:00:00+00:00" />
+<meta itemprop="wordCount" content="161">
+<meta itemprop="keywords" content="" />
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="React中的数据流"/>
+<meta name="twitter:description" content="昨天学习完组件的生命周期，今天学习学习React中的数据流。
+在React中，数据流是单向的(由父节点传递到子节点)，因此组件变得简单且易于把握，它们只需要从父节点中获取props来渲染即可，某个组件顶层的props发生改变，React会递归遍历整个组件树，并且重新渲染使用这个属性的组件。
+在React组件内部，还具有自己的状态，但是只能在组件内部进行修改。
+React中的props: props就是properties的缩写，接收任意类型的数据。
+设置组件的props有两种方法:
+  可以在挂载组件的时候设置
+ var surveys = [ { &quot;title&quot;:&quot;some value&quot; } ]; &lt;ListSurveys surveys={surveys} /&gt;    或者调用组件实例的setProps方法
+var surveys = [ { &quot;title&quot;:&quot;some value&quot; } ]; var listSurveys = React.render(&lt;ListSurveys/&gt;,document.body); listSurveys.setProps({&quot;surveys&quot;:surveys});    需要注意的是，只能在子组件或者组件树外面调用setProps方法，但是不能用this.setProps，如果非要这样，可以用state来代替。
+可以通过this.props来访问props，但是不能修改，组件不能对自己的props进行修改。
+JSX中props的几种使用
+  把props设置成字符串
+ &lt;a href=&quot;/a/b&quot;&gt;&lt;/a&gt;    用JSX中的展开语法({&hellip;obj})把props设置成一个对象
+ var aComponent = React.createClass({ render:function(){ var props = { &quot;a&quot;:&quot;foo&quot;, &quot;b&quot;:&quot;bar&quot; }; return ( &lt;aComponent {."/>
+
+  
+  
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles-confetti@2.10.1/tsparticles.confetti.bundle.min.js"></script>
+  <script>const emojConfig={spread:360,ticks:200,gravity:1,decay:.94,startVelocity:30,particleCount:100,scalar:2,shapes:["image"]},randomInRange=(t,e)=>Math.random()*(e-t)+t,fireDefault=()=>confetti({angle:randomInRange(55,125),spread:randomInRange(50,70),particleCount:randomInRange(50,100),origin:{y:.6}}),fireDog=()=>confetti({...emojConfig,shapeOptions:{image:new Array(parseInt(randomInRange(10,20))).fill({src:"https://avatars.githubusercontent.com/u/9476421",width:16,height:16})}}),fireEmoj=()=>confetti({...emojConfig,shapeOptions:{image:[{src:"https://particles.js.org/images/fruits/apple.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/avocado.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/banana.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/berries.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/cherry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/grapes.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/lemon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/orange.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/peach.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pear.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/pepper.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/plum.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/star.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/strawberry.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon.png",width:32,height:32},{src:"https://particles.js.org/images/fruits/watermelon_slice.png",width:32,height:32}]}}),fireRealistic=()=>{const t={origin:{y:.7}},e=(e,s)=>{confetti(Object.assign({},t,s,{particleCount:Math.floor(200*e)}))};e(.25,{spread:26,startVelocity:55}),e(.2,{spread:60}),e(.35,{spread:100,decay:.91,scalar:.8}),e(.1,{spread:120,startVelocity:25,decay:.92,scalar:1.2}),e(.1,{spread:120,startVelocity:45})};window.addEventListener("DOMContentLoaded",()=>{document.addEventListener("click",t=>{if("A"===t.target.tagName&&Boolean(e.target.href))return;const s=Math.floor(100*Math.random());return s<=25?fireDefault():s<=50?fireDog():s<=75?fireEmoj():void fireRealistic()})});</script>
+</head>
   <body class="text-black duration-200 ease-out dark:text-white">
     <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
   <div class="relative z-50 mr-auto flex items-center">
